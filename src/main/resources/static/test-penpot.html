@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Génération Code Penpot</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header p { margin: 10px 0 0; opacity: 0.9; }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+        .panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .panel h2 {
+            margin: 0 0 15px;
+            font-size: 18px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        select, textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        select:focus, textarea:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-style: italic;
+        }
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #c33;
+        }
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3c3;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Test Génération Code Penpot</h1>
+            <p>Testez différentes stratégies de prompts pour générer du code Penpot</p>
+        </div>
+
+        <div class="content">
+            <!-- Panel gauche : Configuration -->
+            <div class="panel">
+                <h2>⚙️ Configuration</h2>
+                
+                <label for="strategy">Stratégie de prompt :</label>
+                <select id="strategy">
+                    <option value="basic">Basic (simple)</option>
+                    <option value="detailed" selected>Detailed (avec API)</option>
+                    <option value="with-examples">With Examples (few-shot)</option>
+                    <option value="structured">Structured (formaté)</option>
+                </select>
+
+                <label for="prompt" style="margin-top: 15px;">Votre demande :</label>
+                <textarea id="prompt" placeholder="Ex: Crée 3 rectangles rouges alignés horizontalement">Crée un rectangle rouge de 200x150 pixels à la position (100, 100)</textarea>
+
+                <button id="generateBtn" onclick="generateCode()">🚀 Générer le code</button>
+
+                <div id="stats" style="display: none;" class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="tokensEstimate">-</div>
+                        <div class="stat-label">Tokens (est.)</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="codeLength">-</div>
+                        <div class="stat-label">Caractères</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="responseTime">-</div>
+                        <div class="stat-label">Temps (ms)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel droit : Résultats -->
+            <div class="panel">
+                <h2>📄 Code généré</h2>
+                <div id="result" class="result">
+En attente de génération...
+
+Testez différentes formulations :
+- "Crée un rectangle bleu"
+- "Ajoute du texte 'Hello' en position (50, 50)"
+- "Crée 5 cercles espacés de 50px"
+                </div>
+            </div>
+        </div>
+
+        <!-- Section prompt enrichi -->
+        <div style="padding: 0 30px 30px;">
+            <div class="panel">
+                <h2>🔍 Prompt enrichi envoyé à l'IA</h2>
+                <div id="enrichedPrompt" class="result" style="max-height: 200px;">
+-
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let startTime;
+
+        async function generateCode() {
+            const strategy = document.getElementById('strategy').value;
+            const prompt = document.getElementById('prompt').value.trim();
+            const resultDiv = document.getElementById('result');
+            const enrichedDiv = document.getElementById('enrichedPrompt');
+            const btn = document.getElementById('generateBtn');
+            const statsDiv = document.getElementById('stats');
+
+            if (!prompt) {
+                resultDiv.innerHTML = '<div class="error">⚠️ Veuillez saisir une demande</div>';
+                return;
+            }
+
+            // UI Loading
+            btn.disabled = true;
+            btn.textContent = '⏳ Génération en cours...';
+            resultDiv.innerHTML = '<div class="loading">🤖 L\'IA réfléchit...</div>';
+            enrichedDiv.textContent = 'Chargement...';
+            statsDiv.style.display = 'none';
+            startTime = Date.now();
+
+            try {
+                const response = await fetch('http://localhost:8080/api/penpot/test-strategies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, strategy })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                const responseTime = Date.now() - startTime;
+
+                // Affichage du code généré
+                resultDiv.innerHTML = `<div class="success">✅ Code généré avec succès</div>`;
+                resultDiv.innerHTML += `<pre style="margin-top: 15px;">${escapeHtml(data.generatedCode)}</pre>`;
+
+                // Affichage du prompt enrichi
+                enrichedDiv.textContent = data.enrichedPrompt || 'Non disponible';
+
+                // Stats
+                document.getElementById('tokensEstimate').textContent = data.promptTokensEstimate || '-';
+                document.getElementById('codeLength').textContent = data.generatedCode.length;
+                document.getElementById('responseTime').textContent = responseTime;
+                statsDiv.style.display = 'grid';
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur : ${error.message}</div>`;
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 Générer le code';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Permet d'envoyer avec Ctrl+Enter
+        document.getElementById('prompt').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                generateCode();
+            }
+        });
+    </script>
+</body>
+</html>

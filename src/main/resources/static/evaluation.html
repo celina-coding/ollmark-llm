@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POC Évaluation - Tests IA Penpot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .results-box {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        
+        .result-item h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .metric {
+            display: inline-block;
+            margin-right: 20px;
+            padding: 5px 10px;
+            background: white;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .metric strong {
+            color: #667eea;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            text-align: center;
+        }
+        
+        .stat-card h4 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .code-preview {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 POC Évaluation IA - Penpot</h1>
+            <p>Test automatisé des modèles selon les critères du POC OllMark</p>
+        </div>
+        
+        <div class="content">
+            <!-- Section 1: Test d'un prompt unique -->
+            <div class="section">
+                <h2>Test d'un Prompt Unique</h2>
+                
+                <div class="form-group">
+                    <label>Modèle IA:</label>
+                    <input type="text" id="model" value="llama-3.3-70b-versatile" placeholder="Nom du modèle">
+                </div>
+                
+                <div class="form-group">
+                    <label>ID Prompt (ex: PR_CR_001):</label>
+                    <input type="text" id="promptId" placeholder="PR_CR_001">
+                </div>
+                
+                <div class="form-group">
+                    <label>Texte du Prompt:</label>
+                    <textarea id="promptText" placeholder="Crée un rectangle bleu..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Stratégie:</label>
+                    <select id="strategy">
+                        <option value="basic">Basic</option>
+                        <option value="detailed" selected>Detailed</option>
+                        <option value="with-examples">With Examples</option>
+                        <option value="structured">Structured</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" onclick="testSinglePrompt()">
+                    🚀 Lancer le Test (5 exécutions)
+                </button>
+                
+                <div class="loading" id="loading1">
+                    <div class="spinner"></div>
+                    <p>Test en cours... (5 exécutions pour mesurer la stabilité)</p>
+                </div>
+                
+                <div class="results-box" id="results1"></div>
+            </div>
+            
+            <!-- Section 2: Statistiques et export -->
+            <div class="section">
+                <h2>📈 Statistiques et Export</h2>
+                
+                <button class="btn btn-success" onclick="getStatistics()">
+                    📊 Afficher les Statistiques
+                </button>
+                
+                <button class="btn btn-primary" onclick="exportCSV()">
+                    💾 Exporter en CSV (Excel)
+                </button>
+                
+                <button class="btn btn-secondary" onclick="exportJSON()">
+                    📄 Exporter en JSON
+                </button>
+                
+                <button class="btn btn-danger" onclick="clearResults()">
+                    🗑️ Effacer les Résultats
+                </button>
+                
+                <div class="stats" id="statistics"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/evaluation';
+        
+        // Test d'un prompt unique
+        async function testSinglePrompt() {
+            const model = document.getElementById('model').value;
+            const promptId = document.getElementById('promptId').value;
+            const promptText = document.getElementById('promptText').value;
+            const strategy = document.getElementById('strategy').value;
+            
+            if (!promptId || !promptText) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            document.getElementById('loading1').classList.add('active');
+            document.getElementById('results1').innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE}/test-prompt`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({model, promptId, prompt: promptText, strategy})
+                });
+                
+                const data = await response.json();
+                displaySingleResult(data.evaluation);
+                
+            } catch (error) {
+                document.getElementById('results1').innerHTML = 
+                    `<div style="color: red;">Erreur: ${error.message}</div>`;
+            } finally {
+                document.getElementById('loading1').classList.remove('active');
+            }
+        }
+        
+        // Afficher un résultat unique
+        function displaySingleResult(evaluation) {
+            const html = `
+                <div class="result-item">
+                    <h3>${evaluation['ID_Prompt']} - ${evaluation['Modèle IA testé']}</h3>
+                    <div>
+                        <span class="metric"><strong>Temps:</strong> ${evaluation['Temps réponse (s)'].toFixed(2)}s</span>
+                        <span class="metric"><strong>Tokens:</strong> ${evaluation['Tokens moyens']}</span>
+                        <span class="metric"><strong>Stabilité:</strong> ${evaluation['Stabilité (/5)']}/5</span>
+                        <span class="metric"><strong>Cohérence:</strong> ${evaluation['Cohérence (/5)']}/5</span>
+                        <span class="metric"><strong>Respect:</strong> ${evaluation['Respect du sujet (/5)']}/5</span>
+                        <span class="metric"><strong>Richesse:</strong> ${evaluation['Richesse structurelle (/5)']}/5</span>
+                        <span class="metric"><strong>Créativité:</strong> ${evaluation['Créativité (/5)']}/5</span>
+                        <span class="metric"><strong>Moyenne:</strong> ${evaluation['Moyenne globale'].toFixed(2)}/5</span>
+                        <span class="metric"><strong>Réalisable:</strong> ${evaluation['Réalisable ?'] ? '✅' : '❌'}</span>
+                    </div>
+                    <p style="margin-top: 10px;"><strong>Observations:</strong> ${evaluation['Observations']}</p>
+                    ${evaluation.codeGenere ? `<div class="code-preview">${escapeHtml(evaluation.codeGenere)}</div>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('results1').innerHTML = html;
+        }
+        
+        // Obtenir les statistiques
+        async function getStatistics() {
+            try {
+                const response = await fetch(`${API_BASE}/statistics`);
+                const stats = await response.json();
+                
+                const html = `
+                    <div class="stat-card">
+                        <h4>Total Tests</h4>
+                        <div class="value">${stats.totalTests || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Temps Moyen</h4>
+                        <div class="value">${stats.avgTempsReponse || '0s'}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Moyenne Globale</h4>
+                        <div class="value">${stats.avgMoyenneGlobale || '0/5'}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Taux Réalisable</h4>
+                        <div class="value">${stats.tauxRealisable || '0%'}</div>
+                    </div>
+                `;
+                
+                document.getElementById('statistics').innerHTML = html;
+                
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+        
+        // Export CSV
+        async function exportCSV() {
+            try {
+                window.open(`${API_BASE}/export/csv`, '_blank');
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+        
+        // Export JSON
+        async function exportJSON() {
+            try {
+                const response = await fetch(`${API_BASE}/export/json`);
+                const data = await response.json();
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'evaluation.json';
+                a.click();
+                
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+        
+        // Effacer les résultats
+        async function clearResults() {
+            if (!confirm('Voulez-vous vraiment effacer tous les résultats ?')) return;
+            
+            try {
+                await fetch(`${API_BASE}/clear`, {method: 'DELETE'});
+                document.getElementById('results1').innerHTML = '';
+                document.getElementById('statistics').innerHTML = '';
+                alert('Résultats effacés');
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

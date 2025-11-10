@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Penpot Code Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 50px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 42px;
+            color: #333;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .status {
+            margin-top: 40px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .status-title {
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .status-info {
+            font-size: 14px;
+            color: #555;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 AI-Penpot Generator</h1>
+        <p class="subtitle">
+            Générez automatiquement du code JavaScript pour Penpot<br>
+            grâce à l'intelligence artificielle
+        </p>
+
+        <div class="cards">
+            <a href="/chat.html" class="card">
+                <div class="card-icon">💬</div>
+                <div class="card-title">Chat IA</div>
+                <div class="card-description">
+                    Interface de chat simple pour dialoguer avec l'IA
+                    et tester des prompts généraux
+                </div>
+            </a>
+
+            <a href="/test-penpot.html" class="card">
+                <div class="card-icon">🔬</div>
+                <div class="card-title">Test Penpot</div>
+                <div class="card-description">
+                    Testez la génération de code Penpot avec différentes
+                    stratégies de prompts
+                </div>
+            </a>
+
+            <a href="/evaluation.html" class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Évaluation IA</div>
+                <div class="card-description">
+                    Évaluez les performances du modèle IA selon les critères
+                    OllMark (stabilité, cohérence, créativité)
+                </div>
+            </a>
+        </div>
+
+        <div class="status">
+            <div class="status-title">📊 État du système</div>
+            <div class="status-info">
+                <span class="loading">●</span> Vérification de l'API...
+                <span id="api-status"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Vérification de l'état de l'API
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('api-status');
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/health');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusElement.innerHTML = `
+                        <br><strong>✅ API opérationnelle</strong>
+                        <br>Uptime: ${data.uptime}
+                        <br>Service: ${data.service}
+                    `;
+                    statusElement.parentElement.parentElement.style.background = '#e8f5e9';
+                    statusElement.parentElement.parentElement.style.borderColor = '#4caf50';
+                } else {
+                    throw new Error('API non disponible');
+                }
+            } catch (error) {
+                statusElement.innerHTML = `
+                    <br><strong>❌ API non disponible</strong>
+                    <br>Vérifiez que le serveur Spring Boot est démarré
+                `;
+                statusElement.parentElement.parentElement.style.background = '#ffebee';
+                statusElement.parentElement.parentElement.style.borderColor = '#f44336';
+            }
+        }
+
+        // Vérification au chargement
+        checkApiStatus();
+
+        // Actualisation toutes les 30 secondes
+        setInterval(checkApiStatus, 30000);
+    </script>
+</body>
+</html>
