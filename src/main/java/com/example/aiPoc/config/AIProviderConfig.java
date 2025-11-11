@@ -3,7 +3,6 @@ package com.example.aiPoc.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-
 /**
  * Configuration principale du provider d'IA utilisé dans l'application.
  * <p>
@@ -11,20 +10,6 @@ import org.springframework.context.annotation.Configuration;
  * dans le fichier de configuration Spring (ex. {@code application.yml})
  * sous le préfixe {@code spring.ai.openai}.
  * </p>
- *
- * <p>Exemple de configuration dans application.yml :</p>
- * <pre>
- * spring:
- *   ai:
- *     openai:
- *       api-key: "clé_api"
- *       base-url: "https://api.openai.com/v1"
- *       chat:
- *         options:
- *           model: "gpt-4"
- *           max-tokens: 1000
- *           temperature: 0.7
- * </pre>
  */
 @Configuration
 @ConfigurationProperties(prefix = "spring.ai.openai")

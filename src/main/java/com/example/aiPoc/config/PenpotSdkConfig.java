@@ -19,13 +19,10 @@ import org.springframework.context.annotation.Configuration;
 public class PenpotSdkConfig {
 
     /** Chemin vers le fichier de résumé de l’API Penpot (format JSON). */
-    private String apiSummaryPath = "classpath:templates/penpot-api-summary.json";
-
-    /** Chemin vers le fichier contenant les modèles de prompts. */
-    private String promptTemplatesPath = "classpath:templates/prompt-templates.json";
+    private String apiSummaryPath = "templates/penpot-api-summary.json";
 
     /** Chemin vers le fichier d’exemples de code pour Penpot. */
-    private String codeExamplesPath = "classpath:templates/code-examples.json";
+    private String codeExamplesPath = "templates/code-examples.json";
 
     /** Indique si la validation du code généré est activée. */
     private boolean enableValidation = true;
@@ -49,24 +46,6 @@ public class PenpotSdkConfig {
      */
     public void setApiSummaryPath(String apiSummaryPath) {
         this.apiSummaryPath = apiSummaryPath;
-    }
-
-    /**
-     * Retourne le chemin du fichier des modèles de prompts.
-     *
-     * @return le chemin du fichier JSON des modèles de prompts
-     */
-    public String getPromptTemplatesPath() {
-        return promptTemplatesPath;
-    }
-
-    /**
-     * Définit le chemin du fichier des modèles de prompts.
-     *
-     * @param promptTemplatesPath chemin du fichier JSON des modèles de prompts
-     */
-    public void setPromptTemplatesPath(String promptTemplatesPath) {
-        this.promptTemplatesPath = promptTemplatesPath;
     }
 
     /**

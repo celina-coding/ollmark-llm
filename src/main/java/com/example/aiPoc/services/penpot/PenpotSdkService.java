@@ -1,38 +1,40 @@
 package com.example.aiPoc.services.penpot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.example.aiPoc.config.PenpotSdkConfig;
+import com.example.aiPoc.dto.CodeExamplesCollection;
+import com.example.aiPoc.dto.PenpotApiDocumentation;
 import com.example.aiPoc.exceptions.PenpotSdkException;
-import com.example.aiPoc.models.PenpotApiMethod;
+import com.example.aiPoc.services.JsonLoaderService;
 
 import jakarta.annotation.PostConstruct;
 
 /**
  * Service responsable de la gestion et de la documentation du SDK Penpot.
  *
- * <p>
- * Ce service a plusieurs responsabilités :
+ * <p>Ce service permet :</p>
  * <ul>
- *   <li>Charger la documentation de l'API Penpot</li>
- *   <li>Fournir des résumés textuels des méthodes disponibles</li>
- *   <li>Gérer des exemples de code utilisables pour les prompts IA</li>
+ *   <li>De charger la documentation de l’API Penpot depuis des fichiers JSON</li>
+ *   <li>De fournir des résumés textuels des méthodes disponibles</li>
+ *   <li>De gérer des exemples de code utilisables pour les prompts d’IA ou la documentation</li>
  * </ul>
- * </p>
  *
- * <p>
- * Les données sont actuellement codées en dur mais pourront être chargées
- * dynamiquement depuis un fichier JSON à l’avenir.
- * </p>
+ * <p>Il agit comme une façade d’accès centralisée aux ressources JSON décrivant le SDK Penpot.</p>
  *
- * @see PenpotApiMethod
+ * @see PenpotSdkConfig
+ * @see PenpotApiDocumentation
+ * @see CodeExamplesCollection
+ * @see JsonLoaderService
  */
 @Service
 public class PenpotSdkService {
@@ -43,19 +45,27 @@ public class PenpotSdkService {
     /** Configuration du SDK Penpot. */
     private final PenpotSdkConfig config;
 
-    /** Map des méthodes API disponibles, indexées par leur nom. */
-    private Map<String, PenpotApiMethod> apiMethods = new HashMap<>();
+    /** Service utilitaire de chargement des fichiers JSON. */
+    private final JsonLoaderService jsonLoader;
 
-    /** Liste d’exemples de code illustrant l’usage du SDK. */
-    private List<String> codeExamples = new ArrayList<>();
+    /** Documentation de l’API Penpot chargée depuis JSON. */
+    private PenpotApiDocumentation apiDocumentation;
+
+    /** Collection d’exemples de code chargée depuis JSON. */
+    private CodeExamplesCollection codeExamplesCollection;
+
+    /** Index des méthodes pour un accès rapide par leur nom. */
+    private Map<String, PenpotApiDocumentation.ApiMethod> apiMethodsIndex = new HashMap<>();
 
     /**
      * Constructeur du service {@code PenpotSdkService}.
      *
-     * @param config la configuration du SDK Penpot injectée par Spring.
+     * @param config la configuration du SDK Penpot
+     * @param jsonLoader le service de chargement des fichiers JSON
      */
-    public PenpotSdkService(PenpotSdkConfig config) {
+    public PenpotSdkService(PenpotSdkConfig config, JsonLoaderService jsonLoader) {
         this.config = config;
+        this.jsonLoader = jsonLoader;
     }
 
     /**
@@ -66,9 +76,10 @@ public class PenpotSdkService {
      */
     @PostConstruct
     public void initialize() {
-        logger.info("Initialisation du service SDK Penpot");
+        logger.info("Initialisation du service SDK Penpot depuis fichiers JSON");
         loadApiDocumentation();
         loadCodeExamples();
+        buildIndex();
     }
 
     /**
@@ -79,79 +90,60 @@ public class PenpotSdkService {
      * </p>
      */
     private void loadApiDocumentation() {
-        logger.debug("Chargement de la documentation API Penpot");
+        logger.debug("Chargement de la documentation API depuis JSON");
 
-        // Méthode : createRectangle
-        PenpotApiMethod createRect = new PenpotApiMethod(
-            "createRectangle",
-            "Crée un rectangle sur le canevas",
-            "Shape"
+        String path = config.getApiSummaryPath();
+        apiDocumentation = jsonLoader.loadJson(
+            path,
+            PenpotApiDocumentation.class
         );
-        createRect.setCategory("SHAPE_CREATION");
-        createRect.setExample("const rect = penpot.createRectangle(100, 100, 200, 150);");
-        createRect.getParameters().add(new PenpotApiMethod.Parameter("x", "number", true));
-        createRect.getParameters().add(new PenpotApiMethod.Parameter("y", "number", true));
-        createRect.getParameters().add(new PenpotApiMethod.Parameter("width", "number", true));
-        createRect.getParameters().add(new PenpotApiMethod.Parameter("height", "number", true));
-        apiMethods.put("createRectangle", createRect);
 
-        // Méthode : createText
-        PenpotApiMethod createText = new PenpotApiMethod(
-            "createText",
-            "Crée un élément texte sur le canevas",
-            "TextNode"
-        );
-        createText.setCategory("TEXT");
-        createText.setExample("const text = penpot.createText(50, 50, 'Hello World');");
-        createText.getParameters().add(new PenpotApiMethod.Parameter("x", "number", true));
-        createText.getParameters().add(new PenpotApiMethod.Parameter("y", "number", true));
-        createText.getParameters().add(new PenpotApiMethod.Parameter("content", "string", true));
-        apiMethods.put("createText", createText);
-
-        // Méthode : createCircle
-        PenpotApiMethod createCircle = new PenpotApiMethod(
-            "createCircle",
-            "Crée un cercle sur le canevas",
-            "Shape"
-        );
-        createCircle.setCategory("SHAPE_CREATION");
-        createCircle.setExample("const circle = penpot.createCircle(150, 150, 75);");
-        createCircle.getParameters().add(new PenpotApiMethod.Parameter("x", "number", true));
-        createCircle.getParameters().add(new PenpotApiMethod.Parameter("y", "number", true));
-        createCircle.getParameters().add(new PenpotApiMethod.Parameter("radius", "number", true));
-        apiMethods.put("createCircle", createCircle);
-
-        logger.info("Documentation API chargée: {} méthodes", apiMethods.size());
+        if (apiDocumentation == null) {
+            logger.error("Impossible de charger la documentation API");
+            apiDocumentation = createEmptyDocumentation();
+        } else {
+            logger.info("Documentation API chargée: {} méthodes (version {})", 
+                       apiDocumentation.getMethods().size(),
+                       apiDocumentation.getVersion());
+        }
     }
 
     /**
-     * Charge les exemples de code d’utilisation du SDK.
+     * Charge les exemples de code du SDK Penpot depuis un fichier JSON.
+     * <p>Si le chargement échoue, une collection vide est créée par défaut.</p>
      */
     private void loadCodeExamples() {
-        logger.debug("Chargement des exemples de code");
+        logger.debug("Chargement des exemples de code depuis JSON");
 
-        codeExamples.add(
-            "// Créer un rectangle rouge\n" +
-            "const rect = penpot.createRectangle(100, 100, 200, 150);\n" +
-            "rect.fills = [{color: '#FF0000'}];"
+        String path = config.getCodeExamplesPath();
+        codeExamplesCollection = jsonLoader.loadJson(
+            path,
+            CodeExamplesCollection.class
         );
 
-        codeExamples.add(
-            "// Créer du texte stylisé\n" +
-            "const text = penpot.createText(50, 50, 'Hello World');\n" +
-            "text.fontSize = 24;\n" +
-            "text.fontWeight = 'bold';"
-        );
+        if (codeExamplesCollection == null) {
+            logger.error("Impossible de charger les exemples de code");
+            codeExamplesCollection = createEmptyExamples();
+        } else {
+            logger.info("Exemples de code chargés: {} exemples (version {})", 
+                       codeExamplesCollection.getExamples().size(),
+                       codeExamplesCollection.getVersion());
+        }
+    }
 
-        codeExamples.add(
-            "// Créer plusieurs formes alignées\n" +
-            "for (let i = 0; i < 3; i++) {\n" +
-            "  const rect = penpot.createRectangle(100 + i * 250, 100, 200, 150);\n" +
-            "  rect.fills = [{color: `hsl(${i * 120}, 70%, 50%)`}];\n" +
-            "}"
-        );
-
-        logger.info("Exemples de code chargés: {}", codeExamples.size());
+    /**
+     * Construit un index interne pour un accès rapide aux méthodes par leur nom.
+     */
+    private void buildIndex() {
+        if (apiDocumentation != null && apiDocumentation.getMethods() != null) {
+            apiMethodsIndex = apiDocumentation.getMethods().stream()
+                .collect(Collectors.toMap(
+                    PenpotApiDocumentation.ApiMethod::getName,
+                    method -> method,
+                    (existing, replacement) -> existing
+                ));
+            logger.debug("Index construit: {} méthodes indexées", apiMethodsIndex.size());
+        }
     }
 
     /**
@@ -164,18 +156,46 @@ public class PenpotSdkService {
         StringBuilder summary = new StringBuilder();
         summary.append("SDK Penpot - Méthodes disponibles:\n\n");
 
-        apiMethods.values().forEach(method -> {
+        if (apiDocumentation == null || apiDocumentation.getMethods() == null) {
+            return summary.append("Aucune documentation disponible").toString();
+        }
+
+        for (PenpotApiDocumentation.ApiMethod method : apiDocumentation.getMethods()) {
             summary.append(String.format("- %s(%s): %s\n",
                 method.getName(),
                 formatParameters(method.getParameters()),
                 method.getReturnType()
             ));
             summary.append(String.format("  Description: %s\n", method.getDescription()));
+
             if (method.getExample() != null) {
                 summary.append(String.format("  Exemple: %s\n", method.getExample()));
             }
+            if (method.getNotes() != null) {
+                summary.append(String.format("  Note: %s\n", method.getNotes()));
+            }
+
             summary.append("\n");
-        });
+        }
+
+        // Ajout des propriétés communes
+        if (apiDocumentation.getCommonProperties() != null) {
+            summary.append("\nPropriétés communes:\n");
+            apiDocumentation.getCommonProperties().forEach((type, props) -> {
+                summary.append(String.format("\n%s:\n", type));
+                props.forEach((key, value) -> 
+                    summary.append(String.format("  - %s: %s\n", key, value))
+                );
+            });
+        }
+
+        // Ajout des utilitaires
+        if (apiDocumentation.getUtilities() != null) {
+            summary.append("\nUtilitaires:\n");
+            apiDocumentation.getUtilities().forEach((key, value) -> 
+                summary.append(String.format("  - %s: %s\n", key, value))
+            );
+        }
 
         return summary.toString();
     }
@@ -186,16 +206,16 @@ public class PenpotSdkService {
      * @return une chaîne compacte contenant la liste des méthodes du SDK.
      */
     public String getCompactApiSummary() {
-        StringBuilder summary = new StringBuilder();
+        if (apiDocumentation == null || apiDocumentation.getMethods() == null) {
+            return "";
+        }
 
-        apiMethods.values().forEach(method -> {
-            summary.append(String.format("penpot.%s(%s)\n",
+        return apiDocumentation.getMethods().stream()
+            .map(method -> String.format("penpot.%s(%s)",
                 method.getName(),
                 formatParameters(method.getParameters())
-            ));
-        });
-
-        return summary.toString();
+            ))
+            .collect(Collectors.joining("\n"));
     }
 
     /**
@@ -204,7 +224,19 @@ public class PenpotSdkService {
      * @return une liste de chaînes de caractères contenant des extraits de code.
      */
     public List<String> getCodeExamples() {
-        return new ArrayList<>(codeExamples);
+        if (codeExamplesCollection == null || codeExamplesCollection.getExamples() == null) {
+            return Collections.emptyList();
+        }
+
+        return codeExamplesCollection.getExamples().stream()
+            .map(example -> {
+                return String.format("// %s\n// %s\n%s",
+                    example.getTitle(),
+                    example.getDescription(),
+                    example.getCode()
+                );
+            })
+            .collect(Collectors.toList());
     }
 
     /**
@@ -214,62 +246,99 @@ public class PenpotSdkService {
      * @throws PenpotSdkException si aucun exemple de code n’est disponible.
      */
     public String getRandomExample() {
-        if (codeExamples.isEmpty()) throw new PenpotSdkException("Aucun exemple de code disponible");
-        int index = (int) (Math.random() * codeExamples.size());
-        return codeExamples.get(index);
+        List<String> examples = getCodeExamples();
+        if (examples.isEmpty()) {
+            throw new PenpotSdkException("Aucun exemple de code disponible");
+        }
+
+        int index = (int) (Math.random() * examples.size());
+        return examples.get(index);
     }
 
     /**
-     * Vérifie si une méthode donnée existe dans la documentation de l’API.
+     * Vérifie si une méthode existe dans la documentation de l’API.
      *
-     * @param methodName le nom de la méthode à vérifier.
-     * @return {@code true} si la méthode existe, {@code false} sinon.
+     * @param methodName le nom de la méthode recherchée
+     * @return {@code true} si la méthode existe, sinon {@code false}
      */
     public boolean methodExists(String methodName) {
-        return apiMethods.containsKey(methodName);
-    }
-
-    /**
-     * Récupère les détails d’une méthode spécifique de l’API.
-     *
-     * @param methodName le nom de la méthode à rechercher.
-     * @return un objet {@link PenpotApiMethod} représentant la méthode, ou {@code null} si introuvable.
-     */
-    public PenpotApiMethod getMethod(String methodName) {
-        return apiMethods.get(methodName);
+        return apiMethodsIndex.containsKey(methodName);
     }
 
     /**
      * Retourne la liste des méthodes appartenant à une catégorie donnée.
      *
-     * @param category le nom de la catégorie (ex. "SHAPE_CREATION", "TEXT").
-     * @return une liste de méthodes appartenant à cette catégorie (peut être vide).
+     * @param category le nom de la catégorie
+     * @return une liste d’objets {@link PenpotApiDocumentation.ApiMethod}
      */
-    public List<PenpotApiMethod> getMethodsByCategory(String category) {
-        return apiMethods.values().stream()
+    public List<PenpotApiDocumentation.ApiMethod> getMethodsByCategory(String category) {
+        if (apiDocumentation == null || apiDocumentation.getMethods() == null) {
+            return Collections.emptyList();
+        }
+
+        return apiDocumentation.getMethods().stream()
             .filter(m -> category.equals(m.getCategory()))
-            .toList();
+            .collect(Collectors.toList());
     }
 
     /**
-     * Formate la liste des paramètres d’une méthode pour un affichage lisible.
+     * Retourne le nombre total de méthodes chargées.
      *
-     * @param parameters la liste des paramètres de la méthode.
-     * @return une chaîne formatée de la forme {@code "x: number, y: number"}.
-     */
-    private String formatParameters(List<PenpotApiMethod.Parameter> parameters) {
-        return parameters.stream()
-            .map(p -> p.getName() + ": " + p.getType())
-            .reduce((a, b) -> a + ", " + b)
-            .orElse("");
-    }
-
-    /**
-     * Retourne le nombre total de méthodes API chargées.
-     *
-     * @return le nombre de méthodes actuellement disponibles dans la documentation.
+     * @return le nombre de méthodes disponibles
      */
     public int getMethodCount() {
-        return apiMethods.size();
+        return apiMethodsIndex.size();
+    }
+
+    /**
+     * Retourne la collection complète d’exemples de code.
+     *
+     * @return une liste d’objets {@link CodeExamplesCollection.CodeExample}
+     */
+    public List<CodeExamplesCollection.CodeExample> getCodeExamplesCollection() {
+        if (codeExamplesCollection == null || codeExamplesCollection.getExamples() == null) {
+            return java.util.Collections.emptyList();
+        }
+        return codeExamplesCollection.getExamples();
+    }
+
+    /**
+     * Formate les paramètres d’une méthode pour un affichage lisible.
+     *
+     * @param parameters la liste des paramètres
+     * @return une chaîne formatée des paramètres
+     */
+    private String formatParameters(List<PenpotApiDocumentation.Parameter> parameters) {
+        if (parameters == null || parameters.isEmpty()) return "";
+
+        return parameters.stream()
+            .map(p -> p.getName() + ": " + p.getType())
+            .collect(Collectors.joining(", "));
+    }
+
+    /**
+     * Crée une documentation vide en cas d’échec de chargement.
+     *
+     * @return un objet {@link PenpotApiDocumentation} vide
+     */
+    private PenpotApiDocumentation createEmptyDocumentation() {
+        PenpotApiDocumentation doc = new PenpotApiDocumentation();
+        doc.setVersion("error");
+        doc.setMethods(new ArrayList<>());
+        doc.setCommonProperties(new HashMap<>());
+        doc.setUtilities(new HashMap<>());
+        return doc;
+    }
+
+    /**
+     * Crée une collection d’exemples vide en cas d’échec de chargement.
+     *
+     * @return un objet {@link CodeExamplesCollection} vide
+     */
+    private CodeExamplesCollection createEmptyExamples() {
+        CodeExamplesCollection collection = new CodeExamplesCollection();
+        collection.setVersion("error");
+        collection.setExamples(new ArrayList<>());
+        return collection;
     }
 }

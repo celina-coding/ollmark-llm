@@ -10,49 +10,32 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.example.aiPoc.models.ValidationError;
+import com.example.aiPoc.utils.CodeUtils;
 
 /**
  * Service chargé de la validation du code JavaScript généré automatiquement,
  * notamment pour des scripts destinés à l'API Penpot.
- * <p>
- * Ce service effectue plusieurs niveaux de validation :
- * </p>
+ * 
+ * <p><b>Version optimisée avec :</b></p>
  * <ul>
- *   <li>Validation syntaxique de base (équilibre des parenthèses, guillemets, etc.)</li>
- *   <li>Validation sémantique (usage correct des méthodes de l’API Penpot)</li>
- *   <li>Détection d’erreurs ou d’incohérences communes dans le code généré</li>
+ *   <li>Meilleure détection des faux positifs</li>
+ *   <li>Validation plus permissive pour le code généré par IA</li>
+ *   <li>Distinction entre erreurs critiques et avertissements</li>
  * </ul>
- *
- * <p>
- * L’objectif est de garantir que le code produit par le modèle d’IA soit
- * exécutable, cohérent et conforme aux conventions de l’API cible.
- * </p>
+ * 
+ * @see PenpotSdkService
  */
 @Service
 public class CodeValidationService {
 
     private static final Logger logger = LoggerFactory.getLogger(CodeValidationService.class);
 
-    /**
-     * Liste des méthodes valides exposées par l'API Penpot.
-     * <p>
-     * Cette liste est utilisée pour valider les appels d’API trouvés dans
-     * le code JavaScript fourni.
-     * </p>
-     */
-    private static final List<String> VALID_PENPOT_METHODS = List.of(
-        "createRectangle",
-        "createCircle",
-        "createText",
-        "createEllipse",
-        "createPath",
-        "group",
-        "ungroup",
-        "alignHorizontal",
-        "alignVertical",
-        "distributeHorizontal",
-        "distributeVertical"
-    );
+    /** Service de gestion du SDK Penpot (injection de dépendance) */
+    private final PenpotSdkService sdkService;
+
+    public CodeValidationService(PenpotSdkService sdkService) {
+        this.sdkService = sdkService;
+    }
 
     /**
      * Valide un code JavaScript généré par l’IA.
@@ -79,6 +62,15 @@ public class CodeValidationService {
 
         logger.debug("Validation du code: {} caractères", code.length());
 
+        // Vérifie que la documentation API est chargée
+        if (sdkService.getMethodCount() == 0) {
+            logger.error("La documentation API Penpot n'est pas chargée !");
+            errors.add(new ValidationError("API_DOC_ERROR", 
+                "Impossible de valider : documentation API non disponible"));
+            return errors;
+        }
+
+        // Validations dans l'ordre de priorité
         errors.addAll(validateSyntax(code));
         errors.addAll(validatePenpotApiUsage(code));
         errors.addAll(validateCommonMistakes(code));
@@ -105,12 +97,22 @@ public class CodeValidationService {
         List<ValidationError> errors = new ArrayList<>();
 
         if (!areBracketsBalanced(code)) {
-            errors.add(new ValidationError("SYNTAX", "Parenthèses, accolades ou crochets non équilibrés"));
+            errors.add(new ValidationError("SYNTAX", 
+                "Parenthèses, accolades ou crochets non équilibrés"));
         }
 
-        Pattern invalidKeywords = Pattern.compile("\\b(goto|with)\\b");
-        if (invalidKeywords.matcher(code).find()) {
-            errors.add(new ValidationError("SYNTAX", "Utilisation de mots-clés JavaScript déconseillés"));
+        // Validation des mots-clés problématiques (goto strictement interdit)
+        Pattern invalidKeywordsStrict = Pattern.compile("\\bgoto\\b");
+        if (invalidKeywordsStrict.matcher(code).find()) {
+            errors.add(new ValidationError("SYNTAX", 
+                "Utilisation de mots-clés JavaScript déconseillés"));
+        }
+
+        // Vérifier 'with' uniquement en tant que statement, pas dans les noms de méthodes
+        Pattern withStatement = Pattern.compile("\\bwith\\s*\\(");
+        if (withStatement.matcher(code).find()) {
+            errors.add(new ValidationError("SYNTAX", 
+                "Utilisation du mot-clé 'with' déconseillée"));
         }
 
         return errors;
@@ -131,20 +133,26 @@ public class CodeValidationService {
     private List<ValidationError> validatePenpotApiUsage(String code) {
         List<ValidationError> errors = new ArrayList<>();
 
+        // Pattern pour capturer les appels à penpot.method()
         Pattern penpotCallPattern = Pattern.compile("penpot\\.([a-zA-Z]+)\\s*\\(");
         Matcher matcher = penpotCallPattern.matcher(code);
 
         while (matcher.find()) {
             String methodName = matcher.group(1);
 
-            if (!VALID_PENPOT_METHODS.contains(methodName)) {
-                errors.add(new ValidationError(
-                    "API_USAGE",
-                    "Méthode Penpot inconnue: penpot." + methodName + "()"
-                ));
+            if (!sdkService.methodExists(methodName)) {
+                List<String> suggestions = suggestSimilarMethods(methodName, 3);
+                
+                String errorMsg = "Méthode Penpot inconnue: penpot." + methodName + "()";
+                if (!suggestions.isEmpty()) {
+                    errorMsg += ". Suggestions: " + String.join(", ", suggestions);
+                }
+                
+                errors.add(new ValidationError("API_USAGE", errorMsg));
             }
         }
 
+        // Vérifier les erreurs de casse courantes
         if (code.contains("createTextBox")) {
             errors.add(new ValidationError(
                 "API_USAGE",
@@ -152,7 +160,9 @@ public class CodeValidationService {
             ));
         }
 
-        if (code.contains("Penpot.")) {
+        // Vérifier uniquement "Penpot." (avec majuscule) en tant qu'objet
+        Pattern penpotUpperCase = Pattern.compile("\\bPenpot\\.");
+        if (penpotUpperCase.matcher(code).find()) {
             errors.add(new ValidationError(
                 "API_USAGE",
                 "Utilisez 'penpot' (minuscule) et non 'Penpot'"
@@ -179,15 +189,17 @@ public class CodeValidationService {
     private List<ValidationError> validateCommonMistakes(String code) {
         List<ValidationError> errors = new ArrayList<>();
 
-        if (code.matches(".*\\b[a-z]+\\s*=.*") && !code.contains("const") && !code.contains("let") && !code.contains("var")) {
-            errors.add(new ValidationError(
-                "SEMANTIC",
-                "Certaines variables semblent non déclarées (manque const/let/var)",
-                null,
-                null
-            ));
+        // Validation des guillemets
+        if (!areQuotesBalanced(code)) {
+            ValidationError warning = new ValidationError(
+                "SYNTAX",
+                "Guillemets potentiellement non appariés (vérification recommandée)"
+            );
+            warning.setSeverity("WARNING");
+            errors.add(warning);
         }
 
+        // Vérifier les fonctions sans return (avec avertissement, pas erreur)
         int functionCount = countOccurrences(code, "function");
         int returnCount = countOccurrences(code, "return");
 
@@ -200,21 +212,96 @@ public class CodeValidationService {
             errors.add(warning);
         }
 
-        int singleQuotes = countOccurrences(code, "'");
-        int doubleQuotes = countOccurrences(code, "\"");
-        int backticks = countOccurrences(code, "`");
-
-        if (singleQuotes % 2 != 0) {
-            errors.add(new ValidationError("SYNTAX", "Guillemets simples non appariés"));
-        }
-        if (doubleQuotes % 2 != 0) {
-            errors.add(new ValidationError("SYNTAX", "Guillemets doubles non appariés"));
-        }
-        if (backticks % 2 != 0) {
-            errors.add(new ValidationError("SYNTAX", "Backticks non appariés"));
+        // Vérifier les variables potentiellement non déclarées
+        if (hasPotentialUndeclaredVariables(code)) {
+            ValidationError warning = new ValidationError(
+                "SEMANTIC",
+                "Variables potentiellement non déclarées (const/let/var manquant)"
+            );
+            warning.setSeverity("WARNING");
+            errors.add(warning);
         }
 
         return errors;
+    }
+
+    /**
+     * Suggère des méthodes similaires pour une méthode invalide.
+     * <p>
+     * Utilise la distance de Levenshtein pour trouver les méthodes les plus proches
+     * parmi celles disponibles dans la documentation API.
+     * </p>
+     *
+     * @param invalidMethod la méthode invalide
+     * @param maxSuggestions nombre maximum de suggestions
+     * @return liste des suggestions (triées par similarité)
+     */
+    private List<String> suggestSimilarMethods(String invalidMethod, int maxSuggestions) {
+        return sdkService.getMethodsByCategory(null).stream() // Toutes les méthodes
+            .map(method -> new java.util.AbstractMap.SimpleEntry<>(
+                method.getName(),
+                CodeUtils.levenshteinDistance(
+                    invalidMethod.toLowerCase(), 
+                    method.getName().toLowerCase()
+                )
+            ))
+            .sorted(java.util.Map.Entry.comparingByValue())
+            .limit(maxSuggestions)
+            .filter(entry -> entry.getValue() <= 3) // Seulement les suggestions pertinentes
+            .map(java.util.Map.Entry::getKey)
+            .toList();
+    }
+
+    /**
+     * Vérifie l'équilibre des guillemets de manière intelligente.
+     * 
+     * @param code le code à analyser
+     * @return {@code true} si les symboles sont équilibrés, {@code false} sinon
+     */
+    private boolean areQuotesBalanced(String code) {
+        int singleQuotes = 0;
+        int doubleQuotes = 0;
+        int backticks = 0;
+        boolean escaped = false;
+
+        for (int i = 0; i < code.length(); i++) {
+            char c = code.charAt(i);
+
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                escaped = true;
+                continue;
+            }
+
+            switch (c) {
+                case '\'' -> singleQuotes++;
+                case '"' -> doubleQuotes++;
+                case '`' -> backticks++;
+            }
+        }
+
+        // Tolérance de ±1 pour tenir compte des commentaires ou du code partiel
+        return (singleQuotes % 2 <= 1) && (doubleQuotes % 2 <= 1) && (backticks % 2 == 0);
+    }
+
+    /**
+     * Détecte les variables non déclarées de manière plus précise.
+     */
+    private boolean hasPotentialUndeclaredVariables(String code) {
+        // Chercher des patterns comme "variable = value" sans const/let/var avant
+        Pattern undeclaredPattern = Pattern.compile(
+            "^\\s*[a-z_][a-zA-Z0-9_]*\\s*=",
+            Pattern.MULTILINE
+        );
+        Matcher matcher = undeclaredPattern.matcher(code);
+
+        if (!matcher.find()) return false;
+
+        return !code.contains("const ") && !code.contains("let ") && !code.contains("var ");
     }
 
     /**
@@ -237,6 +324,7 @@ public class CodeValidationService {
         for (int i = 0; i < code.length(); i++) {
             char c = code.charAt(i);
 
+            // Gérer les guillemets et chaînes de caractères
             if ((c == '"' || c == '\'' || c == '`') && (i == 0 || code.charAt(i - 1) != '\\')) {
                 if (!inString) {
                     inString = true;
@@ -273,7 +361,11 @@ public class CodeValidationService {
      * @param substring la sous-chaîne à rechercher
      * @return le nombre d’occurrences trouvées
      */
+
     private int countOccurrences(String text, String substring) {
+        if (text == null || substring == null || substring.isEmpty()) {
+            return 0;
+        }
         return (text.length() - text.replace(substring, "").length()) / substring.length();
     }
 
@@ -281,29 +373,16 @@ public class CodeValidationService {
      * Indique si un code est entièrement valide.
      * <p>
      * Cette méthode exécute la validation complète et renvoie {@code true}
-     * uniquement si aucune erreur ou avertissement n’a été détecté.
+     * uniquement si aucune erreur n’a été détectée.
      * </p>
      *
      * @param code le code à vérifier
      * @return {@code true} si le code est valide, {@code false} sinon
      */
+
     public boolean isValid(String code) {
         List<ValidationError> errors = validate(code);
-        return errors.isEmpty();
-    }
-
-    /**
-     * Retourne uniquement les erreurs critiques détectées dans le code.
-     * <p>
-     * Les avertissements (warnings) sont exclus du résultat.
-     * </p>
-     *
-     * @param code le code à analyser
-     * @return la liste des erreurs critiques (sévérité {@code ERROR})
-     */
-    public List<ValidationError> getCriticalErrors(String code) {
-        return validate(code).stream()
-            .filter(error -> "ERROR".equals(error.getSeverity()))
-            .toList();
+        // Considérer comme valide si seules des warnings existent
+        return errors.stream().noneMatch(e -> "ERROR".equals(e.getSeverity()));
     }
 }

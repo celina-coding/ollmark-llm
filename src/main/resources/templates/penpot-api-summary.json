@@ -1,0 +1,327 @@
+{
+  "version": "1.0.0",
+  "lastUpdate": "2025-11-10",
+  "source": "Penpot Plugin API Documentation",
+  "methods": [
+    {
+      "name": "createRectangle",
+      "description": "Crée un rectangle sur le canevas",
+      "returnType": "Shape",
+      "category": "SHAPE_CREATION",
+      "parameters": [],
+      "methods": {
+        "resize": "resize(width: number, height: number): void",
+        "rotate": "(angle: number, center?: null | { x: number; y: number;}): void"
+      },
+        "example": "const shape = penpot.createRectangle();",
+        "notes": "Utilisez la méthode resize() pour définir les dimensions."
+    },
+    {
+      "name": "createEllipse",
+      "description": "Crée une ellipse sur le canevas (cercle si largeur et hauteur identiques).",
+      "returnType": "Shape",
+      "category": "SHAPE_CREATION",
+      "parameters": [],
+      "methods": {
+        "resize": "resize(width: number, height: number): void",
+        "rotate": "(angle: number, center?: null | { x: number; y: number;}): void"
+      },
+      "example": "const shape = penpot.createEllipse();",
+      "notes": ""
+    },
+    {
+      "name": "createPath",
+      "description": "Crée un chemin vectoriel sur le canevas.",
+      "returnType": "Shape",
+      "category": "SHAPE_CREATION",
+      "parameters": [],
+      "methods": {
+        "resize": "resize(width: number, height: number): void",
+        "rotate": "(angle: number, center?: null | { x: number; y: number;}): void"
+      },
+      "example": "const path = penpot.createPath();",
+      "notes": ""
+    },
+    {
+      "name": "createBoolean",
+      "description": "Crée une forme booléenne basée sur une opération donnée et un ensemble de formes.",
+      "returnType": "Shape | null",
+      "category": "SHAPE_CREATION",
+      "parameters": [
+        {
+          "name": "boolType",
+          "type": "BooleanType",
+          "required": true,
+          "description": "Type d'opération booléenne ('union', 'difference', 'exclude', 'intersection')"
+        },
+        {
+          "name": "shapes",
+          "type": "Array<Shape>",
+          "required": true,
+          "description": "Tableau de formes sur lesquelles appliquer l'opération booléenne"
+        }
+      ],
+      "methods": {
+        "resize": "resize(width: number, height: number): void",
+        "rotate": "(angle: number, center?: null | { x: number; y: number;}): void"
+      },
+      "example": "const booleanShape = context.createBoolean('union', [shape1, shape2]);",
+      "notes": ""
+    },
+    {
+      "name": "createBoard",
+      "description": "Crée un board (artboard/frame) sur le canevas. Vous pouvez ensuite y ajouter un layout (grid ou flex) ou y insérer des formes.",
+      "returnType": "Shape",
+      "category": "SHAPE_CREATION",
+      "parameters": [],
+      "methods": {
+        "appendChild": "appendChild(shape: Shape) - Ajoute une forme enfant au board",
+        "addFlexLayout": "addFlexLayout() - Ajoute un layout flex au board",
+        "addGridLayout": "addGridLayout() - Ajoute un layout grid au board"
+      },
+      "example": "const board = penpot.createBoard();",
+      "notes": "Un board est le conteneur principal dans l’interface de Penpot."
+    },
+    {
+      "name": "createText",
+      "description": "Crée une forme de texte sur le canevas.",
+      "returnType": "Shape | null",
+      "category": "SHAPE_CREATION",
+      "parameters": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": false,
+          "description": "Contenu textuel initial du texte à créer.",
+          "defaultValue": "''"
+        }
+      ],
+      "example": "let text = penpot.createText();",
+      "notes": "Appliquez `fontId` avant `fontStyle` ou `fontWeight` pour éviter les erreurs de rendu."
+    },
+    {
+      "name": "group",
+      "description": "Groupe les formes spécifiées en un seul groupe.",
+      "returnType": "Shape | null",
+      "category": "ORGANIZATION",
+      "parameters": [
+        {
+          "name": "shapes",
+          "type": "Array<Shape>",
+          "required": true,
+          "description": "Liste des formes à regrouper dans un même groupe."
+        }
+      ],
+      "example": "const selected = penpot.selection;\n const group = penpot.group(selected);",
+      "notes": "Utile pour organiser et manipuler plusieurs éléments ensemble."
+    },
+    {
+      "name": "ungroup",
+      "description": "Dégroupe un ou plusieurs groupes de formes.",
+      "returnType": "void",
+      "category": "ORGANIZATION",
+      "parameters": [
+        {
+          "name": "group",
+          "type": "Group",
+          "required": true,
+          "description": "Le groupe principal à dégrouper."
+        },
+        {
+          "name": "other",
+          "type": "Array<Group>",
+          "required": false,
+          "description": "Autres groupes supplémentaires à dégrouper."
+        }
+      ],
+      "example": "const penpotShapesArray = penpot.selection; penpot.ungroup(penpotShapesArray[..]);",
+      "notes": "Sépare les éléments d'un ou plusieurs groupes spécifiés."
+    },
+    {
+      "name": "alignHorizontal",
+      "description": "Aligne plusieurs formes horizontalement sur le canevas.",
+      "returnType": "void",
+      "category": "ORGANIZATION",
+        "parameters": [
+          {
+            "name": "shapes",
+            "type": "Array<Shape>",
+            "required": true,
+            "description": "Liste des formes à aligner horizontalement."
+          },
+          {
+            "name": "direction",
+            "type": "'left' | 'center' | 'right'",
+            "required": true,
+            "description": "Type d'alignement horizontal à appliquer (gauche, centre ou droite)."
+          }
+        ],
+      "example": "const selected = penpot.selection;\npenpot.alignHorizontal(selected, 'center');",
+      "notes": "Le positionnement est effectué par rapport à l'une des formes sélectionnées."
+    },
+    {
+      "name": "alignVertical",
+      "description": "Aligne plusieurs formes verticalement sur le canevas.",
+      "returnType": "void",
+      "category": "ORGANIZATION",
+      "parameters": [
+        {
+          "name": "shapes",
+          "type": "Array<Shape>",
+          "required": true,
+          "description": "Liste des formes à aligner verticalement."
+        },
+        {
+          "name": "direction",
+          "type": "'top' | 'center' | 'bottom'",
+          "required": true,
+          "description": "Type d'alignement vertical à appliquer."
+        }
+      ],
+      "example": "const selected = penpot.selection;\npenpot.alignVertical(selected, 'center');",
+      "notes": "Le positionnement est effectué par rapport à l'une des formes sélectionnées."
+    },
+    {
+      "name": "distributeHorizontal",
+      "description": "Distribue les formes sélectionnées horizontalement afin qu'elles soient espacées de manière égale sur le canevas.",
+      "returnType": "void",
+      "category": "ORGANIZATION",
+      "parameters": [
+        {
+          "name": "shapes",
+          "type": "Array<Shape>",
+          "required": true,
+          "description": "Liste des formes à distribuer horizontalement avec des espacements égaux."
+        }
+      ],
+      "example": "const selected = penpot.selection;\npenpot.distributeHorizontal(selected);",
+      "notes": ""
+    },
+    {
+      "name": "distributeVertical",
+      "description": "Distribue les formes sélectionnées verticalement afin qu'elles soient espacées de manière égale sur le canevas.",
+      "returnType": "void",
+      "category": "ORGANIZATION",
+      "parameters": [
+        {
+          "name": "shapes",
+          "type": "Array<Shape>",
+          "required": true,
+          "description": "Liste des formes à distribuer verticalement avec des espacements égaux."
+        }
+      ],
+      "example": "const selected = penpot.selection;\npenpot.distributeVertical(selected);",
+      "notes": ""
+    },
+    {
+      "name": "uploadMediaData",
+      "description": "Uploads media to penpot and retrieves the image data.",
+      "returnType": "Promise<ImageData>",
+      "category": "SHAPE_CREATION",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Le nom du media."
+        },
+        {
+          "name": "data",
+          "type": "Uint8Array",
+          "required": true,
+          "description": "Le contenu du media."
+        },
+        {
+          "name": "mimeType",
+          "type": "string",
+          "required": true,
+          "description": ""
+        }
+      ],
+      "example": "const imageData = await context.uploadMediaData('example', imageData, 'image/jpeg');",
+      "notes": "Returns a promise that resolves to the image data of the uploaded media."
+    },
+    {
+      "name": "uploadMediaUrl",
+      "description": "Uploads media to Penpot and retrieves its image data.",
+      "returnType": "Promise<ImageData>",
+      "category": "SHAPE_CREATION",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Le nom du media."
+        },
+        {
+          "name": "url",
+          "type": "Uint8Array",
+          "required": true,
+          "description": "L'URL du media à uploader."
+        }
+      ],
+      "example": "const imageData = await context.uploadMediaUrl('example', 'https://example.com/image.jpg');",
+      "notes": "Returns a promise that resolves to the image data of the uploaded media."
+    }
+  ],
+  "commonProperties": {
+    "Shape": {
+      "id": "string", 
+      "type": "string - Type de forme (rect, path, text, etc.)",
+      "name": "string - Nom de la forme",
+      "x": "number - Position X dans le canevas",
+      "y": "number - Position Y dans le canevas",
+      "parent": "null | Shape",
+      "bounds": "Bounds - Les limites d'une zone rectangulaire",
+      "center": "Point",
+      "width": "number - Largeur (lecture seule, utilisez resize())",
+      "height": "number - Hauteur (lecture seule, utilisez resize())",
+      "rotation": "number - Rotation en degrés (0-360)",
+      "flipX": "boolean - Miroir horizontal",
+      "flipY": "boolean - Miroir vertical",
+      "blocked": "boolean - Forme verrouillée",
+      "hidden": "boolean - Forme masquée",
+      "opacity": "number - Opacité (0-1, null = opaque)",
+      "blendMode": "string - Mode de fusion",
+      "fills": "Array<Fill> - Remplissages",
+      "strokes": "Array<Stroke> - Contours",
+      "parentX": "number",
+      "parentY": "number" 
+    },
+    "Fill": {
+      "fillColor": "string - Couleur au format hex (#RRGGBB)",
+      "fillOpacity": "number - Opacité du remplissage (0-1)"
+    },
+    "Stroke": {
+      "strokeColor": "string - Couleur du contour",
+      "strokeWidth": "number - Épaisseur du contour",
+      "strokeStyle": "string - Style (solid, dotted, dashed)",
+      "strokeAlignment": "string - Alignement (center, inner, outer)"
+    },
+    "Bounds": {
+      "x": "number",
+      "y": "number",
+      "width": "number",
+      "height": "number"
+    },
+    "Point": {
+      "x": "number",
+      "y": "number"
+    },
+    "ImageData": {
+      "name": "string (optionnel)",
+      "width": "number",
+      "height": "number",
+      "mtype": "string (optionnel)",
+      "id": "string"
+    }
+  },
+  "utilities": {
+    "penpot.selection": "Array<Shape> - Formes actuellement sélectionnées",
+    "penpot.currentPage": "Page - Page active",
+    "penpot.viewport.center": "Point - Centre du viewport {x, y}",
+    "penpot.theme": "string - Thème actuel (dark|light)",
+    "penpot.utils.types.isGroup": "isGroup(shape) - Vérifie si une forme est un groupe",
+    "penpot.library.local": "LocalLibrary - Bibliothèque locale (composants, couleurs)"
+  }
+}

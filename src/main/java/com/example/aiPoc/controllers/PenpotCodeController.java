@@ -42,7 +42,7 @@ public class PenpotCodeController {
 
     /** Logger pour le suivi des requêtes et la journalisation des erreurs. */
     private static final Logger logger = LoggerFactory.getLogger(PenpotCodeController.class);
-    
+
     private final CodeGenerationOrchestrator orchestrator;
 
     /**
@@ -129,36 +129,6 @@ public class PenpotCodeController {
             logger.error("Erreur lors du test de stratégie", e);
             return ResponseEntity.internalServerError()
                 .body(new ErrorResponse("TEST_ERROR", e.getMessage()));
-        }
-    }
-
-    /**
-     * Génère du code Penpot en utilisant automatiquement la stratégie jugée optimale
-     * en fonction du prompt fourni.
-     *
-     * @param request map contenant au minimum la clé "prompt"
-     * @return 200 avec un {@link CodeGenerationResponse} optimisé,
-     *         400 si le prompt est vide,
-     *         500 en cas d'erreur interne.
-     */
-    @PostMapping("/generate-optimized")
-    public ResponseEntity<?> generateOptimized(@RequestBody Map<String, String> request) {
-        String prompt = request.get("prompt");
-
-        logger.info("Génération optimisée: prompt='{}'", prompt);
-
-        try {
-            if (prompt == null || prompt.trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(new ErrorResponse("INVALID_REQUEST", "Le prompt ne peut pas être vide"));
-            }
-
-            CodeGenerationResponse response = orchestrator.generateCodeOptimized(prompt);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Erreur lors de la génération optimisée", e);
-            return ResponseEntity.internalServerError()
-                .body(new ErrorResponse("GENERATION_ERROR", e.getMessage()));
         }
     }
 

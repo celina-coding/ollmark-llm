@@ -228,27 +228,27 @@
             <h1>🧪 POC Évaluation IA - Penpot</h1>
             <p>Test automatisé des modèles selon les critères du POC OllMark</p>
         </div>
-        
+
         <div class="content">
             <!-- Section 1: Test d'un prompt unique -->
             <div class="section">
                 <h2>Test d'un Prompt Unique</h2>
-                
+
                 <div class="form-group">
                     <label>Modèle IA:</label>
-                    <input type="text" id="model" value="llama-3.3-70b-versatile" placeholder="Nom du modèle">
+                    <input type="text" id="model" value="qwen/qwen3-32b" placeholder="Nom du modèle">
                 </div>
-                
+
                 <div class="form-group">
                     <label>ID Prompt (ex: PR_CR_001):</label>
                     <input type="text" id="promptId" placeholder="PR_CR_001">
                 </div>
-                
+
                 <div class="form-group">
                     <label>Texte du Prompt:</label>
                     <textarea id="promptText" placeholder="Crée un rectangle bleu..."></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Stratégie:</label>
                     <select id="strategy">
@@ -258,39 +258,39 @@
                         <option value="structured">Structured</option>
                     </select>
                 </div>
-                
+
                 <button class="btn btn-primary" onclick="testSinglePrompt()">
                     🚀 Lancer le Test (5 exécutions)
                 </button>
-                
+
                 <div class="loading" id="loading1">
                     <div class="spinner"></div>
                     <p>Test en cours... (5 exécutions pour mesurer la stabilité)</p>
                 </div>
-                
+
                 <div class="results-box" id="results1"></div>
             </div>
-            
+
             <!-- Section 2: Statistiques et export -->
             <div class="section">
                 <h2>📈 Statistiques et Export</h2>
-                
+
                 <button class="btn btn-success" onclick="getStatistics()">
                     📊 Afficher les Statistiques
                 </button>
-                
+
                 <button class="btn btn-primary" onclick="exportCSV()">
                     💾 Exporter en CSV (Excel)
                 </button>
-                
+
                 <button class="btn btn-secondary" onclick="exportJSON()">
                     📄 Exporter en JSON
                 </button>
-                
+
                 <button class="btn btn-danger" onclick="clearResults()">
                     🗑️ Effacer les Résultats
                 </button>
-                
+
                 <div class="stats" id="statistics"></div>
             </div>
         </div>
@@ -298,32 +298,31 @@
 
     <script>
         const API_BASE = 'http://localhost:8080/api/evaluation';
-        
+
         // Test d'un prompt unique
         async function testSinglePrompt() {
             const model = document.getElementById('model').value;
             const promptId = document.getElementById('promptId').value;
             const promptText = document.getElementById('promptText').value;
             const strategy = document.getElementById('strategy').value;
-            
+
             if (!promptId || !promptText) {
                 alert('Veuillez remplir tous les champs');
                 return;
             }
-            
+
             document.getElementById('loading1').classList.add('active');
             document.getElementById('results1').innerHTML = '';
-            
+
             try {
                 const response = await fetch(`${API_BASE}/test-prompt`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({model, promptId, prompt: promptText, strategy})
                 });
-                
+
                 const data = await response.json();
                 displaySingleResult(data.evaluation);
-                
             } catch (error) {
                 document.getElementById('results1').innerHTML = 
                     `<div style="color: red;">Erreur: ${error.message}</div>`;
@@ -331,7 +330,7 @@
                 document.getElementById('loading1').classList.remove('active');
             }
         }
-        
+
         // Afficher un résultat unique
         function displaySingleResult(evaluation) {
             const html = `
@@ -352,16 +351,16 @@
                     ${evaluation.codeGenere ? `<div class="code-preview">${escapeHtml(evaluation.codeGenere)}</div>` : ''}
                 </div>
             `;
-            
+
             document.getElementById('results1').innerHTML = html;
         }
-        
+
         // Obtenir les statistiques
         async function getStatistics() {
             try {
                 const response = await fetch(`${API_BASE}/statistics`);
                 const stats = await response.json();
-                
+
                 const html = `
                     <div class="stat-card">
                         <h4>Total Tests</h4>
@@ -380,14 +379,13 @@
                         <div class="value">${stats.tauxRealisable || '0%'}</div>
                     </div>
                 `;
-                
+
                 document.getElementById('statistics').innerHTML = html;
-                
             } catch (error) {
                 alert('Erreur: ' + error.message);
             }
         }
-        
+
         // Export CSV
         async function exportCSV() {
             try {
@@ -396,29 +394,28 @@
                 alert('Erreur: ' + error.message);
             }
         }
-        
+
         // Export JSON
         async function exportJSON() {
             try {
                 const response = await fetch(`${API_BASE}/export/json`);
                 const data = await response.json();
-                
+
                 const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'evaluation.json';
                 a.click();
-                
             } catch (error) {
                 alert('Erreur: ' + error.message);
             }
         }
-        
+
         // Effacer les résultats
         async function clearResults() {
             if (!confirm('Voulez-vous vraiment effacer tous les résultats ?')) return;
-            
+
             try {
                 await fetch(`${API_BASE}/clear`, {method: 'DELETE'});
                 document.getElementById('results1').innerHTML = '';
@@ -428,7 +425,7 @@
                 alert('Erreur: ' + error.message);
             }
         }
-        
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;

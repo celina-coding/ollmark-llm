@@ -24,9 +24,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  * </ul>
  * </p>
  *
- * <p>
  * Toutes les erreurs de traitement JSON sont journalisées via SLF4J.
- * </p>
  */
 public class JsonUtils {
 

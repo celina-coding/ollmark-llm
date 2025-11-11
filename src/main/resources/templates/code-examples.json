@@ -1,0 +1,96 @@
+{
+  "version": "1.0.0",
+  "lastUpdate": "2025-11-10",
+  "examples": [
+    {
+      "id": "example-001",
+      "title": "Rectangle rouge simple",
+      "category": "SHAPE_CREATION",
+      "difficulty": "EASY",
+      "tags": ["rectangle", "couleur", "basique"],
+      "description": "Crée un rectangle rouge basique au centre du viewport",
+      "code": "const rect = penpot.createRectangle();\nrect.resize(150, 150);\nrect.fills = [{ fillColor: '#FF0000', fillOpacity: 1 }];\nconst center = penpot.viewport.center;\nrect.x = center.x;\nrect.y = center.y;"
+    },
+    {
+      "id": "example-002",
+      "title": "Rectangle avec bordure arrondie",
+      "category": "SHAPE_CREATION",
+      "difficulty": "EASY",
+      "tags": ["rectangle", "bordure", "style"],
+      "description": "Rectangle stylisé avec coins arrondis et bordure",
+      "code": "const rect = penpot.createRectangle();\nrect.resize(200, 150);\nrect.name = 'Rectangle stylisé';\nrect.fills = [{ fillColor: '#7EFFF5', fillOpacity: 1 }];\nrect.borderRadius = 8;\nrect.strokes = [{\n  strokeColor: '#2e3434',\n  strokeStyle: 'solid',\n  strokeWidth: 2,\n  strokeAlignment: 'center'\n}];"
+    },
+    {
+      "id": "example-003",
+      "title": "Texte stylisé",
+      "category": "SHAPE_CREATION",
+      "difficulty": "EASY",
+      "tags": ["texte", "typographie", "style"],
+      "description": "Crée un texte avec styles avancés",
+      "code": "const text = penpot.createText('Hello World!');\ntext.fontSize = '24';\ntext.fontWeight = '700';\ntext.textTransform = 'uppercase';\ntext.fills = [{ fillColor: '#FF6FE0', fillOpacity: 1 }];\nconst center = penpot.viewport.center;\ntext.x = center.x;\ntext.y = center.y;"
+    },
+    {
+      "id": "example-004",
+      "title": "Texte avec styles mixtes",
+      "category": "TEXT",
+      "difficulty": "MEDIUM",
+      "tags": ["texte", "range", "multi-style"],
+      "description": "Applique différents styles à des portions de texte",
+      "code": "const text = penpot.createText('Hello World!');\ntext.fontSize = '20';\nconst range = text.getRange(0, 5);\nrange.fontSize = '40';\nrange.fills = [{ fillColor: '#ff6fe0', fillOpacity: 1 }];\ntext.x = penpot.viewport.center.x;\ntext.y = penpot.viewport.center.y;"
+    },
+    {
+      "id": "example-005",
+      "title": "Trois rectangles colorés alignés",
+      "category": "SHAPE_CREATION",
+      "difficulty": "MEDIUM",
+      "tags": ["rectangle", "boucle", "couleur", "alignement"],
+      "description": "Crée plusieurs formes alignées avec couleurs HSL",
+      "code": "for (let i = 0; i < 3; i++) {\n  const rect = penpot.createRectangle();\n  rect.resize(200, 150);\n  rect.x = 100 + i * 250;\n  rect.y = 100;\n  rect.fills = [{ fillColor: `hsl(${i * 120}, 70%, 50%)`, fillOpacity: 1 }];\n}"
+    },
+    {
+      "id": "example-006",
+      "title": "Cercle bleu",
+      "category": "SHAPE_CREATION",
+      "difficulty": "EASY",
+      "tags": ["cercle", "ellipse", "couleur"],
+      "description": "Crée un cercle bleu parfait",
+      "code": "const circle = penpot.createEllipse();\ncircle.resize(100, 100);\ncircle.fills = [{ fillColor: '#0000FF', fillOpacity: 1 }];\ncircle.x = penpot.viewport.center.x;\ncircle.y = penpot.viewport.center.y;"
+    },
+    {
+      "id": "example-007",
+      "title": "Groupe de formes",
+      "category": "ORGANIZATION",
+      "difficulty": "MEDIUM",
+      "tags": ["groupe", "organisation"],
+      "description": "Crée et groupe plusieurs formes ensemble",
+      "code": "const rect1 = penpot.createRectangle();\nrect1.resize(100, 100);\nrect1.x = 100;\nrect1.y = 100;\n\nconst rect2 = penpot.createRectangle();\nrect2.resize(100, 100);\nrect2.x = 250;\nrect2.y = 100;\n\npenpot.group([rect1, rect2]);"
+    },
+    {
+      "id": "example-008",
+      "title": "Board avec flex layout",
+      "category": "ORGANIZATION",
+      "difficulty": "HARD",
+      "tags": ["board", "flex", "layout"],
+      "description": "Crée un board avec flex layout et formes",
+      "code": "const board = penpot.createBoard();\nboard.horizontalSizing = 'auto';\nboard.verticalSizing = 'auto';\n\nconst flex = board.addFlexLayout();\nflex.dir = 'column';\nflex.alignItems = 'center';\nflex.justifyContent = 'center';\nflex.verticalPadding = 10;\nflex.horizontalPadding = 10;\n\nboard.appendChild(penpot.createRectangle());\nboard.appendChild(penpot.createEllipse());"
+    },
+    {
+      "id": "example-009",
+      "title": "Drapeau français",
+      "category": "SHAPE_CREATION",
+      "difficulty": "MEDIUM",
+      "tags": ["rectangle", "couleur", "composition"],
+      "description": "Crée un drapeau français avec 3 rectangles",
+      "code": "const colors = ['#0055A4', '#FFFFFF', '#EF4135'];\nfor (let i = 0; i < 3; i++) {\n  const stripe = penpot.createRectangle();\n  stripe.resize(100, 200);\n  stripe.x = 100 + i * 100;\n  stripe.y = 100;\n  stripe.fills = [{ fillColor: colors[i], fillOpacity: 1 }];\n  stripe.name = `Stripe ${i + 1}`;\n}"
+    },
+    {
+      "id": "example-010",
+      "title": "Carte avec titre et contenu",
+      "category": "ORGANIZATION",
+      "difficulty": "HARD",
+      "tags": ["board", "texte", "composition"],
+      "description": "Crée une carte stylisée avec titre et contenu",
+      "code": "const card = penpot.createBoard();\ncard.resize(300, 400);\ncard.fills = [{ fillColor: '#FFFFFF', fillOpacity: 1 }];\ncard.strokes = [{ strokeColor: '#E0E0E0', strokeWidth: 1, strokeStyle: 'solid' }];\ncard.borderRadius = 8;\n\nconst title = penpot.createText('Titre de la carte');\ntitle.fontSize = '24';\ntitle.fontWeight = '700';\ntitle.x = card.x + 20;\ntitle.y = card.y + 20;\n\nconst content = penpot.createText('Contenu de la carte avec plus de détails...');\ncontent.fontSize = '16';\ncontent.x = card.x + 20;\ncontent.y = card.y + 80;\n\ncard.appendChild(title);\ncard.appendChild(content);"
+    }
+  ]
+}

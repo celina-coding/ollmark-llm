@@ -1,18 +1,14 @@
 package com.example.aiPoc.services.ai;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.example.aiPoc.models.PromptStrategy;
-import com.example.aiPoc.services.penpot.PenpotSdkService;
+import com.example.aiPoc.services.penpot.DocumentationAggregatorService;
 
 /**
- * <p>
  * Service responsable de la construction de prompts optimisés pour la génération de code via l’IA.
- * </p>
  *
  * <p>
  * Ce service applique différentes stratégies de construction de prompts selon le besoin et
@@ -29,7 +25,6 @@ import com.example.aiPoc.services.penpot.PenpotSdkService;
  * </ul>
  *
  * @see PromptStrategy
- * @see PenpotSdkService
  * @see com.example.aiPoc.services.ai.AIService
  */
 @Service
@@ -38,16 +33,16 @@ public class PromptBuilderService {
     /** Logger pour le suivi des opérations et le diagnostic. */
     private static final Logger logger = LoggerFactory.getLogger(PromptBuilderService.class);
 
-    /** Service d’accès au SDK Penpot pour obtenir le contexte API et les exemples de code. */
-    private final PenpotSdkService penpotSdkService;
+    /** Service d’agrégation de documentation pour enrichir le contexte des prompts. */
+    private final DocumentationAggregatorService documentationAggregator;
 
     /**
-     * Initialise le service de construction de prompts avec le SDK Penpot.
+     * Constructeur du service de génération de prompts.
      *
-     * @param penpotSdkService le service fournissant les données du SDK Penpot (API, exemples, résumé, etc.)
+     * @param documentationAggregator service d’agrégation de documentation du SDK Penpot
      */
-    public PromptBuilderService(PenpotSdkService penpotSdkService) {
-        this.penpotSdkService = penpotSdkService;
+    public PromptBuilderService(DocumentationAggregatorService documentationAggregator) {
+        this.documentationAggregator = documentationAggregator;
     }
 
     /**
@@ -81,85 +76,70 @@ public class PromptBuilderService {
     }
 
     /**
-     * <p>
-     * Construit un prompt basique sans ajout de contexte ni de documentation.
-     * </p>
-     * <p>
-     * Stratégie BASIC: Simple et directe.
-     * </p>
+     * Construit un prompt basique, sans ajout de contexte ni de documentation.
      *
-     * @param userPrompt la demande utilisateur
-     * @return un prompt minimaliste contenant uniquement la consigne et la tâche
-     */
-    private String buildBasicPrompt(String userPrompt) {
-        return String.format(
-            "Génère du code JavaScript pour Penpot : %s\n\n" +
-            "Réponds uniquement avec du code, sans explication.",
-            userPrompt
-        );
-    }
-
-    /**
-     * Construit un prompt détaillé en incluant la documentation complète du SDK Penpot.
-     * <p>
-     * Stratégie DETAILED: Contexte riche avec documentation.
-     * </p>
-     *
-     * @param userPrompt la demande de l’utilisateur
-     * @return un prompt détaillé intégrant la documentation Penpot et des consignes de génération
-     */
-    private String buildDetailedPrompt(String userPrompt) {
-        String apiSummary = penpotSdkService.getApiSummary();
-
-        return String.format("""
-            Tu es un assistant spécialisé en génération de code pour le SDK Penpot.
-
-            %s
-
-            Propriétés des objets Shape:
-            - x: number (position X)
-            - y: number (position Y)
-            - width: number (largeur)
-            - height: number (hauteur)
-            - fills: Array<{color: string}> (couleurs de remplissage)
-            - strokes: Array<{color: string, width: number}> (bordures)
-
-            Tâche: %s
-
-            Exigences de sortie:
-            - Code JavaScript pur, sans commentaires excessifs
-            - Pas de balises markdown (```javascript)
-            - Directement exécutable dans un plugin Penpot
-            - Gestion d'erreurs si nécessaire
-            - Utilise des noms de variables descriptifs
-
-            Code:
-            """,
-            apiSummary,
-            userPrompt
-        );
-    }
-
-    /**
-     * Construit un prompt intégrant des exemples de code (approche few-shot learning).
-     * <p>
-     * Stratégie WITH_EXAMPLES: Apprentissage par exemples.
-     * </p>
+     * <p><b>Stratégie :</b> {@link PromptStrategy#BASIC}</p>
      *
      * @param userPrompt la consigne utilisateur
-     * @return un prompt enrichi d’exemples de code et d’instructions précises
+     * @return un prompt minimal contenant uniquement la demande et l’instruction de génération
+     */
+    private String buildBasicPrompt(String userPrompt) {
+        String minimalApi = documentationAggregator.generateMinimalSummary(userPrompt);
+
+        return String.format(
+            "Génère du code JavaScript pour Penpot : %s\n\n" +
+            "API disponible:\n%s\n\n" +
+            "Réponds uniquement avec du code, sans explication.",
+            userPrompt,
+            minimalApi
+        );
+    }
+
+    /**
+     * Construit un prompt détaillé intégrant la documentation complète du SDK Penpot.
+     *
+     * <p><b>Stratégie :</b> {@link PromptStrategy#DETAILED}</p>
+     *
+     * @param userPrompt la demande utilisateur
+     * @return un prompt enrichi de documentation et d’instructions détaillées
+     */
+    private String buildDetailedPrompt(String userPrompt) {
+        String optimizedApiSummary = documentationAggregator.generateOptimizedSummary(userPrompt);
+
+        return String.format("""
+            [SYSTÈME]
+            Tu es un générateur de code Penpot expert.
+            Tu ne dois te fier qu'à la documentation de l'API donnée ci-dessous.
+            Tu as l'interdiction d'utiliser ne serait-ce qu'un attribut qui n'est pas mentionné ici.
+
+            [API DISPONIBLE]
+            %s
+
+            [TÂCHE]
+            %s
+
+            [FORMAT DE SORTIE]
+            - Code JavaScript uniquement pas le droit au texte
+            - Tu as l'interdiction de commenter le code
+            - Tu as l'interdiction d'argumenter tes choix
+            - Pas de balises markdown (```javascript)
+            - Directement exécutable dans un plugin Penpot
+            """,
+            optimizedApiSummary,
+            userPrompt
+        );
+    }
+
+    /**
+     * Construit un prompt enrichi d’exemples de code (apprentissage par démonstration).
+     *
+     * <p><b>Stratégie :</b> {@link PromptStrategy#WITH_EXAMPLES}</p>
+     *
+     * @param userPrompt la consigne utilisateur
+     * @return un prompt contenant plusieurs exemples de code pertinents
      */
     private String buildPromptWithExamples(String userPrompt) {
-        List<String> examples = penpotSdkService.getCodeExamples();
-
-        StringBuilder examplesText = new StringBuilder();
-        for (int i = 0; i < Math.min(3, examples.size()); i++) {
-            examplesText.append(String.format(
-                "Exemple %d:\n%s\n\n",
-                i + 1,
-                examples.get(i)
-            ));
-        }
+        String exampleRichSummary = documentationAggregator.generateExampleRichSummary(userPrompt);
 
         return String.format("""
             Tu es un expert Penpot. Voici des exemples de code valide:
@@ -169,26 +149,24 @@ public class PromptBuilderService {
             Maintenant, génère du code pour: %s
 
             Important:
-            - Utilise le même style que les exemples
             - Code uniquement, sans explication
             - Pas de markdown
             """,
-            examplesText.toString(),
+            exampleRichSummary,
             userPrompt
         );
     }
 
     /**
-     * Construit un prompt structuré, organisé en sections thématiques distinctes.
-     * <p>
-     * Stratégie STRUCTURED: Organisation claire et formatée.
-     * </p>
+     * Construit un prompt structuré en plusieurs sections thématiques.
      *
-     * @param userPrompt la consigne utilisateur
-     * @return un prompt structuré avec des balises de contexte et de sortie
+     * <p><b>Stratégie :</b> {@link PromptStrategy#STRUCTURED}</p>
+     *
+     * @param userPrompt la demande utilisateur
+     * @return un prompt structuré et formaté selon un modèle prédéfini
      */
     private String buildStructuredPrompt(String userPrompt) {
-        String compactApi = penpotSdkService.getCompactApiSummary();
+        String compactApi = documentationAggregator.generateMinimalSummary(userPrompt);
 
         return String.format("""
             [SYSTÈME]
@@ -198,17 +176,14 @@ public class PromptBuilderService {
             %s
 
             [RÈGLES]
-            1. Code JavaScript uniquement
+            1. Code JavaScript fonctionnel uniquement
             2. Pas de markdown ni commentaires
-            3. Syntaxe ES6+ moderne
-            4. Variables avec const/let
-            5. Code fonctionnel et testé
 
             [TÂCHE]
             %s
 
             [FORMAT DE SORTIE]
-            Code JavaScript uniquement, prêt à l'exécution.
+            Uniquement et strictement du code JavaScript, prêt à l'exécution.
 
             [CODE]
             """,
@@ -218,9 +193,7 @@ public class PromptBuilderService {
     }
 
     /**
-     * <p>
      * Construit un prompt destiné à corriger du code erroné généré par l’IA.
-     * </p>
      *
      * <p>
      * Ce prompt fournit le code initial, le message d’erreur et la demande originale,
@@ -249,48 +222,5 @@ public class PromptBuilderService {
             failedCode,
             errorMessage
         );
-    }
-
-    /**
-     * Estime la longueur totale du prompt généré (en nombre de caractères).
-     *
-     * @param userPrompt la demande utilisateur
-     * @param strategy   la stratégie de construction utilisée
-     * @return la longueur estimée du prompt en caractères
-     */
-    public int estimatePromptLength(String userPrompt, PromptStrategy strategy) {
-        return buildPrompt(userPrompt, strategy).length();
-    }
-
-    /**
-     * <p>
-     * Détermine automatiquement la stratégie de prompt la plus adaptée
-     * en fonction de la complexité de la demande utilisateur.
-     * </p>
-     *
-     * <p>
-     * La complexité est estimée sur la base du nombre de mots :
-     * <ul>
-     *   <li>< 5 mots → {@link PromptStrategy#WITH_EXAMPLES}</li>
-     *   <li>5 à 15 mots → {@link PromptStrategy#DETAILED}</li>
-     *   <li>> 15 mots → {@link PromptStrategy#STRUCTURED}</li>
-     * </ul>
-     * </p>
-     *
-     * @param userPrompt la requête textuelle de l’utilisateur
-     * @return la stratégie recommandée selon la longueur et la complexité du prompt
-     */
-    public PromptStrategy recommendStrategy(String userPrompt) {
-        int wordCount = userPrompt.split("\\s+").length;
-
-        if (wordCount < 5) {
-            return PromptStrategy.WITH_EXAMPLES;
-        }
-
-        if (wordCount < 15) {
-            return PromptStrategy.DETAILED;
-        }
-
-        return PromptStrategy.STRUCTURED;
     }
 }

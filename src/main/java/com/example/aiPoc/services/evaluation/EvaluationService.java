@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.example.aiPoc.dto.response.CodeGenerationResponse;
 import com.example.aiPoc.models.EvaluationResult;
 import com.example.aiPoc.models.ValidationError;
+import com.example.aiPoc.utils.CodeUtils;
 import com.example.aiPoc.utils.TokenEstimator;
 
 /**
@@ -37,11 +38,12 @@ public class EvaluationService {
      * @return un objet {@link EvaluationResult} contenant les scores et observations
      */
     public EvaluationResult evaluate(
-            String modelName,
-            String promptId,
-            String userPrompt,
-            CodeGenerationResponse response,
-            List<CodeGenerationResponse> stabilityTests) {
+        String modelName,
+        String promptId,
+        String userPrompt,
+        CodeGenerationResponse response,
+        List<CodeGenerationResponse> stabilityTests
+    ) {
 
         logger.info("Évaluation pour modèle={}, prompt={}", modelName, promptId);
 
@@ -135,9 +137,7 @@ public class EvaluationService {
     private int evaluateCoherence(CodeGenerationResponse response) {
         int score = 5;
 
-        if (!response.isValid()) {
-            score -= 2;
-        }
+        if (!response.isValid()) score -= 2;
 
         List<ValidationError> errors = response.getValidationErrors();
         if (errors != null) {
@@ -178,16 +178,14 @@ public class EvaluationService {
         String code = response.getGeneratedCode();
         if (code == null || code.isEmpty()) return 1;
 
-        int score = 3;
         String promptLower = userPrompt.toLowerCase();
         String codeLower = code.toLowerCase();
 
         List<String> elements = new ArrayList<>();
 
         if (promptLower.contains("rectangle") || promptLower.contains("carré")) elements.add("rectangle");
-        if (promptLower.contains("cercle") || promptLower.contains("rond")) elements.add("circle");
+        if (promptLower.contains("cercle") || promptLower.contains("rond")) elements.add("ellipse");
         if (promptLower.contains("texte") || promptLower.contains("text")) elements.add("text");
-        if (promptLower.contains("ligne")) elements.add("line");
         if (promptLower.contains("ellipse")) elements.add("ellipse");
 
         int found = 0;
@@ -251,10 +249,6 @@ public class EvaluationService {
                         countOccurrences(code, "rgb") +
                         countOccurrences(code, "hsl");
         if (colorCount >= 3) score++;
-        if (code.contains("//") || code.contains("/*")) {
-            if (countOccurrences(code, "//") <= 5) score++;
-        }
-        if (code.length() < 100) score--;
         if (containsDescriptiveNames(code)) score++;
 
         return Math.max(1, Math.min(5, score));
@@ -339,36 +333,11 @@ public class EvaluationService {
         int maxLength = Math.max(s1.length(), s2.length());
         if (maxLength == 0) return 1.0;
 
-        int distance = levenshteinDistance(s1, s2);
+        int distance = CodeUtils.levenshteinDistance(s1, s2);
         return 1.0 - ((double) distance / maxLength);
     }
 
-    /**
-     * Calcule la distance de Levenshtein entre deux chaînes.
-     *
-     * @param s1 première chaîne
-     * @param s2 seconde chaîne
-     * @return nombre minimal d’opérations nécessaires pour transformer s1 en s2
-     */
-    private int levenshteinDistance(String s1, String s2) {
-        int[][] dp = new int[s1.length() + 1][s2.length() + 1];
 
-        for (int i = 0; i <= s1.length(); i++) dp[i][0] = i;
-        for (int j = 0; j <= s2.length(); j++) dp[0][j] = j;
-
-        for (int i = 1; i <= s1.length(); i++) {
-            for (int j = 1; j <= s2.length(); j++) {
-                int cost = s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1;
-                dp[i][j] = Math.min(Math.min(
-                    dp[i - 1][j] + 1,
-                    dp[i][j - 1] + 1),
-                    dp[i - 1][j - 1] + cost
-                );
-            }
-        }
-
-        return dp[s1.length()][s2.length()];
-    }
 
     /**
      * Compte le nombre d'occurrences d'une sous-chaîne donnée dans une chaîne.

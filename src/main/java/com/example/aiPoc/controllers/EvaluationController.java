@@ -45,6 +45,9 @@ import com.example.aiPoc.services.orchestration.CodeGenerationOrchestrator;
  *   <li>Réinitialiser l’ensemble des évaluations.</li>
  * </ul>
  * </p>
+ * 
+ * @see CodeGenerationOrchestrator
+ * @see EvaluationService
  */
 @CrossOrigin(origins = {"http://localhost:61873", "http://localhost:8080"})
 @RestController

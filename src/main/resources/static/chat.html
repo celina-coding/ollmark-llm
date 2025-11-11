@@ -15,7 +15,7 @@
             align-items: center;
             height: 100vh;
         }
-        
+
         .header {
             width: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -24,24 +24,24 @@
             text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        
+
         .header h1 {
             margin: 0;
             font-size: 28px;
         }
-        
+
         .header a {
             color: white;
             text-decoration: none;
             margin-left: 20px;
             opacity: 0.9;
         }
-        
+
         .header a:hover {
             opacity: 1;
             text-decoration: underline;
         }
-        
+
         #chat-box {
             width: 90%;
             max-width: 600px;
@@ -55,7 +55,7 @@
             flex-grow: 1;
             margin: 20px 0;
         }
-        
+
         .message {
             margin: 8px 0;
             padding: 10px 15px;
@@ -63,26 +63,26 @@
             max-width: 75%;
             word-wrap: break-word;
         }
-        
+
         .user {
             align-self: flex-end;
             background-color: #007bff;
             color: white;
         }
-        
+
         .ai {
             align-self: flex-start;
             background-color: #e9ecef;
             color: #333;
         }
-        
+
         #chat-form {
             width: 90%;
             max-width: 600px;
             display: flex;
             margin: 15px 0;
         }
-        
+
         #prompt {
             flex: 1;
             padding: 12px;
@@ -91,7 +91,7 @@
             outline: none;
             font-size: 16px;
         }
-        
+
         button {
             background-color: #007bff;
             color: white;
@@ -101,16 +101,16 @@
             cursor: pointer;
             font-size: 16px;
         }
-        
+
         button:hover {
             background-color: #0056b3;
         }
-        
+
         button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
-        
+
         .loading {
             font-style: italic;
             color: gray;
@@ -125,9 +125,9 @@
         <a href="/">← Retour</a>
         <a href="/test-penpot.html">Test Penpot →</a>
     </div>
-    
+
     <div id="chat-box"></div>
-    
+
     <form id="chat-form">
         <input id="prompt" type="text" placeholder="Écris ton message..." required />
         <button type="submit">Envoyer</button>
@@ -165,10 +165,8 @@
 
                 const data = await res.json();
 
-                // Supprime "L'IA réfléchit..."
                 chatBox.removeChild(loading);
 
-                // Affiche la réponse de l'IA
                 if (data.response) {
                     addMessage('ai', data.response);
                 } else if (data.error) {
@@ -190,7 +188,7 @@
             chatBox.appendChild(msg);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
-        
+
         // Focus automatique sur l'input au chargement
         input.focus();
     </script>

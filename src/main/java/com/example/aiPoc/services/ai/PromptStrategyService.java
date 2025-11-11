@@ -1,7 +1,6 @@
 package com.example.aiPoc.services.ai;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,36 +50,6 @@ public class PromptStrategyService {
     }
 
     /**
-     * Sélectionne la stratégie de génération de prompt la plus adaptée en fonction du contenu du prompt utilisateur.
-     *
-     * <p>
-     * Le choix est fondé sur la longueur du texte, sa complexité estimée et la présence éventuelle de mots-clés.
-     * </p>
-     *
-     * @param userPrompt le texte du prompt fourni par l’utilisateur
-     * @return la stratégie de génération de prompt jugée optimale
-     */
-    public PromptStrategy selectBestStrategy(String userPrompt) {
-        logger.debug("Sélection de la meilleure stratégie pour: {}", 
-                    userPrompt.substring(0, Math.min(50, userPrompt.length())));
-
-        int wordCount = countWords(userPrompt);
-        int complexity = estimateComplexity(userPrompt);
-
-        if (wordCount < 5 && complexity < 3) {
-            return PromptStrategy.BASIC;
-        }
-        if (complexity > 7) {
-            return PromptStrategy.STRUCTURED;
-        }
-        if (containsExampleKeywords(userPrompt)) {
-            return PromptStrategy.WITH_EXAMPLES;
-        }
-
-        return PromptStrategy.DETAILED;
-    }
-
-    /**
      * Enregistre les résultats d’une génération afin d’améliorer l’apprentissage statistique
      * des performances de chaque stratégie.
      *
@@ -98,89 +67,12 @@ public class PromptStrategyService {
     }
 
     /**
-     * Retourne les métriques de performance associées à une stratégie donnée.
-     *
-     * @param strategy la stratégie dont on souhaite consulter les métriques
-     * @return l’objet {@link StrategyMetrics} correspondant
-     */
-    public StrategyMetrics getMetrics(PromptStrategy strategy) {
-        return metricsHistory.get(strategy);
-    }
-
-    /**
      * Retourne une copie de l’ensemble des métriques enregistrées pour toutes les stratégies.
      *
      * @return une map contenant toutes les métriques par stratégie
      */
     public Map<PromptStrategy, StrategyMetrics> getAllMetrics() {
         return new HashMap<>(metricsHistory);
-    }
-
-    /**
-     * Identifie la stratégie présentant le meilleur taux de réussite global.
-     *
-     * @return la stratégie la plus performante selon les statistiques actuelles
-     */
-    public PromptStrategy getBestPerformingStrategy() {
-        return metricsHistory.entrySet().stream()
-            .max(Comparator.comparingDouble(e -> e.getValue().getSuccessRate()))
-            .map(Map.Entry::getKey)
-            .orElse(PromptStrategy.DETAILED);
-    }
-
-    /**
-     * Estime la complexité d’un prompt utilisateur sur une échelle de 0 à 10.
-     *
-     * <p>
-     * L’évaluation repose sur plusieurs critères : longueur du texte, présence de mots-clés techniques
-     * et de chiffres indiquant des paramètres précis.
-     * </p>
-     *
-     * @param prompt le texte du prompt à analyser
-     * @return un score de complexité compris entre 0 et 10
-     */
-    private int estimateComplexity(String prompt) {
-        int complexity = 0;
-
-        if (prompt.length() > 100) complexity += 2;
-        if (prompt.length() > 200) complexity += 2;
-
-        String[] complexKeywords = {"plusieurs", "aligné", "espacé", "groupe", "stylisé", "animation"};
-        for (String keyword : complexKeywords) {
-            if (prompt.toLowerCase().contains(keyword)) complexity++;
-        }
-
-        if (prompt.matches(".*\\d+.*")) complexity++;
-
-        return Math.min(10, complexity);
-    }
-
-    /**
-     * Vérifie si le prompt contient des termes indiquant la nécessité d’exemples ou de styles similaires.
-     *
-     * @param prompt le texte du prompt utilisateur
-     * @return {@code true} si le texte contient des mots-clés tels que "exemple", "style", etc., sinon {@code false}
-     */
-    private boolean containsExampleKeywords(String prompt) {
-        String[] keywords = {"comme", "exemple", "similaire", "style"};
-        String lowerPrompt = prompt.toLowerCase();
-
-        for (String keyword : keywords) {
-            if (lowerPrompt.contains(keyword)) return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Compte le nombre total de mots présents dans un texte donné.
-     *
-     * @param text le texte à analyser
-     * @return le nombre de mots contenus dans le texte
-     */
-    private int countWords(String text) {
-        if (text == null || text.isEmpty()) return 0;
-        return text.trim().split("\\s+").length;
     }
 
     /**

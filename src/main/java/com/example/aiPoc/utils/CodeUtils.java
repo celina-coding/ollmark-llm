@@ -1,8 +1,5 @@
 package com.example.aiPoc.utils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * Classe utilitaire regroupant diverses méthodes pour analyser,
  * nettoyer et normaliser du code JavaScript généré automatiquement,
@@ -143,81 +140,29 @@ public class CodeUtils {
     }
 
     /**
-     * Compte le nombre total de lignes présentes dans une chaîne.
+     * Calcule la distance de Levenshtein entre deux chaînes.
      *
-     * @param code le code source ou texte brut
-     * @return le nombre de lignes, ou 0 si l'entrée est nulle ou vide
+     * @param s1 première chaîne
+     * @param s2 seconde chaîne
+     * @return nombre minimal d’opérations nécessaires pour transformer s1 en s2
      */
-    public static int countLines(String code) {
-        if (code == null || code.isEmpty()) return 0;
-        return code.split("\n").length;
-    }
+    public static int levenshteinDistance(String s1, String s2) {
+        int[][] dp = new int[s1.length() + 1][s2.length() + 1];
 
-    /**
-     * Vérifie si un texte semble correspondre à du JavaScript
-     * en recherchant certains motifs syntaxiques communs
-     * (comme <code>const</code>, <code>function</code>, <code>=&gt;</code>, etc.).
-     *
-     * @param code le texte à analyser
-     * @return {@code true} si le texte ressemble à du code JavaScript, {@code false} sinon
-     */
-    public static boolean looksLikeJavaScript(String code) {
-        if (code == null || code.isEmpty()) return false;
+        for (int i = 0; i <= s1.length(); i++) dp[i][0] = i;
+        for (int j = 0; j <= s2.length(); j++) dp[0][j] = j;
 
-        Pattern jsPattern = Pattern.compile(
-            "(const|let|var|function|class|=>|\\{|\\}|\\(|\\)|;)",
-            Pattern.MULTILINE
-        );
+        for (int i = 1; i <= s1.length(); i++) {
+            for (int j = 1; j <= s2.length(); j++) {
+                int cost = s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1;
+                dp[i][j] = Math.min(Math.min(
+                    dp[i - 1][j] + 1,
+                    dp[i][j - 1] + 1),
+                    dp[i - 1][j - 1] + cost
+                );
+            }
+        }
 
-        Matcher matcher = jsPattern.matcher(code);
-        return matcher.find();
-    }
-
-    /**
-     * Effectue un nettoyage complet du code généré :
-     * <ol>
-     *   <li>Suppression des balises <code>&lt;think&gt;</code></li>
-     *   <li>Suppression des balises Markdown</li>
-     *   <li>Extraction du code JavaScript</li>
-     *   <li>Normalisation des espaces</li>
-     * </ol>
-     *
-     * @param code le code brut généré par un modèle d’IA
-     * @return le code nettoyé et normalisé
-     */
-    public static String cleanGeneratedCode(String code) {
-        if (code == null) return "";
-
-        code = removeThinkTags(code);
-        code = removeMarkdownFences(code);
-        code = extractJavaScriptCode(code);
-        code = normalizeWhitespace(code);
-
-        return code;
-    }
-
-    /**
-     * Extrait le nom d'une fonction JavaScript à partir de sa définition.
-     * <p>
-     * Exemple :
-     * <pre>{@code
-     *   function myFunction(param) {
-     *       // ...
-     *   }
-     * }</pre>
-     * renverra <code>"myFunction"</code>.
-     *
-     * @param functionDef la définition complète de la fonction
-     * @return le nom de la fonction, ou {@code null} si aucun nom n'est détecté
-     */
-    public static String extractFunctionName(String functionDef) {
-        if (functionDef == null) return null;
-
-        Pattern pattern = Pattern.compile("function\\s+([a-zA-Z_$][a-zA-Z0-9_$]*)");
-        Matcher matcher = pattern.matcher(functionDef);
-
-        if (matcher.find()) return matcher.group(1);
-
-        return null;
+        return dp[s1.length()][s2.length()];
     }
 }

@@ -1,9 +1,7 @@
 package com.example.aiPoc.services.ai;
 
 /**
- * <p>
  * Interface contractuelle pour les services d’intelligence artificielle (IA).
- * </p>
  *
  * <p>
  * Elle définit les opérations de base permettant d’interagir avec un modèle
@@ -16,9 +14,7 @@ package com.example.aiPoc.services.ai;
 public interface AIService {
 
     /**
-     * <p>
      * Envoie un prompt textuel au service d’IA et retourne la réponse générée.
-     * </p>
      *
      * <p>
      * Cette méthode constitue l’entrée principale pour interagir avec le modèle.
@@ -34,9 +30,7 @@ public interface AIService {
     String chat(String prompt);
 
     /**
-     * <p>
      * Envoie un prompt au service d’IA avec des paramètres de génération spécifiques.
-     * </p>
      *
      * <p>
      * Cette surcharge permet d’ajuster la taille maximale de la réponse et
