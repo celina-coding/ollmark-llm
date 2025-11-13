@@ -1,13 +1,10 @@
 package com.example.aiPoc.services.penpot;
 
-import com.example.aiPoc.dto.CodeExamplesCollection;
-import com.example.aiPoc.dto.PenpotApiDocumentation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.aiPoc.dto.*;
+import org.slf4j.*;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -30,40 +27,11 @@ import java.util.stream.Collectors;
 @Service
 public class DocumentationAggregatorService {
 
+    /** Logger utilisé pour le suivi et le débogage du service. */
     private static final Logger logger = LoggerFactory.getLogger(DocumentationAggregatorService.class);
 
+    /** Service d'accès au SDK Penpot, fournissant la documentation et les exemples disponibles. */
     private final PenpotSdkService penpotSdkService;
-
-    /** Liste des mots-clés associés aux formes géométriques. */
-    private static final String[] SHAPE_KEYWORDS = {
-        "rectangle", "carré", "cercle", "ellipse", "oval",
-        "form", "chemin", "tracé", "vecteur", "triang",
-        "créer", "dessin", "trace", "boolean", "booléen",
-        "board", "page", "scène", "tableau", "affiche", "croix"
-    };
-
-    /** Liste des mots-clés associés au texte et à la typographie. */
-    private static final String[] TEXT_KEYWORDS = {
-        "text", "titre", "paragraphe", "mot", "phrase", 
-        "écrire", "typo", "police", "caractère", "label",
-        "étiquette"
-    };
-
-    /** Liste des mots-clés associés à l'organisation d'éléments. */
-    private static final String[] ORGANIZATION_KEYWORDS = {
-        "group", "dégrouper", "grouper", "milieu",
-        "organis", "align", "distribu", "répartir", "espace",
-        "horizontal", "vertical", "centre", "gauche", "coin",
-        "droite", "composition", "haut", "bas", "plan",
-    };
-
-    /** Liste des mots-clés associés aux propriétés visuelles des formes. */
-    private static final String[] STYLE_KEYWORDS = {
-        "couleur", "color", "remplissage", "tour",
-        "opacit", "rotation", "tourner", "pivoter", "petit",
-        "taille", "dimension", "largeur", "hauteur", "grand",
-        "redimension", "styl", "apparence", "px", "pixel"
-    };
 
     /**
      * Constructeur injectant le service SDK Penpot.
@@ -75,19 +43,17 @@ public class DocumentationAggregatorService {
     }
 
     /**
-     * Génère un résumé optimisé de la documentation Penpot en fonction du prompt utilisateur.
+     * Génère un résumé de la documentation Penpot en fonction du prompt utilisateur.
      *
      * @param userPrompt le texte fourni par l'utilisateur
      * @return un résumé synthétique et pertinent de la documentation Penpot
      */
-    public String generateOptimizedSummary(String userPrompt) {
-        logger.debug("Génération du résumé optimisé pour: {}", userPrompt);
-
+    public String generateSummary(String userPrompt) {
+        logger.debug("Génération du résumé pour: {}", userPrompt);
         StringBuilder summary = new StringBuilder();
 
         // 1. Détection des catégories pertinentes
         List<String> relevantCategories = detectRelevantCategories(userPrompt);
-
         if (relevantCategories.isEmpty()) {
             logger.debug("Aucune catégorie spécifique détectée, résumé général");
             return penpotSdkService.getCompactApiSummary();
@@ -95,12 +61,14 @@ public class DocumentationAggregatorService {
 
         logger.debug("Catégories détectées: {}", relevantCategories);
 
-        // 2. Filtrer les méthodes selon les catégories pertinentes
+        // 2. Filtrage des méthodes selon les catégories pertinentes
         summary.append("SDK Penpot - Méthodes pertinentes:\n\n");
 
         for (String category : relevantCategories) {
             List<PenpotApiDocumentation.ApiMethod> methods = 
                 penpotSdkService.getMethodsByCategory(category);
+
+            logger.debug("Méhtodes détectées: {}", methods);
 
             if (!methods.isEmpty()) {
                 summary.append(String.format("=== %s ===\n", category));
@@ -111,17 +79,17 @@ public class DocumentationAggregatorService {
             }
         }
 
-        // 3. Ajouter les propriétés communes si pertinentes
+        // 3. Ajout des propriétés communes si pertinentes
         if (shouldIncludeCommonProperties(userPrompt)) {
             summary.append(getCommonPropertiesSummary());
         }
 
-        // 4. Ajouter les utilitaires si pertinents
+        // 4. Ajout des utilitaires si pertinents
         if (shouldIncludeUtilities(userPrompt)) {
             summary.append(getUtilitiesSummary());
         }
 
-        // 5. Ajouter des exemples de code pertinents
+        // 5. Ajout des exemples de code pertinents
         String examplesSummary = getRelevantExamples(userPrompt, relevantCategories);
         if (!examplesSummary.isEmpty()) {
             summary.append("\nExemples de code:\n").append(examplesSummary);
@@ -131,25 +99,93 @@ public class DocumentationAggregatorService {
     }
 
     /**
-     * Détecte les catégories pertinentes à partir du prompt utilisateur.
+     * Détecte les catégories pertinentes à partir du prompt utilisateur
+     * en utilisant les mots-clés définis dans le JSON.
      *
-     * @param userPrompt le texte saisi par l’utilisateur
-     * @return une liste des catégories correspondantes (ex. SHAPE_CREATION, ORGANIZATION, etc.)
+     * @param userPrompt le texte saisi par l'utilisateur
+     * @return une liste des catégories correspondantes
      */
     private List<String> detectRelevantCategories(String userPrompt) {
         String promptLower = userPrompt.toLowerCase();
         List<String> categories = new ArrayList<>();
 
-        if (containsAny(promptLower, SHAPE_KEYWORDS)) {
+        if (penpotSdkService.getApiSummary() == null) {
+            return categories;
+        }
+
+        // SHAPE_CREATION - Mots-clés associés aux formes géométriques.
+        if (containsAny(promptLower, new String[]{
+            "rectangle", "ellipse", "cercle", "circle", "path", "boolean", "board",
+            "carré", "square", "forme", "shape", "crée", "create", "créer",
+            "rond", "ovale", "tracé", "artboard"
+        })) {
             categories.add("SHAPE_CREATION");
         }
-        if (containsAny(promptLower, TEXT_KEYWORDS)) {
+
+        // STYLING - Mots-clés associés aux couleurs et styles
+        if (containsAny(promptLower, new String[]{
+            "couleur", "color", "rouge", "red", "bleu", "blue", "vert", "green",
+            "jaune", "yellow", "noir", "black", "blanc", "white", "orange",
+            "fill", "remplissage", "stroke", "contour", "bordure", "border",
+            "opacity", "opacité", "transparence", "transparent", "rotation",
+            "pivoter", "rotate", "flip", "miroir", "arrondi", "radius"
+        })) {
+            categories.add("STYLING");
+        }
+
+        // TEXT - Mots-clés associés au texte et à la typographie.
+        if (containsAny(promptLower, new String[]{
+            "text", "texte", "label", "titre", "title", "paragraphe", "paragraph",
+            "font", "police", "écriture", "caractère", "typographie"
+        })) {
             categories.add("TEXT");
         }
-        if (containsAny(promptLower, ORGANIZATION_KEYWORDS)) {
+
+        // ORGANIZATION - Mots-clés associés à l'organisation d'éléments.
+        if (containsAny(promptLower, new String[]{
+            "groupe", "group", "aligner", "align", "distribuer", "distribute",
+            "centre", "center", "gauche", "left", "droite", "right",
+            "haut", "top", "bas", "bottom", "coin", "corner",
+            "position", "placer", "place", "déplacer", "move"
+        })) {
             categories.add("ORGANIZATION");
         }
 
+        // MEDIA
+        if (containsAny(promptLower, new String[]{
+            "image", "media", "upload", "télécharger", "photo", "picture"
+        })) {
+            categories.add("MEDIA");
+        }
+
+        // INTERACTION
+        if (containsAny(promptLower, new String[]{
+            "interaction", "clic", "click", "hover", "souris", "mouse",
+            "prototype", "navigation", "lien", "link", "bouton", "button"
+        })) {
+            categories.add("INTERACTION");
+        }
+
+        // EXPORT
+        if (containsAny(promptLower, new String[]{
+            "export", "exporter", "télécharger", "download", "sauvegarder", "save"
+        })) {
+            categories.add("EXPORT");
+        }
+
+        // Si toujours aucune catégorie, utiliser la logique du JSON
+        if (categories.isEmpty()) {
+            for (String categoryName : List.of("SHAPE_CREATION", "TEXT", "ORGANIZATION", 
+                                               "STYLING", "MEDIA", "INTERACTION", "EXPORT")) {
+                List<String> keywords = penpotSdkService.getCategoryKeywords(categoryName);
+                                            
+                if (keywords != null && containsAny(promptLower, keywords.toArray(new String[0]))) {
+                    categories.add(categoryName);
+                }
+            }
+        }
+
+        logger.debug("Catégories détectées: {}", categories);
         return categories;
     }
 
@@ -175,7 +211,9 @@ public class DocumentationAggregatorService {
      */
     private boolean shouldIncludeCommonProperties(String userPrompt) {
         String promptLower = userPrompt.toLowerCase();
-        return containsAny(promptLower, STYLE_KEYWORDS) || 
+        List<String> styleKeywords = penpotSdkService.getCategoryKeywords("STYLING");
+
+        return (styleKeywords != null && containsAny(promptLower, styleKeywords.toArray(new String[0]))) || 
                promptLower.contains("propriété") || 
                promptLower.contains("property") ||
                promptLower.contains("attribut");
@@ -241,70 +279,36 @@ public class DocumentationAggregatorService {
      */
     private String formatMethodSummary(PenpotApiDocumentation.ApiMethod method) {
         StringBuilder sb = new StringBuilder();
-        
-        sb.append(String.format("penpot.%s(%s) → %s\n",
-            method.getName(),
-            formatParameters(method.getParameters()),
+
+        sb.append(String.format("%s → %s\n",
+            method.formatSignature(),
             method.getReturnType()
         ));
 
         sb.append(String.format("  %s\n", method.getDescription()));
 
-        if (method.getMethods() != null && !method.getMethods().isEmpty()) {
-            sb.append("  Méthodes disponibles:\n");
-            method.getMethods().forEach((key, value) -> 
-                sb.append(String.format("    - %s: %s\n", key, value))
+        // Affiche les méthodes chainables
+        if (method.getChainableMethods() != null && !method.getChainableMethods().isEmpty()) {
+            sb.append("  Méthodes chainables:\n");
+            method.getChainableMethods().forEach((key, value) -> 
+                sb.append(String.format("    - %s: %s\n", value.getSignature(), value.getDescription()))
             );
         }
 
-        if (method.getExample() != null && !method.getExample().isEmpty()) {
-            String compactExample = compactExample(method.getExample());
+        // Affiche les exemples d'utilisation
+        if (method.getCommonUsage() != null && !method.getCommonUsage().isEmpty()) {
+            String compactExample = method.getCommonUsage().stream()
+                .limit(2)
+                .collect(Collectors.joining("; "));
             sb.append(String.format("  Ex: %s\n", compactExample));
         }
 
         if (method.getNotes() != null && !method.getNotes().isEmpty()) {
-            sb.append(String.format("  %s\n", method.getNotes()));
+            sb.append(String.format("  Note: %s\n", method.getNotes()));
         }
 
         sb.append("\n");
         return sb.toString();
-    }
-
-    /**
-     * Formate les paramètres d’une méthode sous forme concise.
-     *
-     * @param parameters liste des paramètres de la méthode
-     * @return une chaîne formatée listant les noms et types de paramètres
-     */
-    private String formatParameters(List<PenpotApiDocumentation.Parameter> parameters) {
-        if (parameters == null || parameters.isEmpty()) return "";
-
-        return parameters.stream()
-            .map(p -> {
-                String paramStr = p.getName() + ": " + p.getType();
-                if (!p.isRequired()) paramStr += "?";
-                if (p.getDefaultValue() != null) paramStr += " = " + p.getDefaultValue();
-                return paramStr;
-            })
-            .collect(Collectors.joining(", "));
-    }
-
-    /**
-     * Compacte un exemple de code en ne gardant que les premières lignes significatives.
-     *
-     * @param example le code source de l’exemple complet
-     * @return une version abrégée de l’exemple
-     */
-    private String compactExample(String example) {
-        if (example == null) return "";
-
-        String[] lines = example.split("\n");
-        if (lines.length == 1) return example;
-
-        return java.util.Arrays.stream(lines)
-            .limit(2)
-            .filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("//"))
-            .collect(Collectors.joining("; "));
     }
 
     /**
@@ -326,14 +330,6 @@ public class DocumentationAggregatorService {
             .filter(ex -> categories.contains(ex.getCategory()))
             .toList();
 
-        if (relevantExamples.isEmpty()) {
-            relevantExamples = allExamples.stream()
-                .filter(ex -> "EASY".equalsIgnoreCase(ex.getDifficulty()) || 
-                             "Débutant".equalsIgnoreCase(ex.getDifficulty()))
-                .limit(1)
-                .toList();
-        }
-
         for (CodeExamplesCollection.CodeExample example : relevantExamples) {
             examples.append(String.format("\n// %s\n%s\n", 
                 example.getTitle(), 
@@ -347,7 +343,7 @@ public class DocumentationAggregatorService {
     /**
      * Génère un résumé minimal des méthodes pertinentes (sans exemples).
      *
-     * @param userPrompt le texte fourni par l’utilisateur
+     * @param userPrompt le texte fourni par l'utilisateur
      * @return un résumé très concis listant uniquement les signatures de méthodes pertinentes
      */
     public String generateMinimalSummary(String userPrompt) {
@@ -361,10 +357,7 @@ public class DocumentationAggregatorService {
                 penpotSdkService.getMethodsByCategory(category);
 
             for (PenpotApiDocumentation.ApiMethod method : methods) {
-                summary.append(String.format("penpot.%s(%s)\n",
-                    method.getName(),
-                    formatParameters(method.getParameters())
-                ));
+                summary.append(method.formatSignature()).append("\n");
             }
         }
 
@@ -374,7 +367,7 @@ public class DocumentationAggregatorService {
     /**
      * Génère un résumé riche en exemples pour un apprentissage par "few-shot".
      *
-     * @param userPrompt le texte de l’utilisateur
+     * @param userPrompt le texte de l'utilisateur
      * @return un résumé incluant les signatures de méthodes et plusieurs exemples de code
      */
     public String generateExampleRichSummary(String userPrompt) {
@@ -405,45 +398,5 @@ public class DocumentationAggregatorService {
         }
 
         return summary.toString();
-    }
-
-    /**
-     * Génère un résumé spécifique pour la création de formes.
-     *
-     * @return un résumé détaillé des méthodes de création de formes
-     */
-    public String generateShapeCreationSummary() {
-        return generateOptimizedSummary("créer des formes rectangle ellipse path board");
-    }
-
-    /**
-     * Génère un résumé spécifique pour l'organisation et l'alignement.
-     *
-     * @return un résumé détaillé des méthodes d'organisation
-     */
-    public String generateOrganizationSummary() {
-        return generateOptimizedSummary("grouper aligner distribuer organisation");
-    }
-
-    /**
-     * Estime le nombre de tokens nécessaires pour le résumé généré.
-     * 
-     * <p>Cette estimation est grossière, en considérant une moyenne
-     * de quatre caractères par token, approximation basée sur les modèles GPT.</p>
-     *
-     * @param summary le texte à évaluer
-     * @return le nombre approximatif de tokens utilisés
-     */
-    public int estimateTokenCount(String summary) {
-        return summary.length() / 4;
-    }
-
-    /**
-     * Retourne les catégories disponibles dans la documentation.
-     *
-     * @return une liste des catégories disponibles
-     */
-    public List<String> getAvailableCategories() {
-        return List.of("SHAPE_CREATION", "ORGANIZATION", "TEXT");
     }
 }

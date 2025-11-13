@@ -1,20 +1,13 @@
 package com.example.aiPoc.services.penpot;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import org.springframework.stereotype.Service;
 
 import com.example.aiPoc.config.PenpotSdkConfig;
-import com.example.aiPoc.dto.CodeExamplesCollection;
-import com.example.aiPoc.dto.PenpotApiDocumentation;
-import com.example.aiPoc.exceptions.PenpotSdkException;
+import com.example.aiPoc.dto.*;
 import com.example.aiPoc.services.JsonLoaderService;
 
 import jakarta.annotation.PostConstruct;
@@ -28,8 +21,6 @@ import jakarta.annotation.PostConstruct;
  *   <li>De fournir des résumés textuels des méthodes disponibles</li>
  *   <li>De gérer des exemples de code utilisables pour les prompts d’IA ou la documentation</li>
  * </ul>
- *
- * <p>Il agit comme une façade d’accès centralisée aux ressources JSON décrivant le SDK Penpot.</p>
  *
  * @see PenpotSdkConfig
  * @see PenpotApiDocumentation
@@ -160,40 +151,65 @@ public class PenpotSdkService {
             return summary.append("Aucune documentation disponible").toString();
         }
 
-        for (PenpotApiDocumentation.ApiMethod method : apiDocumentation.getMethods()) {
-            summary.append(String.format("- %s(%s): %s\n",
-                method.getName(),
-                formatParameters(method.getParameters()),
-                method.getReturnType()
-            ));
-            summary.append(String.format("  Description: %s\n", method.getDescription()));
+        // Grouper par catégorie
+        Map<String, List<PenpotApiDocumentation.ApiMethod>> methodsByCategory = 
+            apiDocumentation.getMethods().stream()
+                .collect(Collectors.groupingBy(m -> 
+                    m.getCategories() != null && !m.getCategories().isEmpty() 
+                        ? m.getCategories().get(0) 
+                        : "AUTRES"
+                ));
 
-            if (method.getExample() != null) {
-                summary.append(String.format("  Exemple: %s\n", method.getExample()));
-            }
-            if (method.getNotes() != null) {
-                summary.append(String.format("  Note: %s\n", method.getNotes()));
-            }
+        for (Map.Entry<String, List<PenpotApiDocumentation.ApiMethod>> entry : methodsByCategory.entrySet()) {
+            summary.append(String.format("=== %s ===\n", entry.getKey()));
 
-            summary.append("\n");
+            for (PenpotApiDocumentation.ApiMethod method : entry.getValue()) {
+                summary.append(String.format("- %s\n", method.formatSignature()));
+                summary.append(String.format("  Description: %s\n", method.getDescription()));
+                summary.append(String.format("  Retour: %s\n", method.getReturnType()));
+
+                if (method.getCommonUsage() != null && !method.getCommonUsage().isEmpty()) {
+                    summary.append("  Exemple:\n");
+                    method.getCommonUsage().stream().limit(2).forEach(usage -> 
+                        summary.append(String.format("    %s\n", usage))
+                    );
+                }
+
+                if (method.getNotes() != null) {
+                    summary.append(String.format("  Note: %s\n", method.getNotes()));
+                }
+
+                summary.append("\n");
+            }
         }
 
         // Ajout des propriétés communes
-        if (apiDocumentation.getCommonProperties() != null) {
-            summary.append("\nPropriétés communes:\n");
-            apiDocumentation.getCommonProperties().forEach((type, props) -> {
-                summary.append(String.format("\n%s:\n", type));
-                props.forEach((key, value) -> 
-                    summary.append(String.format("  - %s: %s\n", key, value))
-                );
+        if (apiDocumentation.getCommonProperties() != null && !apiDocumentation.getCommonProperties().isEmpty()) {
+            summary.append("\n=== Propriétés communes ===\n");
+            apiDocumentation.getCommonProperties().forEach((type, prop) -> {
+                summary.append(String.format("\n%s: %s\n", type, prop.getDescription()));
+                if (prop.getProperties() != null) {
+                    prop.getProperties().forEach((key, detail) -> 
+                        summary.append(String.format("  - %s (%s): %s\n", 
+                            key, detail.getType(), detail.getDescription()))
+                    );
+                }
             });
         }
 
         // Ajout des utilitaires
-        if (apiDocumentation.getUtilities() != null) {
-            summary.append("\nUtilitaires:\n");
-            apiDocumentation.getUtilities().forEach((key, value) -> 
-                summary.append(String.format("  - %s: %s\n", key, value))
+        if (apiDocumentation.getUtilities() != null && !apiDocumentation.getUtilities().isEmpty()) {
+            summary.append("\n=== Utilitaires ===\n");
+            apiDocumentation.getUtilities().forEach((key, util) -> 
+                summary.append(String.format("  - %s: %s\n", key, util.getDescription()))
+            );
+        }
+
+        // Ajout des tips
+        if (apiDocumentation.getTips() != null && !apiDocumentation.getTips().isEmpty()) {
+            summary.append("\n=== Conseils ===\n");
+            apiDocumentation.getTips().forEach(tip -> 
+                summary.append(String.format("  - %s\n", tip))
             );
         }
 
@@ -211,48 +227,8 @@ public class PenpotSdkService {
         }
 
         return apiDocumentation.getMethods().stream()
-            .map(method -> String.format("penpot.%s(%s)",
-                method.getName(),
-                formatParameters(method.getParameters())
-            ))
+            .map(PenpotApiDocumentation.ApiMethod::formatSignature)
             .collect(Collectors.joining("\n"));
-    }
-
-    /**
-     * Retourne la liste complète des exemples de code disponibles.
-     *
-     * @return une liste de chaînes de caractères contenant des extraits de code.
-     */
-    public List<String> getCodeExamples() {
-        if (codeExamplesCollection == null || codeExamplesCollection.getExamples() == null) {
-            return Collections.emptyList();
-        }
-
-        return codeExamplesCollection.getExamples().stream()
-            .map(example -> {
-                return String.format("// %s\n// %s\n%s",
-                    example.getTitle(),
-                    example.getDescription(),
-                    example.getCode()
-                );
-            })
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Sélectionne et retourne un exemple de code aléatoire parmi ceux chargés.
-     *
-     * @return une chaîne contenant un extrait de code.
-     * @throws PenpotSdkException si aucun exemple de code n’est disponible.
-     */
-    public String getRandomExample() {
-        List<String> examples = getCodeExamples();
-        if (examples.isEmpty()) {
-            throw new PenpotSdkException("Aucun exemple de code disponible");
-        }
-
-        int index = (int) (Math.random() * examples.size());
-        return examples.get(index);
     }
 
     /**
@@ -276,8 +252,12 @@ public class PenpotSdkService {
             return Collections.emptyList();
         }
 
+        if (category == null) {
+            return apiDocumentation.getMethods();
+        }
+
         return apiDocumentation.getMethods().stream()
-            .filter(m -> category.equals(m.getCategory()))
+            .filter(m -> m.getCategories() != null && m.getCategories().contains(category))
             .collect(Collectors.toList());
     }
 
@@ -297,23 +277,37 @@ public class PenpotSdkService {
      */
     public List<CodeExamplesCollection.CodeExample> getCodeExamplesCollection() {
         if (codeExamplesCollection == null || codeExamplesCollection.getExamples() == null) {
-            return java.util.Collections.emptyList();
+            return Collections.emptyList();
         }
         return codeExamplesCollection.getExamples();
     }
 
     /**
-     * Formate les paramètres d’une méthode pour un affichage lisible.
+     * Retourne les mots-clés associés à une catégorie.
      *
-     * @param parameters la liste des paramètres
-     * @return une chaîne formatée des paramètres
+     * @param categoryName le nom de la catégorie
+     * @return la liste des mots-clés ou une liste vide
      */
-    private String formatParameters(List<PenpotApiDocumentation.Parameter> parameters) {
-        if (parameters == null || parameters.isEmpty()) return "";
+    public List<String> getCategoryKeywords(String categoryName) {
+        if (apiDocumentation == null || apiDocumentation.getCategories() == null) {
+            return Collections.emptyList();
+        }
 
-        return parameters.stream()
-            .map(p -> p.getName() + ": " + p.getType())
-            .collect(Collectors.joining(", "));
+        PenpotApiDocumentation.Category category = apiDocumentation.getCategories().get(categoryName);
+        return category != null && category.getKeywords() != null 
+            ? category.getKeywords() 
+            : Collections.emptyList();
+    }
+
+    /**
+     * Retourne tous les patterns de code courants.
+     *
+     * @return map des patterns
+     */
+    public Map<String, PenpotApiDocumentation.CommonPattern> getCommonPatterns() {
+        return apiDocumentation != null && apiDocumentation.getCommonPatterns() != null
+            ? apiDocumentation.getCommonPatterns()
+            : Collections.emptyMap();
     }
 
     /**
@@ -325,8 +319,11 @@ public class PenpotSdkService {
         PenpotApiDocumentation doc = new PenpotApiDocumentation();
         doc.setVersion("error");
         doc.setMethods(new ArrayList<>());
+        doc.setCategories(new HashMap<>());
         doc.setCommonProperties(new HashMap<>());
         doc.setUtilities(new HashMap<>());
+        doc.setCommonPatterns(new HashMap<>());
+        doc.setTips(new ArrayList<>());
         return doc;
     }
 

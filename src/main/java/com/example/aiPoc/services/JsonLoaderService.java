@@ -1,80 +1,87 @@
 package com.example.aiPoc.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.*;
+import org.slf4j.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
- * Service utilitaire pour charger et désérialiser des fichiers JSON
- * depuis le classpath ou le système de fichiers.
+ * Service utilitaire chargé de charger et désérialiser des fichiers JSON depuis le classpath
+ * ou un chemin de ressource interne au projet Spring Boot.
+ *
+ * <p>
+ * Ce service centralise les opérations de lecture JSON utilisées dans l’application,
+ * notamment pour charger des fichiers de configuration ou de documentation (ex. : résumés d’API).
+ * </p>
  */
 @Service
 public class JsonLoaderService {
 
+    /** Logger utilisé pour le suivi et le débogage du service. */
     private static final Logger logger = LoggerFactory.getLogger(JsonLoaderService.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final ObjectMapper objectMapper;
 
     /**
-     * Charge un fichier JSON du classpath et le désérialise en un objet du type spécifié.
+     * Initialise un {@link ObjectMapper} configuré pour accepter les structures JSON incomplètes
+     * ou comportant des propriétés inconnues, afin de rendre la désérialisation plus tolérante.
      *
-     * @param path  chemin relatif dans le classpath (ex : "templates/penpot-api-summary.json")
-     * @param clazz type cible pour la désérialisation
-     * @param <T>   type générique de l’objet attendu
-     * @return instance de l’objet désérialisé, ou {@code null} si erreur
+     * <p>Les options activées sont :
+     * <ul>
+     *   <li>{@link DeserializationFeature#FAIL_ON_UNKNOWN_PROPERTIES} désactivé</li>
+     *   <li>{@link DeserializationFeature#ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT} activé</li>
+     * </ul>
+     * </p>
+     */
+    public JsonLoaderService() {
+        this.objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true);
+    }
+
+    /**
+     * Charge un fichier JSON situé dans le classpath de l’application et le convertit
+     * en une instance de la classe spécifiée.
+     *
+     * @param path  chemin relatif vers le fichier JSON dans le classpath
+     * @param clazz classe du type de l’objet attendu après désérialisation.
+     * @param <T>   type de retour générique, correspondant à la classe cible.
+     * @return instance de l’objet désérialisé, ou {@code null} si une erreur survient
+     *         (fichier introuvable, I/O ou JSON invalide).
+     *
+     * @throws IllegalArgumentException si le chemin est nul ou vide.
      */
     public <T> T loadJson(String path, Class<T> clazz) {
+        if (path == null || path.trim().isEmpty()) {
+            logger.error("Chemin du fichier JSON null ou vide");
+            return null;
+        }
+
+        String cleanPath = path.startsWith("classpath:") 
+            ? path.substring("classpath:".length()) 
+            : path;
+
+        logger.debug("Tentative de chargement du fichier JSON: {}", cleanPath);
+
         try {
-            ClassPathResource resource = new ClassPathResource(path);
+            ClassPathResource resource = new ClassPathResource(cleanPath);
             if (!resource.exists()) {
-                logger.warn("Fichier JSON introuvable dans le classpath: {}", path);
+                logger.warn("Fichier JSON introuvable dans le classpath: {} (chemin complet: {})", 
+                           cleanPath, resource.getPath());
                 return null;
             }
 
             try (InputStream inputStream = resource.getInputStream()) {
                 T result = objectMapper.readValue(inputStream, clazz);
-                logger.debug("Fichier JSON chargé avec succès : {}", path);
+                logger.info("Fichier JSON chargé avec succès : {}", path);
                 return result;
             }
-
         } catch (IOException e) {
-            logger.error("Erreur lors du chargement du fichier JSON : {}", path, e);
+            logger.error("Erreur lors du chargement du fichier JSON: {} - {}", 
+                        cleanPath, e.getMessage(), e);
             return null;
         }
-    }
-
-    /**
-     * Charge un fichier JSON depuis le système de fichiers.
-     *
-     * @param file  fichier à charger
-     * @param clazz classe cible pour la désérialisation
-     * @return instance de l’objet désérialisé, ou {@code null} si erreur
-     */
-    public <T> T loadJsonFromFile(File file, Class<T> clazz) {
-        if (file == null || !file.exists()) {
-            logger.warn("Fichier JSON introuvable : {}", file);
-            return null;
-        }
-        try {
-            return objectMapper.readValue(file, clazz);
-        } catch (IOException e) {
-            logger.error("Erreur de lecture du fichier JSON : {}", file, e);
-            return null;
-        }
-    }
-
-    /**
-     * Vérifie si un fichier existe dans le classpath.
-     *
-     * @param path chemin relatif du fichier
-     * @return true si le fichier est présent
-     */
-    public boolean exists(String path) {
-        return new ClassPathResource(path).exists();
     }
 }

@@ -26,6 +26,12 @@ public class CodeExamplesCollection {
     @JsonProperty("lastUpdate")
     private String lastUpdate;
 
+    @JsonProperty("source")
+    private String source;
+
+    @JsonProperty("description")
+    private String description;
+
     /** Liste des exemples de code disponibles. */
     @JsonProperty("examples")
     private List<CodeExample> examples = new ArrayList<>();
@@ -53,10 +59,6 @@ public class CodeExamplesCollection {
         /** Catégorie fonctionnelle ou thématique de l'exemple. */
         @JsonProperty("category")
         private String category;
-
-        /** Niveau de difficulté (ex. : facile, moyen, avancé). */
-        @JsonProperty("difficulty")
-        private String difficulty;
 
         /** Niveau de difficulté (ex. : facile, moyen, avancé). */
         @JsonProperty("tags")
@@ -115,18 +117,6 @@ public class CodeExamplesCollection {
          * @param category nom de la catégorie
          */
         public void setCategory(String category) { this.category = category; }
-
-        /**
-         * Retourne le niveau de difficulté de l'exemple.
-         * @return difficulté (facile, moyen, avancé)
-         */
-        public String getDifficulty() { return difficulty; }
-
-        /**
-         * Définit le niveau de difficulté de l'exemple.
-         * @param difficulty difficulté du code
-         */
-        public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
 
         /**
          * Retourne la liste des tags associés.
@@ -190,6 +180,13 @@ public class CodeExamplesCollection {
      */
     public void setLastUpdate(String lastUpdate) { this.lastUpdate = lastUpdate; }
 
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    
     /**
      * Retourne la liste complète des exemples de code.
      * @return liste d'exemples
@@ -201,31 +198,4 @@ public class CodeExamplesCollection {
      * @param examples liste d'exemples
      */
     public void setExamples(List<CodeExample> examples) { this.examples = examples; }
-
-    /**
-     * Sélectionne et retourne un exemple de code aléatoire dans la collection.
-     * Cette méthode est utile pour effectuer des tests aléatoires ou des
-     * démonstrations dynamiques.
-     *
-     * @return un {@link Optional} contenant un exemple aléatoire s’il en existe,
-     *         sinon un {@link Optional#empty()}
-     */
-    public Optional<CodeExample> getRandomExample() {
-        if (examples == null || examples.isEmpty()) return Optional.empty();
-        return Optional.of(examples.get(new Random().nextInt(examples.size())));
-    }
-
-    /**
-     * Retourne la liste des exemples appartenant à une catégorie spécifique.
-     *
-     * @param category catégorie à filtrer (non sensible à la casse)
-     * @return liste filtrée d'exemples appartenant à la catégorie spécifiée,
-     *         ou liste vide si aucune correspondance
-     */
-    public List<CodeExample> findByCategory(String category) {
-        if (examples == null || category == null) return List.of();
-        return examples.stream()
-                .filter(ex -> category.equalsIgnoreCase(ex.getCategory()))
-                .toList();
-    }
 }

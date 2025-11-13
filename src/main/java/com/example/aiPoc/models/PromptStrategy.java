@@ -1,10 +1,8 @@
 package com.example.aiPoc.models;
 
 /**
- * <p>
  * Représente les différentes stratégies de construction de prompts utilisées
  * dans le cadre de l'interaction avec le modèle d'IA.
- * </p>
  *
  * <p>
  * Chaque stratégie définit un niveau de contextualisation et de structuration

@@ -1,96 +1,249 @@
 {
-  "version": "1.0.0",
-  "lastUpdate": "2025-11-10",
+  "version": "2.0.0",
+  "lastUpdate": "2025-11-12",
+  "source": "Penpot Plugin API - Code Examples Collection",
+  "description": "Collection exhaustive d'exemples de code pour aider l'IA à générer du code Penpot de qualité",
+  
   "examples": [
     {
       "id": "example-001",
-      "title": "Rectangle rouge simple",
+      "title": "Rectangle simple avec couleur",
       "category": "SHAPE_CREATION",
-      "difficulty": "EASY",
+      "description": "Crée un rectangle rouge de base",
       "tags": ["rectangle", "couleur", "basique"],
-      "description": "Crée un rectangle rouge basique au centre du viewport",
-      "code": "const rect = penpot.createRectangle();\nrect.resize(150, 150);\nrect.fills = [{ fillColor: '#FF0000', fillOpacity: 1 }];\nconst center = penpot.viewport.center;\nrect.x = center.x;\nrect.y = center.y;"
+      "code": "const rect = penpot.createRectangle();\nrect.resize(100, 50);\nrect.x = 100;\nrect.y = 100;\nrect.fills = [{fillColor: '#FF0000'}];"
     },
     {
       "id": "example-002",
-      "title": "Rectangle avec bordure arrondie",
+      "title": "Cercle parfait",
       "category": "SHAPE_CREATION",
-      "difficulty": "EASY",
-      "tags": ["rectangle", "bordure", "style"],
-      "description": "Rectangle stylisé avec coins arrondis et bordure",
-      "code": "const rect = penpot.createRectangle();\nrect.resize(200, 150);\nrect.name = 'Rectangle stylisé';\nrect.fills = [{ fillColor: '#7EFFF5', fillOpacity: 1 }];\nrect.borderRadius = 8;\nrect.strokes = [{\n  strokeColor: '#2e3434',\n  strokeStyle: 'solid',\n  strokeWidth: 2,\n  strokeAlignment: 'center'\n}];"
+      "description": "Crée un cercle bleu parfait",
+      "tags": ["cercle", "ellipse", "basique"],
+      "code": "const circle = penpot.createEllipse();\ncircle.resize(100, 100);\ncircle.x = 200;\ncircle.y = 200;\ncircle.fills = [{fillColor: '#0000FF'}];"
     },
     {
       "id": "example-003",
-      "title": "Texte stylisé",
-      "category": "SHAPE_CREATION",
-      "difficulty": "EASY",
-      "tags": ["texte", "typographie", "style"],
-      "description": "Crée un texte avec styles avancés",
-      "code": "const text = penpot.createText('Hello World!');\ntext.fontSize = '24';\ntext.fontWeight = '700';\ntext.textTransform = 'uppercase';\ntext.fills = [{ fillColor: '#FF6FE0', fillOpacity: 1 }];\nconst center = penpot.viewport.center;\ntext.x = center.x;\ntext.y = center.y;"
+      "title": "Rectangle avec contour",
+      "category": "STYLING",
+      "description": "Rectangle avec remplissage et contour noir",
+      "tags": ["rectangle", "contour", "stroke"],
+      "code": "const rect = penpot.createRectangle();\nrect.resize(120, 80);\nrect.x = 50;\nrect.y = 50;\nrect.fills = [{fillColor: '#FFFF00'}];\nrect.strokes = [{strokeColor: '#000000', strokeWidth: 2, strokeStyle: 'solid'}];"
     },
     {
       "id": "example-004",
-      "title": "Texte avec styles mixtes",
-      "category": "TEXT",
-      "difficulty": "MEDIUM",
-      "tags": ["texte", "range", "multi-style"],
-      "description": "Applique différents styles à des portions de texte",
-      "code": "const text = penpot.createText('Hello World!');\ntext.fontSize = '20';\nconst range = text.getRange(0, 5);\nrange.fontSize = '40';\nrange.fills = [{ fillColor: '#ff6fe0', fillOpacity: 1 }];\ntext.x = penpot.viewport.center.x;\ntext.y = penpot.viewport.center.y;"
+      "title": "Forme avec opacité",
+      "category": "STYLING",
+      "description": "Rectangle semi-transparent",
+      "tags": ["opacité", "transparence", "alpha"],
+      "code": "const rect = penpot.createRectangle();\nrect.resize(150, 100);\nrect.fills = [{fillColor: '#FF0000', fillOpacity: 0.5}];\nrect.opacity = 0.8;"
     },
     {
       "id": "example-005",
-      "title": "Trois rectangles colorés alignés",
-      "category": "SHAPE_CREATION",
-      "difficulty": "MEDIUM",
-      "tags": ["rectangle", "boucle", "couleur", "alignement"],
-      "description": "Crée plusieurs formes alignées avec couleurs HSL",
-      "code": "for (let i = 0; i < 3; i++) {\n  const rect = penpot.createRectangle();\n  rect.resize(200, 150);\n  rect.x = 100 + i * 250;\n  rect.y = 100;\n  rect.fills = [{ fillColor: `hsl(${i * 120}, 70%, 50%)`, fillOpacity: 1 }];\n}"
+      "title": "Rectangle avec coins arrondis",
+      "category": "STYLING",
+      "description": "Rectangle aux coins arrondis",
+      "tags": ["borderRadius", "coins", "arrondi"],
+      "code": "const rect = penpot.createRectangle();\nrect.resize(100, 60);\nrect.borderRadius = 10;\nrect.fills = [{fillColor: '#00FF00'}];"
     },
     {
       "id": "example-006",
-      "title": "Cercle bleu",
-      "category": "SHAPE_CREATION",
-      "difficulty": "EASY",
-      "tags": ["cercle", "ellipse", "couleur"],
-      "description": "Crée un cercle bleu parfait",
-      "code": "const circle = penpot.createEllipse();\ncircle.resize(100, 100);\ncircle.fills = [{ fillColor: '#0000FF', fillOpacity: 1 }];\ncircle.x = penpot.viewport.center.x;\ncircle.y = penpot.viewport.center.y;"
+      "title": "Centrer une forme dans le viewport",
+      "category": "ORGANIZATION",
+      "description": "Positionne une forme au centre de la vue",
+      "tags": ["centre", "viewport", "position"],
+      "code": "const rect = penpot.createRectangle();\nrect.resize(100, 100);\nconst center = penpot.viewport.center;\nrect.x = center.x - (rect.width / 2);\nrect.y = center.y - (rect.height / 2);\nrect.fills = [{fillColor: '#FF00FF'}];"
     },
     {
       "id": "example-007",
-      "title": "Groupe de formes",
-      "category": "ORGANIZATION",
-      "difficulty": "MEDIUM",
-      "tags": ["groupe", "organisation"],
-      "description": "Crée et groupe plusieurs formes ensemble",
-      "code": "const rect1 = penpot.createRectangle();\nrect1.resize(100, 100);\nrect1.x = 100;\nrect1.y = 100;\n\nconst rect2 = penpot.createRectangle();\nrect2.resize(100, 100);\nrect2.x = 250;\nrect2.y = 100;\n\npenpot.group([rect1, rect2]);"
+      "title": "Texte simple",
+      "category": "TEXT",
+      "description": "Crée un texte basique",
+      "tags": ["texte", "text", "label"],
+      "code": "const text = penpot.createText('Hello Penpot');\ntext.x = 100;\ntext.y = 100;\ntext.fontSize = 24;\ntext.fills = [{fillColor: '#000000'}];"
     },
     {
       "id": "example-008",
-      "title": "Board avec flex layout",
-      "category": "ORGANIZATION",
-      "difficulty": "HARD",
-      "tags": ["board", "flex", "layout"],
-      "description": "Crée un board avec flex layout et formes",
-      "code": "const board = penpot.createBoard();\nboard.horizontalSizing = 'auto';\nboard.verticalSizing = 'auto';\n\nconst flex = board.addFlexLayout();\nflex.dir = 'column';\nflex.alignItems = 'center';\nflex.justifyContent = 'center';\nflex.verticalPadding = 10;\nflex.horizontalPadding = 10;\n\nboard.appendChild(penpot.createRectangle());\nboard.appendChild(penpot.createEllipse());"
+      "title": "Rotation d'une forme",
+      "category": "STYLING",
+      "description": "Fait pivoter un rectangle de 45 degrés",
+      "tags": ["rotation", "pivoter", "angle"],
+      "code": "const rect = penpot.createRectangle();\nrect.resize(100, 50);\nrect.x = 150;\nrect.y = 150;\nrect.rotation = 45;\nrect.fills = [{fillColor: '#FFA500'}];"
     },
     {
       "id": "example-009",
-      "title": "Drapeau français",
+      "title": "Cloner une forme",
       "category": "SHAPE_CREATION",
-      "difficulty": "MEDIUM",
-      "tags": ["rectangle", "couleur", "composition"],
-      "description": "Crée un drapeau français avec 3 rectangles",
-      "code": "const colors = ['#0055A4', '#FFFFFF', '#EF4135'];\nfor (let i = 0; i < 3; i++) {\n  const stripe = penpot.createRectangle();\n  stripe.resize(100, 200);\n  stripe.x = 100 + i * 100;\n  stripe.y = 100;\n  stripe.fills = [{ fillColor: colors[i], fillOpacity: 1 }];\n  stripe.name = `Stripe ${i + 1}`;\n}"
+      "description": "Crée une copie d'une forme existante",
+      "tags": ["clone", "copie", "duplicate"],
+      "code": "const original = penpot.createRectangle();\noriginal.resize(80, 80);\noriginal.fills = [{fillColor: '#00FFFF'}];\nconst copy = original.clone();\ncopy.x = original.x + 100;"
     },
     {
       "id": "example-010",
-      "title": "Carte avec titre et contenu",
+      "title": "Ligne horizontale simple",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une ligne noire horizontale",
+      "tags": ["ligne", "line", "horizontal"],
+      "code": "const line = penpot.createRectangle();\nline.resize(300, 2);\nconst center = penpot.viewport.center;\nline.x = center.x - 150;\nline.y = center.y;\nline.fills = [{fillColor: '#000000'}];"
+    },
+    {
+      "id": "example-011",
+      "title": "Grille de rectangles",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une grille 3x3 de rectangles colorés",
+      "tags": ["grille", "grid", "boucle", "pattern"],
+      "code": "const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#FFC0CB'];\nfor (let i = 0; i < 3; i++) {\n  for (let j = 0; j < 3; j++) {\n    const rect = penpot.createRectangle();\n    rect.resize(50, 50);\n    rect.x = 100 + (j * 60);\n    rect.y = 100 + (i * 60);\n    rect.fills = [{fillColor: colors[i * 3 + j]}];\n  }\n}"
+    },
+    {
+      "id": "example-012",
+      "title": "Grouper plusieurs formes",
       "category": "ORGANIZATION",
-      "difficulty": "HARD",
-      "tags": ["board", "texte", "composition"],
-      "description": "Crée une carte stylisée avec titre et contenu",
-      "code": "const card = penpot.createBoard();\ncard.resize(300, 400);\ncard.fills = [{ fillColor: '#FFFFFF', fillOpacity: 1 }];\ncard.strokes = [{ strokeColor: '#E0E0E0', strokeWidth: 1, strokeStyle: 'solid' }];\ncard.borderRadius = 8;\n\nconst title = penpot.createText('Titre de la carte');\ntitle.fontSize = '24';\ntitle.fontWeight = '700';\ntitle.x = card.x + 20;\ntitle.y = card.y + 20;\n\nconst content = penpot.createText('Contenu de la carte avec plus de détails...');\ncontent.fontSize = '16';\ncontent.x = card.x + 20;\ncontent.y = card.y + 80;\n\ncard.appendChild(title);\ncard.appendChild(content);"
+      "description": "Crée plusieurs formes et les groupe ensemble",
+      "tags": ["groupe", "group", "organisation"],
+      "code": "const rect1 = penpot.createRectangle();\nrect1.resize(50, 50);\nrect1.x = 100;\nrect1.y = 100;\nrect1.fills = [{fillColor: '#FF0000'}];\n\nconst rect2 = penpot.createRectangle();\nrect2.resize(50, 50);\nrect2.x = 160;\nrect2.y = 100;\nrect2.fills = [{fillColor: '#00FF00'}];\n\nconst circle = penpot.createEllipse();\ncircle.resize(50, 50);\ncircle.x = 130;\ncircle.y = 160;\ncircle.fills = [{fillColor: '#0000FF'}];\n\nconst group = penpot.group([rect1, rect2, circle]);"
+    },
+    {
+      "id": "example-013",
+      "title": "Aligner des formes horizontalement",
+      "category": "ORGANIZATION",
+      "description": "Crée et align des formes au centre horizontal",
+      "tags": ["alignement", "horizontal", "centre"],
+      "code": "const shapes = [];\nfor (let i = 0; i < 3; i++) {\n  const rect = penpot.createRectangle();\n  rect.resize(60, 40);\n  rect.x = 100 + (i * 80);\n  rect.y = 100 + (i * 30);\n  rect.fills = [{fillColor: '#FF' + (i * 50).toString(16).padStart(2, '0') + '00'}];\n  shapes.push(rect);\n}\npenpot.alignHorizontal(shapes, 'center');"
+    },
+    {
+      "id": "example-014",
+      "title": "Distribuer des formes verticalement",
+      "category": "ORGANIZATION",
+      "description": "Crée des formes et les distribue avec espacement égal",
+      "tags": ["distribution", "vertical", "espacement"],
+      "code": "const shapes = [];\nfor (let i = 0; i < 4; i++) {\n  const circle = penpot.createEllipse();\n  circle.resize(50, 50);\n  circle.x = 200;\n  circle.y = 50 + (i * 80);\n  circle.fills = [{fillColor: '#0000FF'}];\n  shapes.push(circle);\n}\npenpot.distributeVertical(shapes);"
+    },
+    {
+      "id": "example-015",
+      "title": "Board avec plusieurs éléments",
+      "category": "SHAPE_CREATION",
+      "description": "Crée un board et y ajoute des formes enfants",
+      "tags": ["board", "artboard", "container"],
+      "code": "const board = penpot.createBoard();\nboard.resize(400, 300);\nboard.x = 100;\nboard.y = 100;\nboard.name = 'Mon Board';\n\nconst title = penpot.createText('Titre du Board');\ntitle.fontSize = 24;\ntitle.x = 120;\ntitle.y = 120;\nboard.appendChild(title);\n\nconst rect = penpot.createRectangle();\nrect.resize(100, 100);\nrect.x = 200;\nrect.y = 160;\nrect.fills = [{fillColor: '#FF6B6B'}];\nboard.appendChild(rect);"
+    },
+    {
+      "id": "example-016",
+      "title": "Dégradé de cercles",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une série de cercles avec opacité décroissante",
+      "tags": ["opacité", "dégradé", "gradient", "série"],
+      "code": "for (let i = 0; i < 5; i++) {\n  const circle = penpot.createEllipse();\n  circle.resize(80 - (i * 10), 80 - (i * 10));\n  circle.x = 200 + (i * 5);\n  circle.y = 200 + (i * 5);\n  circle.fills = [{fillColor: '#FF0000', fillOpacity: 1 - (i * 0.15)}];\n}"
+    },
+    {
+      "id": "example-017",
+      "title": "Forme avec contour en pointillés",
+      "category": "STYLING",
+      "description": "Rectangle avec contour en pointillés",
+      "tags": ["contour", "pointillés", "dashed"],
+      "code": "const rect = penpot.createRectangle();\nrect.resize(150, 100);\nrect.x = 150;\nrect.y = 150;\nrect.fills = [{fillColor: '#FFFFFF'}];\nrect.strokes = [{\n  strokeColor: '#000000',\n  strokeWidth: 3,\n  strokeStyle: 'dashed',\n  strokeAlignment: 'center'\n}];"
+    },
+    {
+      "id": "example-018",
+      "title": "Texte stylisé avancé",
+      "category": "TEXT",
+      "description": "Crée un texte avec style et alignement",
+      "tags": ["texte", "style", "alignement"],
+      "code": "const text = penpot.createText('Texte Stylisé');\ntext.x = 200;\ntext.y = 200;\ntext.fontSize = 32;\ntext.fontWeight = '700';\ntext.textAlign = 'center';\ntext.fills = [{fillColor: '#2C3E50'}];\ntext.strokes = [{strokeColor: '#ECF0F1', strokeWidth: 1}];"
+    },
+    {
+      "id": "example-019",
+      "title": "Miroir horizontal et vertical",
+      "category": "STYLING",
+      "description": "Crée des formes avec effet miroir",
+      "tags": ["miroir", "flip", "symétrie"],
+      "code": "const original = penpot.createRectangle();\noriginal.resize(80, 120);\noriginal.x = 100;\noriginal.y = 100;\noriginal.fills = [{fillColor: '#E74C3C'}];\n\nconst mirrorX = original.clone();\nmirrorX.x = 200;\nmirrorX.flipX = true;\n\nconst mirrorY = original.clone();\nmirrorY.x = 100;\nmirrorY.y = 240;\nmirrorY.flipY = true;\n\nconst mirrorXY = original.clone();\nmirrorXY.x = 200;\nmirrorXY.y = 240;\nmirrorXY.flipX = true;\nmirrorXY.flipY = true;"
+    },
+    {
+      "id": "example-020",
+      "title": "Opération booléenne - Union",
+      "category": "SHAPE_CREATION",
+      "description": "Combine deux formes avec une opération d'union",
+      "tags": ["boolean", "union", "combinaison"],
+      "code": "const rect = penpot.createRectangle();\nrect.resize(100, 100);\nrect.x = 150;\nrect.y = 150;\nrect.fills = [{fillColor: '#3498DB'}];\n\nconst circle = penpot.createEllipse();\ncircle.resize(100, 100);\ncircle.x = 200;\ncircle.y = 150;\ncircle.fills = [{fillColor: '#E74C3C'}];\n\nconst union = penpot.createBoolean('union', [rect, circle]);\nif (union) {\n  union.fills = [{fillColor: '#9B59B6'}];\n}"
+    },
+    {
+      "id": "example-021",
+      "title": "Opération booléenne - Différence",
+      "category": "SHAPE_CREATION",
+      "description": "Soustrait une forme d'une autre",
+      "tags": ["boolean", "difference", "soustraction"],
+      "code": "const base = penpot.createRectangle();\nbase.resize(120, 120);\nbase.x = 150;\nbase.y = 150;\nbase.fills = [{fillColor: '#2ECC71'}];\n\nconst hole = penpot.createEllipse();\nhole.resize(60, 60);\nhole.x = 180;\nhole.y = 180;\n\nconst result = penpot.createBoolean('difference', [base, hole]);\nif (result) {\n  result.fills = [{fillColor: '#16A085'}];\n}"
+    },
+    {
+      "id": "example-022",
+      "title": "Pattern de cercles concentriques",
+      "category": "SHAPE_CREATION",
+      "description": "Crée des cercles concentriques avec différentes couleurs",
+      "tags": ["pattern", "concentrique", "cercles"],
+      "code": "const center = penpot.viewport.center;\nconst colors = ['#E74C3C', '#E67E22', '#F39C12', '#F1C40F', '#2ECC71'];\nfor (let i = 5; i > 0; i--) {\n  const circle = penpot.createEllipse();\n  const size = i * 40;\n  circle.resize(size, size);\n  circle.x = center.x - (size / 2);\n  circle.y = center.y - (size / 2);\n  circle.fills = [{fillColor: colors[i - 1]}];\n}"
+    },
+    {
+      "id": "example-023",
+      "title": "Carte avec titre et contenu",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une carte stylisée avec titre et description",
+      "tags": ["carte", "card", "ui", "design"],
+      "code": "const card = penpot.createRectangle();\ncard.resize(250, 150);\ncard.x = 100;\ncard.y = 100;\ncard.borderRadius = 8;\ncard.fills = [{fillColor: '#FFFFFF'}];\ncard.strokes = [{strokeColor: '#BDC3C7', strokeWidth: 1}];\n\nconst header = penpot.createRectangle();\nheader.resize(250, 50);\nheader.x = 100;\nheader.y = 100;\nheader.borderRadius = 8;\nheader.fills = [{fillColor: '#3498DB'}];\n\nconst title = penpot.createText('Titre de la Carte');\ntitle.x = 115;\ntitle.y = 115;\ntitle.fontSize = 18;\ntitle.fontWeight = '600';\ntitle.fills = [{fillColor: '#FFFFFF'}];\n\nconst content = penpot.createText('Contenu de la carte');\ncontent.x = 115;\ncontent.y = 165;\ncontent.fontSize = 14;\ncontent.fills = [{fillColor: '#34495E'}];\n\nconst group = penpot.group([card, header, title, content]);"
+    },
+    {
+      "id": "example-024",
+      "title": "Bouton interactif",
+      "category": "INTERACTION",
+      "description": "Crée un bouton avec interaction de navigation",
+      "tags": ["bouton", "button", "interaction", "prototype"],
+      "code": "const button = penpot.createRectangle();\nbutton.resize(120, 40);\nbutton.x = 200;\nbutton.y = 200;\nbutton.borderRadius = 20;\nbutton.fills = [{fillColor: '#3498DB'}];\nbutton.name = 'Bouton Action';\n\nconst label = penpot.createText('Cliquer');\nlabel.x = 230;\nlabel.y = 210;\nlabel.fontSize = 16;\nlabel.fontWeight = '600';\nlabel.fills = [{fillColor: '#FFFFFF'}];\n\nconst targetBoard = penpot.createBoard();\ntargetBoard.name = 'Page Cible';\ntargetBoard.resize(400, 600);\ntargetBoard.x = 500;\ntargetBoard.y = 100;\n\nbutton.addInteraction('click', {\n  type: 'navigate-to',\n  destination: targetBoard\n});"
+    },
+    {
+      "id": "example-025",
+      "title": "Spirale de rectangles",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une spirale avec des rectangles pivotés",
+      "tags": ["spirale", "spiral", "rotation", "pattern"],
+      "code": "const center = penpot.viewport.center;\nconst steps = 12;\nfor (let i = 0; i < steps; i++) {\n  const rect = penpot.createRectangle();\n  const size = 20 + (i * 5);\n  rect.resize(size, size);\n  const angle = (i * 30) * (Math.PI / 180);\n  const radius = 50 + (i * 10);\n  rect.x = center.x + Math.cos(angle) * radius - (size / 2);\n  rect.y = center.y + Math.sin(angle) * radius - (size / 2);\n  rect.rotation = i * 30;\n  const hue = (i * 30) % 360;\n  rect.fills = [{fillColor: `hsl(${hue}, 70%, 50%)`}];\n}"
+    },
+    {
+      "id": "example-026",
+      "title": "Timeline verticale",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une timeline verticale avec étapes",
+      "tags": ["timeline", "étapes", "vertical", "ui"],
+      "code": "const steps = ['Étape 1', 'Étape 2', 'Étape 3', 'Étape 4'];\nconst startY = 100;\nconst spacing = 80;\n\nconst line = penpot.createRectangle();\nline.resize(4, 280);\nline.x = 148;\nline.y = startY;\nline.fills = [{fillColor: '#95A5A6'}];\n\nfor (let i = 0; i < steps.length; i++) {\n  const dot = penpot.createEllipse();\n  dot.resize(20, 20);\n  dot.x = 140;\n  dot.y = startY + (i * spacing);\n  dot.fills = [{fillColor: i < 2 ? '#2ECC71' : '#95A5A6'}];\n  dot.strokes = [{strokeColor: '#FFFFFF', strokeWidth: 3}];\n  \n  const label = penpot.createText(steps[i]);\n  label.x = 170;\n  label.y = startY + (i * spacing) + 2;\n  label.fontSize = 16;\n  label.fills = [{fillColor: '#2C3E50'}];\n}"
+    },
+    {
+      "id": "example-027",
+      "title": "Graphique en barres simple",
+      "category": "SHAPE_CREATION",
+      "description": "Crée un graphique en barres avec valeurs",
+      "tags": ["graphique", "chart", "barres", "data"],
+      "code": "const data = [65, 45, 80, 30, 90];\nconst maxHeight = 150;\nconst barWidth = 40;\nconst spacing = 10;\nconst startX = 100;\nconst baseY = 300;\n\nfor (let i = 0; i < data.length; i++) {\n  const height = (data[i] / 100) * maxHeight;\n  const bar = penpot.createRectangle();\n  bar.resize(barWidth, height);\n  bar.x = startX + (i * (barWidth + spacing));\n  bar.y = baseY - height;\n  bar.fills = [{fillColor: '#3498DB'}];\n  \n  const value = penpot.createText(data[i].toString());\n  value.x = bar.x + 10;\n  value.y = bar.y - 20;\n  value.fontSize = 12;\n  value.fills = [{fillColor: '#2C3E50'}];\n}"
+    },
+    {
+      "id": "example-028",
+      "title": "Badge de notification",
+      "category": "SHAPE_CREATION",
+      "description": "Crée un badge rond avec nombre",
+      "tags": ["badge", "notification", "ui", "counter"],
+      "code": "const badge = penpot.createEllipse();\nbadge.resize(24, 24);\nbadge.x = 200;\nbadge.y = 200;\nbadge.fills = [{fillColor: '#E74C3C'}];\n\nconst count = penpot.createText('5');\ncount.x = 208;\ncount.y = 205;\ncount.fontSize = 12;\ncount.fontWeight = '700';\ncount.textAlign = 'center';\ncount.fills = [{fillColor: '#FFFFFF'}];\n\nconst group = penpot.group([badge, count]);\ngroup.name = 'Notification Badge';"
+    },
+    {
+      "id": "example-029",
+      "title": "Icône de menu hamburger",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une icône de menu à trois barres",
+      "tags": ["icône", "icon", "menu", "hamburger"],
+      "code": "const lines = [];\nfor (let i = 0; i < 3; i++) {\n  const line = penpot.createRectangle();\n  line.resize(30, 3);\n  line.x = 200;\n  line.y = 200 + (i * 8);\n  line.borderRadius = 1.5;\n  line.fills = [{fillColor: '#2C3E50'}];\n  lines.push(line);\n}\nconst menuIcon = penpot.group(lines);\nmenuIcon.name = 'Menu Icon';"
+    },
+    {
+      "id": "example-030",
+      "title": "Indicateur de progression",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une barre de progression avec pourcentage",
+      "tags": ["progress", "progression", "loading", "ui"],
+      "code": "const progress = 65;\nconst background = penpot.createRectangle();\nbackground.resize(200, 20);\nbackground.x = 150;\nbackground.y = 200;\nbackground.borderRadius = 10;\nbackground.fills = [{fillColor: '#ECF0F1'}];\n\nconst fill = penpot.createRectangle();\nfill.resize(200 * (progress / 100), 20);\nfill.x = 150;\nfill.y = 200;\nfill.borderRadius = 10;\nfill.fills = [{fillColor: '#2ECC71'}];\n\nconst label = penpot.createText(progress + '%');\nlabel.x = 230;\nlabel.y = 202;\nlabel.fontSize = 14;\nlabel.fontWeight = '600';\nlabel.fills = [{fillColor: '#FFFFFF'}];\n\nconst progressBar = penpot.group([background, fill, label]);\nprogressBar.name = 'Progress Bar';"
     }
   ]
 }

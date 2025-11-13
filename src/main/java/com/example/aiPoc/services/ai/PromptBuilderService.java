@@ -1,7 +1,6 @@
 package com.example.aiPoc.services.ai;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import org.springframework.stereotype.Service;
 
 import com.example.aiPoc.models.PromptStrategy;
@@ -64,18 +63,6 @@ public class PromptBuilderService {
     }
 
     /**
-     * Construit un prompt à partir du nom d’une stratégie.
-     *
-     * @param userPrompt   le texte fourni par l’utilisateur
-     * @param strategyName le nom de la stratégie à utiliser (ex. "basic", "detailed", "structured")
-     * @return le prompt généré selon la stratégie correspondante
-     */
-    public String buildPrompt(String userPrompt, String strategyName) {
-        PromptStrategy strategy = PromptStrategy.fromValue(strategyName);
-        return buildPrompt(userPrompt, strategy);
-    }
-
-    /**
      * Construit un prompt basique, sans ajout de contexte ni de documentation.
      *
      * <p><b>Stratégie :</b> {@link PromptStrategy#BASIC}</p>
@@ -104,7 +91,7 @@ public class PromptBuilderService {
      * @return un prompt enrichi de documentation et d’instructions détaillées
      */
     private String buildDetailedPrompt(String userPrompt) {
-        String optimizedApiSummary = documentationAggregator.generateOptimizedSummary(userPrompt);
+        String apiSummary = documentationAggregator.generateSummary(userPrompt);
 
         return String.format("""
             [SYSTÈME]
@@ -125,7 +112,7 @@ public class PromptBuilderService {
             - Pas de balises markdown (```javascript)
             - Directement exécutable dans un plugin Penpot
             """,
-            optimizedApiSummary,
+            apiSummary,
             userPrompt
         );
     }

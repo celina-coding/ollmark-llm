@@ -1,38 +1,42 @@
 package com.example.aiPoc.services.penpot;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.regex.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import org.springframework.stereotype.Service;
 
 import com.example.aiPoc.models.ValidationError;
 import com.example.aiPoc.utils.CodeUtils;
 
 /**
- * Service chargé de la validation du code JavaScript généré automatiquement,
- * notamment pour des scripts destinés à l'API Penpot.
- * 
- * <p><b>Version optimisée avec :</b></p>
+ * Service responsable de la validation des scripts JavaScript générés automatiquement
+ * pour l’API Penpot.
+ *
+ * <p>Ce service applique plusieurs niveaux de vérification :</p>
  * <ul>
- *   <li>Meilleure détection des faux positifs</li>
- *   <li>Validation plus permissive pour le code généré par IA</li>
- *   <li>Distinction entre erreurs critiques et avertissements</li>
+ *   <li>Validation syntaxique des structures de code</li>
+ *   <li>Contrôle de l’utilisation correcte de l’API Penpot</li>
+ *   <li>Détection d’erreurs et d’incohérences fréquentes</li>
  * </ul>
- * 
+ *
  * @see PenpotSdkService
+ * @see ValidationError
  */
 @Service
 public class CodeValidationService {
 
+    /** Logger utilisé pour le suivi et le débogage du service. */
     private static final Logger logger = LoggerFactory.getLogger(CodeValidationService.class);
 
     /** Service de gestion du SDK Penpot (injection de dépendance) */
     private final PenpotSdkService sdkService;
 
+    /**
+     * Constructeur du service de validation.
+     *
+     * @param sdkService le service gérant la documentation et les méthodes du SDK Penpot
+     */
     public CodeValidationService(PenpotSdkService sdkService) {
         this.sdkService = sdkService;
     }
@@ -237,7 +241,7 @@ public class CodeValidationService {
      * @return liste des suggestions (triées par similarité)
      */
     private List<String> suggestSimilarMethods(String invalidMethod, int maxSuggestions) {
-        return sdkService.getMethodsByCategory(null).stream() // Toutes les méthodes
+        return sdkService.getMethodsByCategory(null).stream()
             .map(method -> new java.util.AbstractMap.SimpleEntry<>(
                 method.getName(),
                 CodeUtils.levenshteinDistance(
@@ -247,7 +251,7 @@ public class CodeValidationService {
             ))
             .sorted(java.util.Map.Entry.comparingByValue())
             .limit(maxSuggestions)
-            .filter(entry -> entry.getValue() <= 3) // Seulement les suggestions pertinentes
+            .filter(entry -> entry.getValue() <= 3)
             .map(java.util.Map.Entry::getKey)
             .toList();
     }
@@ -289,10 +293,12 @@ public class CodeValidationService {
     }
 
     /**
-     * Détecte les variables non déclarées de manière plus précise.
+     * Détecte les variables non déclarées dans le code.
+     *
+     * @param code le code à analyser
+     * @return {@code true} si des variables non déclarées sont suspectées
      */
     private boolean hasPotentialUndeclaredVariables(String code) {
-        // Chercher des patterns comme "variable = value" sans const/let/var avant
         Pattern undeclaredPattern = Pattern.compile(
             "^\\s*[a-z_][a-zA-Z0-9_]*\\s*=",
             Pattern.MULTILINE
@@ -361,28 +367,10 @@ public class CodeValidationService {
      * @param substring la sous-chaîne à rechercher
      * @return le nombre d’occurrences trouvées
      */
-
     private int countOccurrences(String text, String substring) {
         if (text == null || substring == null || substring.isEmpty()) {
             return 0;
         }
         return (text.length() - text.replace(substring, "").length()) / substring.length();
-    }
-
-    /**
-     * Indique si un code est entièrement valide.
-     * <p>
-     * Cette méthode exécute la validation complète et renvoie {@code true}
-     * uniquement si aucune erreur n’a été détectée.
-     * </p>
-     *
-     * @param code le code à vérifier
-     * @return {@code true} si le code est valide, {@code false} sinon
-     */
-
-    public boolean isValid(String code) {
-        List<ValidationError> errors = validate(code);
-        // Considérer comme valide si seules des warnings existent
-        return errors.stream().noneMatch(e -> "ERROR".equals(e.getSeverity()));
     }
 }

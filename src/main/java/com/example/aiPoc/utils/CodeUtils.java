@@ -13,8 +13,6 @@ package com.example.aiPoc.utils;
  *   <li>Évaluer la validité syntaxique du code</li>
  * </ul>
  * <p>
- * Cette classe ne doit pas être instanciée.
- * Toutes les méthodes sont statiques.
  */
 public class CodeUtils {
 
@@ -62,7 +60,9 @@ public class CodeUtils {
 
         for (String line : lines) {
             String trimmed = line.trim();
-            if (!trimmed.startsWith("//") || trimmed.contains("TODO") || trimmed.contains("FIXME")) {
+            if (!trimmed.startsWith("//") || 
+                trimmed.contains("TODO") || 
+                trimmed.contains("FIXME")) {
                 result.append(line).append("\n");
             }
         }
@@ -109,6 +109,7 @@ public class CodeUtils {
             if (trimmed.matches("^(const|let|var|function|class|import|export|penpot\\.|//|/\\*).*")) {
                 inCode = true;
             }
+
             if (inCode) {
                 code.append(line).append("\n");
             }
@@ -147,6 +148,13 @@ public class CodeUtils {
      * @return nombre minimal d’opérations nécessaires pour transformer s1 en s2
      */
     public static int levenshteinDistance(String s1, String s2) {
+        if (s1 == null || s2 == null) {
+            return Math.max(
+                s1 == null ? 0 : s1.length(),
+                s2 == null ? 0 : s2.length()
+            );
+        }
+
         int[][] dp = new int[s1.length() + 1][s2.length() + 1];
 
         for (int i = 0; i <= s1.length(); i++) dp[i][0] = i;
@@ -164,5 +172,76 @@ public class CodeUtils {
         }
 
         return dp[s1.length()][s2.length()];
+    }
+
+    /**
+     * Calcule le pourcentage de similarité entre deux chaînes.
+     * <p>
+     * Utilise la distance de Levenshtein pour calculer un score de similarité
+     * entre 0 (complètement différent) et 1 (identique).
+     * </p>
+     *
+     * @param s1 première chaîne
+     * @param s2 seconde chaîne
+     * @return score de similarité entre 0.0 et 1.0
+     */
+    public static double similarityScore(String s1, String s2) {
+        if (s1 == null || s2 == null) return 0.0;
+        if (s1.equals(s2)) return 1.0;
+
+        int maxLength = Math.max(s1.length(), s2.length());
+        if (maxLength == 0) return 1.0;
+
+        int distance = levenshteinDistance(s1, s2);
+        return 1.0 - ((double) distance / maxLength);
+    }
+
+    /**
+     * Supprime les phrases explicatives courantes en début de code.
+     * <p>
+     * Détecte et supprime les phrases comme "Let me create...", "Wait, maybe...", etc.
+     * </p>
+     */
+    public static String removeExplanatoryText(String code) {
+        if (code == null) return "";
+
+        String[] problematicPhrases = {
+            "(?i)^.*?wait,.*?$",
+            "(?i)^.*?let me.*?$",
+            "(?i)^.*?maybe.*?$",
+            "(?i)^.*?perhaps.*?$",
+            "(?i)^.*?for example.*?$",
+            "(?i)^.*?first,.*?$",
+            "(?i)^.*?then,.*?$"
+        };
+
+        String cleaned = code;
+        for (String pattern : problematicPhrases) {
+            cleaned = cleaned.replaceAll(pattern, "");
+        }
+
+        return cleaned.trim();
+    }
+
+    /**
+     * Vérifie si le code contient du texte explicatif.
+     */
+    public static boolean containsExplanatoryText(String code) {
+        if (code == null || code.isEmpty()) return false;
+
+        String lowerCode = code.toLowerCase();
+        String[] indicators = {
+            "wait", "let me", "maybe", "perhaps", "for example",
+            "voici", "alors", "d'abord", "ensuite", "maintenant",
+            "i will", "i'll", "we can", "we need"
+        };
+
+        for (String indicator : indicators) {
+            if (lowerCode.contains(indicator)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

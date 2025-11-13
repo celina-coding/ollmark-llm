@@ -1,18 +1,14 @@
 package com.example.aiPoc.services.evaluation;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import org.springframework.stereotype.Service;
 
 import com.example.aiPoc.dto.response.CodeGenerationResponse;
-import com.example.aiPoc.models.EvaluationResult;
-import com.example.aiPoc.models.ValidationError;
-import com.example.aiPoc.utils.CodeUtils;
-import com.example.aiPoc.utils.TokenEstimator;
+import com.example.aiPoc.models.*;
+import com.example.aiPoc.utils.*;
 
 /**
  * Service chargé d'évaluer automatiquement les performances des modèles IA
@@ -44,7 +40,6 @@ public class EvaluationService {
         CodeGenerationResponse response,
         List<CodeGenerationResponse> stabilityTests
     ) {
-
         logger.info("Évaluation pour modèle={}, prompt={}", modelName, promptId);
 
         EvaluationResult result = new EvaluationResult();
@@ -83,7 +78,7 @@ public class EvaluationService {
      * @param tempsSecondes durée de génération en secondes
      * @return une appréciation textuelle : « Excellent », « Acceptable », etc.
      */
-    public String evaluateTempsReponse(double tempsSecondes) {
+    private String evaluateTempsReponse(double tempsSecondes) {
         if (tempsSecondes < 3.0) return "Excellent";
         if (tempsSecondes < 8.0) return "Acceptable";
         if (tempsSecondes < 15.0) return "Lent mais exploitable";
@@ -336,8 +331,6 @@ public class EvaluationService {
         int distance = CodeUtils.levenshteinDistance(s1, s2);
         return 1.0 - ((double) distance / maxLength);
     }
-
-
 
     /**
      * Compte le nombre d'occurrences d'une sous-chaîne donnée dans une chaîne.

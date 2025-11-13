@@ -2,8 +2,7 @@ package com.example.aiPoc.models;
 
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Représente un résultat d'évaluation d'un modèle d'IA dans le cadre du POC.
@@ -100,46 +99,6 @@ public class EvaluationResult {
 
             this.moyenneGlobale = Math.round(this.moyenneGlobale * 100.0) / 100.0;
         }
-    }
-
-    /**
-     * Retourne une interprétation qualitative de la moyenne globale.
-     *
-     * @return une appréciation textuelle (ex. : "Excellent", "Bon", "Moyen", etc.)
-     */
-    public String getInterpretationMoyenne() {
-        if (moyenneGlobale == null) return "Non évalué";
-
-        if (moyenneGlobale >= 4.5) return "Excellent";
-        if (moyenneGlobale >= 3.5) return "Bon";
-        if (moyenneGlobale >= 2.5) return "Moyen";
-        if (moyenneGlobale >= 1.5) return "Faible";
-        return "Très faible";
-    }
-
-    /**
-     * Retourne une interprétation qualitative du temps de réponse.
-     *
-     * @return une appréciation textuelle du temps (ex. : "Excellent", "Acceptable", ...)
-     */
-    public String getInterpretationTemps() {
-        if (tempsReponseS == null) return "Non mesuré";
-
-        if (tempsReponseS < 3.0) return "Excellent";
-        if (tempsReponseS < 8.0) return "Acceptable";
-        if (tempsReponseS < 15.0) return "Lent mais exploitable";
-        return "Problématique";
-    }
-
-    /**
-     * Vérifie si tous les champs essentiels sont renseignés pour permettre l'export des résultats.
-     *
-     * @return {@code true} si les valeurs minimales nécessaires sont présentes, sinon {@code false}
-     */
-    public boolean isValidForExport() {
-        return modeleIA != null && idPrompt != null && 
-               stabilite != null && coherence != null && respectSujet != null &&
-               richesseStructurelle != null && creativite != null;
     }
 
     @Override
