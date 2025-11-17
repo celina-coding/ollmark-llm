@@ -1,8 +1,8 @@
 package com.example.aiPoc.dto.response;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
+import com.example.aiPoc.models.PromptStrategy;
 import com.example.aiPoc.models.ValidationError;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -32,7 +32,7 @@ public class CodeGenerationResponse {
     @JsonProperty("generatedCode")
     private String generatedCode;
 
-    /** Stratégie utilisée pour générer le code (ex. : {@code basic}, {@code detailed}, {@code structured}). */
+    /** Stratégie utilisée pour générer le code (ex. : {@link PromptStrategy#CREATION}. */
     @JsonProperty("strategy")
     private String strategy;
 
@@ -41,8 +41,7 @@ public class CodeGenerationResponse {
     private String userPrompt;
 
     /**
-     * Version enrichie du prompt, éventuellement augmentée par le système
-     * afin d'améliorer la qualité de génération (ajout de contexte, structure…).
+     * Version enrichie du prompt afin d'améliorer la qualité de génération.
      */
     @JsonProperty("enrichedPrompt")
     private String enrichedPrompt;

@@ -23,7 +23,7 @@ public class PromptTestRequest {
 
     /**
      * Stratégie de génération de code à tester.  
-     * Par exemple : {@code basic}, {@code detailed}, {@code with-examples}, {@code structured}.
+     * Par exemple : {@code creation}.
      */
     @JsonProperty("strategy")
     private String strategy;
@@ -83,7 +83,7 @@ public class PromptTestRequest {
     /**
      * Définit la stratégie utilisée pour le test.
      *
-     * @param strategy nom de la stratégie à évaluer (ex: {@code basic}, {@code detailed}, etc.)
+     * @param strategy nom de la stratégie à évaluer (ex: {@code creation})
      */
     public void setStrategy(String strategy) {
         this.strategy = strategy;

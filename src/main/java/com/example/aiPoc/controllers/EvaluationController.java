@@ -91,17 +91,17 @@ public class EvaluationController {
      *          <li><b>model</b> : nom du modèle IA (par défaut : <code>llama-3.3-70b</code>)</li>
      *          <li><b>promptId</b> : identifiant du prompt testé</li>
      *          <li><b>prompt</b> : texte du prompt à évaluer</li>
-     *          <li><b>strategy</b> : stratégie de génération (par défaut : <code>detailed</code>)</li>
+     *          <li><b>strategy</b> : stratégie de génération (par défaut : <code>creation</code>)</li>
      *        </ul>
      * @return une {@link ResponseEntity} contenant le résultat principal, les réponses brutes,
      *         et le nombre total de tests exécutés
      */
     @PostMapping("/test-prompt")
     public ResponseEntity<?> testPrompt(@RequestBody Map<String, String> request) {
-        String modelName = request.getOrDefault("model", "llama-3.3-70b");
+        String modelName = request.getOrDefault("model", "gemini-2.5-flash");
         String promptId = request.get("promptId");
         String promptText = request.get("prompt");
-        String strategy = request.getOrDefault("strategy", "detailed");
+        String strategy = request.getOrDefault("strategy", "creation");
 
         logger.info("Test d'évaluation: model={}, prompt={}", modelName, promptId);
 

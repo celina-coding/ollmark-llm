@@ -5,56 +5,26 @@ package com.example.aiPoc.models;
  * dans le cadre de l'interaction avec le modèle d'IA.
  *
  * <p>
- * Chaque stratégie définit un niveau de contextualisation et de structuration
- * différent, afin d’adapter la formulation des requêtes au modèle selon le cas
- * d’usage.
+ * Chaque stratégie est enrichit avec la documentation complète du SDK Penpot,
+ * ainsi que quelques exemples selon le contexte de la stratégie utilisée.
  * </p>
  *
  * <p>
  * Les stratégies disponibles sont :
  * <ul>
- *   <li>{@link #BASIC} : Prompt minimaliste sans contexte détaillé.</li>
- *   <li>{@link #DETAILED} : Prompt enrichi avec la documentation complète du SDK Penpot.</li>
- *   <li>{@link #WITH_EXAMPLES} : Prompt intégrant des exemples concrets (few-shot learning).</li>
- *   <li>{@link #STRUCTURED} : Prompt structuré avec sections clairement identifiées.</li>
+ *   <li>{@link #CREATION} : Prompt enrichi avec la documentation complète du SDK Penpot.</li>
  * </ul>
  * </p>
  */
 public enum PromptStrategy {
 
     /**
-     * Stratégie basique : génère un prompt minimal sans contexte spécifique ni structure avancée.
+     * Stratégie détaillée : génère un prompt mettant dans le contexte de la création d'un contenu.
      * <p>
-     * Cette approche est adaptée aux requêtes simples ne nécessitant pas de compréhension approfondie.
+     * Cette stratégie est pertinente pour les tâches de création de composants.
      * </p>
      */
-    BASIC("basic", "Prompt simple sans contexte détaillé"),
-
-    /**
-     * Stratégie détaillée : génère un prompt complet intégrant la documentation du SDK Penpot.
-     * <p>
-     * Cette stratégie est pertinente pour les tâches nécessitant une connaissance du contexte applicatif.
-     * </p>
-     */
-    DETAILED("detailed", "Inclut la documentation complète du SDK Penpot"),
-
-    /**
-     * Stratégie avec exemples : intègre des exemples concrets dans le prompt afin de favoriser
-     * l’apprentissage contextuel (few-shot learning).
-     * <p>
-     * Recommandée pour les cas où le modèle doit reproduire un comportement observé dans les exemples fournis.
-     * </p>
-     */
-    WITH_EXAMPLES("with-examples", "Inclut des exemples de code fonctionnels"),
-
-    /**
-     * Stratégie structurée : construit un prompt organisé en sections distinctes telles que
-     * [SYSTÈME], [API] et [TÂCHE].
-     * <p>
-     * Cette approche améliore la lisibilité et la cohérence du prompt pour des interactions complexes.
-     * </p>
-     */
-    STRUCTURED("structured", "Format structuré avec balises [SYSTÈME], [API], [TÂCHE]");
+    CREATION("creation", "Inclut la documentation complète du SDK Penpot");
 
     /** Valeur textuelle associée à la stratégie (identifiant interne ou clé de configuration). */
     private final String value;
@@ -96,11 +66,11 @@ public enum PromptStrategy {
      *
      * <p>
      * La recherche est insensible à la casse. Si aucune correspondance n’est trouvée,
-     * la stratégie {@link #DETAILED} est retournée par défaut.
+     * la stratégie {@link #CREATION} est retournée par défaut.
      * </p>
      *
      * @param value la valeur textuelle de la stratégie recherchée
-     * @return la stratégie correspondante si trouvée, ou {@link #DETAILED} par défaut
+     * @return la stratégie correspondante si trouvée, ou {@link #CREATION} par défaut
      */
     public static PromptStrategy fromValue(String value) {
         for (PromptStrategy strategy : values()) {
@@ -108,7 +78,7 @@ public enum PromptStrategy {
                 return strategy;
             }
         }
-        return DETAILED;
+        return CREATION;
     }
 
     @Override

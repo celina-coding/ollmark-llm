@@ -236,7 +236,7 @@
 
                 <div class="form-group">
                     <label>Modèle IA:</label>
-                    <input type="text" id="model" value="qwen/qwen3-32b" placeholder="Nom du modèle">
+                    <input type="text" id="model" value="gemini-2.5-flash" placeholder="Nom du modèle">
                 </div>
 
                 <div class="form-group">
@@ -252,10 +252,7 @@
                 <div class="form-group">
                     <label>Stratégie:</label>
                     <select id="strategy">
-                        <option value="basic">Basic</option>
-                        <option value="detailed" selected>Detailed</option>
-                        <option value="with-examples">With Examples</option>
-                        <option value="structured">Structured</option>
+                        <option value="creation" selected>Création</option>
                     </select>
                 </div>
 
@@ -331,7 +328,7 @@
             }
         }
 
-        // Afficher un résultat unique
+        // Affiche un résultat unique
         function displaySingleResult(evaluation) {
             const html = `
                 <div class="result-item">
@@ -355,7 +352,7 @@
             document.getElementById('results1').innerHTML = html;
         }
 
-        // Obtenir les statistiques
+        // Récupère les statistiques
         async function getStatistics() {
             try {
                 const response = await fetch(`${API_BASE}/statistics`);

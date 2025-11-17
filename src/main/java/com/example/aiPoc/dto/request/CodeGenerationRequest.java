@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * <p>Les valeurs par défaut sont :
  * <ul>
- *   <li>strategy : {@code detailed}</li>
+ *   <li>strategy : {@code creation}</li>
  *   <li>includeValidation : {@code true}</li>
  *   <li>cleanCode : {@code true}</li>
  * </ul>
@@ -29,11 +29,11 @@ public class CodeGenerationRequest {
 
     /**
      * Stratégie de génération de code utilisée par le moteur.
-     * <p>Peut être par exemple : {@code basic}, {@code detailed}, {@code with-examples}, {@code structured}.</p>
-     * Valeur par défaut : {@code detailed}.
+     * <p>Peut être par exemple : {@code creation}.</p>
+     * Valeur par défaut : {@code creation}.
      */
     @JsonProperty("strategy")
-    private String strategy = "detailed";
+    private String strategy = "creation";
 
     /**
      * Indique si le code généré doit être validé (syntaxe, structure, conformité, etc.).
@@ -97,7 +97,7 @@ public class CodeGenerationRequest {
     /**
      * Définit la stratégie utilisée pour la génération de code.
      *
-     * @param strategy nom de la stratégie (ex. : {@code basic}, {@code detailed}, {@code with-examples}, {@code structured})
+     * @param strategy nom de la stratégie (ex. : {@code creation})
      */
     public void setStrategy(String strategy) {
         this.strategy = strategy;
