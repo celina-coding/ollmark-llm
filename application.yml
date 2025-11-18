@@ -1,0 +1,21 @@
+gemini:
+  api-key: "AIzaSyC-hrAxSLR6JhYfhZPiSawc_cEUcmHZ_2Y"
+  model: "gemini-2.5-flash"
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/ollca
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  sql:
+    init:
+      mode: always  

@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: ollca-postgres
+    environment:
+      POSTGRES_DB: ollca
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
+    networks:
+      - ollca-network
+
+  app:
+    build: .
+    container_name: ollca-spring-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ollca
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+    networks:
+      - ollca-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ollca-network:
+    driver: bridge
