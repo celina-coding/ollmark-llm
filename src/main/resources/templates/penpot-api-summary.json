@@ -1,8 +1,8 @@
 {
   "version": "2.0.0",
-  "lastUpdate": "2025-11-12",
+  "lastUpdate": "2025-11-18",
   "source": "Penpot Plugin API Documentation",
-  "description": "Documentation structurée de l'API Penpot pour génération de code optimisée",
+  "description": "Documentation structurée de l'API Penpot pour génération de code optimisée - Méthodes officielles uniquement",
   
   "categories": {
     "SHAPE_CREATION": {
@@ -387,7 +387,7 @@
       "name": "uploadMediaData",
       "description": "Upload un média (image) vers Penpot depuis des données binaires",
       "returnType": "Promise<ImageData>",
-      "categories": ["MEDIA", "SHAPE_CREATION"],
+      "categories": ["MEDIA"],
       "parameters": [
         {
           "name": "name",
@@ -418,7 +418,7 @@
       "name": "uploadMediaUrl",
       "description": "Upload un média (image) vers Penpot depuis une URL",
       "returnType": "Promise<ImageData>",
-      "categories": ["MEDIA", "SHAPE_CREATION"],
+      "categories": ["MEDIA"],
       "parameters": [
         {
           "name": "name",
@@ -620,17 +620,25 @@
       "description": "Configuration du remplissage d'une forme",
       "properties": {
         "fillColor": {
-          "type": "string",
+          "type": "string", 
           "description": "Couleur au format hex (#RRGGBB ou #RRGGBBAA)",
           "example": "#FF0000"
         },
         "fillOpacity": {
           "type": "number",
-          "description": "Opacité du remplissage (0-1)",
+          "description": "Opacité du remplissage (0-1)", 
           "defaultValue": 1
+        },
+        "fillImage": {
+          "type": "ImageData",
+          "description": "Image de remplissage (utiliser avec uploadMediaUrl/uploadMediaData)",
+          "notes": "⚠️ Peut avoir des problèmes de validation dans certaines versions"
         }
       },
-      "usage": "shape.fills = [{fillColor: '#FF0000', fillOpacity: 0.8}];"
+      "usage": [
+        "shape.fills = [{fillColor: '#FF0000', fillOpacity: 0.8}];",
+        "shape.fills = [{fillImage: imageData}];"
+      ]
     },
     "Stroke": {
       "description": "Configuration du contour d'une forme",
@@ -794,15 +802,26 @@
         "penpot.alignHorizontal(penpot.selection, 'center');",
         "penpot.alignVertical(penpot.selection, 'center');"
       ]
+    },
+    "uploadAndUseImage": {
+      "description": "Workflow pour uploader et utiliser une image",
+      "code": [
+        "const imageData = await penpot.uploadMediaUrl('background', 'https://example.com/image.jpg');",
+        "const rect = penpot.createRectangle();",
+        "rect.resize(400, 300);",
+        "rect.x = 100; rect.y = 100;",
+        "// Note: L'application d'images comme remplissage peut avoir des limitations"
+      ]
     }
   },
 
-  "tips": [
+  "importantNotes": [
+    "Utilisez uploadMediaUrl et uploadMediaData pour gérer les images",
+    "Les méthodes async (uploadMedia, export) nécessitent await ou .then()",
     "Utilisez toujours resize() pour définir les dimensions, width/height sont en lecture seule",
     "Pour createText(), définissez fontId AVANT fontStyle ou fontWeight",
     "penpot.viewport.center est utile pour centrer les formes",
     "Les fills et strokes sont des tableaux, vous pouvez avoir plusieurs remplissages/contours",
-    "Les méthodes async (uploadMedia, export) nécessitent await ou .then()",
     "Pour un cercle parfait avec createEllipse(), utilisez la même valeur pour width et height",
     "group() retourne null si le regroupement échoue, vérifiez toujours le résultat",
     "Les opérations booléennes (createBoolean) nécessitent au moins 2 formes"

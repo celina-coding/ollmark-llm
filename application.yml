@@ -4,7 +4,7 @@ gemini:
 
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/ollca
+    url: jdbc:postgresql://localhost:5432/ollca
     username: user
     password: password
     driver-class-name: org.postgresql.Driver

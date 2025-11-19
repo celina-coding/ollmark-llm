@@ -244,6 +244,30 @@
       "description": "Crée une barre de progression avec pourcentage",
       "tags": ["progress", "progression", "loading", "ui"],
       "code": "const progress = 65;\nconst background = penpot.createRectangle();\nbackground.resize(200, 20);\nbackground.x = 150;\nbackground.y = 200;\nbackground.borderRadius = 10;\nbackground.fills = [{fillColor: '#ECF0F1'}];\n\nconst fill = penpot.createRectangle();\nfill.resize(200 * (progress / 100), 20);\nfill.x = 150;\nfill.y = 200;\nfill.borderRadius = 10;\nfill.fills = [{fillColor: '#2ECC71'}];\n\nconst label = penpot.createText(progress + '%');\nlabel.x = 230;\nlabel.y = 202;\nlabel.fontSize = 14;\nlabel.fontWeight = '600';\nlabel.fills = [{fillColor: '#FFFFFF'}];\n\nconst progressBar = penpot.group([background, fill, label]);\nprogressBar.name = 'Progress Bar';"
+    },
+    {
+      "id": "example-031", 
+      "title": "Rectangle avec image de fond",
+      "category": "MEDIA",
+      "description": "Crée un rectangle avec une image comme remplissage",
+      "tags": ["image", "fillImage", "upload", "media"],
+      "code": "const imageUrl = 'https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg';\nconst imageData = await penpot.uploadMediaUrl('background', imageUrl);\nconst rect = penpot.createRectangle();\nrect.resize(400, 250);\nrect.x = 100;\nrect.y = 100;\nrect.fills = [{fillImage: imageData}];"
+    },
+    {
+      "id": "example-032",
+      "title": "Image avec gestion d'erreur", 
+      "category": "MEDIA",
+      "description": "Upload une image avec fallback en cas d'erreur",
+      "tags": ["image", "erreur", "fallback", "try-catch"],
+      "code": "const imageUrl = 'https://example.com/image.jpg';\ntry {\n  const imageData = await penpot.uploadMediaUrl('mon-image', imageUrl);\n  const rect = penpot.createRectangle();\n  rect.resize(300, 200);\n  rect.x = 150;\n  rect.y = 150;\n  rect.fills = [{fillImage: imageData}];\n} catch (error) {\n  const rect = penpot.createRectangle();\n  rect.resize(300, 200);\n  rect.x = 150;\n  rect.y = 150;\n  rect.fills = [{fillColor: '#E0E0E0'}];\n  const text = penpot.createText('Image non disponible');\n  text.x = 160;\n  text.y = 240;\n  text.fills = [{fillColor: '#666666'}];\n}"
+    },
+    {
+      "id": "example-033",
+      "title": "Cercle avec image",
+      "category": "MEDIA", 
+      "description": "Crée un cercle avec image de fond",
+      "tags": ["image", "cercle", "ellipse", "fillImage"],
+      "code": "const imageData = await penpot.uploadMediaUrl('avatar', 'https://example.com/avatar.jpg');\nconst circle = penpot.createEllipse();\ncircle.resize(150, 150);\ncircle.x = 200;\ncircle.y = 200;\ncircle.fills = [{fillImage: imageData}];"
     }
   ]
 }
