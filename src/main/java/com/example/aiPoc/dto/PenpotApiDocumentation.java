@@ -293,7 +293,7 @@ public class PenpotApiDocumentation {
 
         /** Exemple d'utilisation. */
         @JsonProperty("usage")
-        private String usage;
+        private List<String> usage = new ArrayList<>();
 
         public String getDescription() { return description; }
         public void setDescription(String description) { this.description = description; }
@@ -301,8 +301,8 @@ public class PenpotApiDocumentation {
         public void setProperties(Map<String, PropertyDetail> properties) { 
             this.properties = properties; 
         }
-        public String getUsage() { return usage; }
-        public void setUsage(String usage) { this.usage = usage; }
+        public List<String> getUsage() { return usage; }
+        public void setUsage(List<String> usage) { this.usage = usage; }
     }
 
     /**

@@ -664,7 +664,9 @@
           "defaultValue": "center"
         }
       },
-      "usage": "shape.strokes = [{strokeColor: '#000', strokeWidth: 2, strokeStyle: 'solid'}];"
+      "usage": [
+        "shape.strokes = [{strokeColor: '#000', strokeWidth: 2, strokeStyle: 'solid'}];"
+      ]
     },
     "Bounds": {
       "description": "Limites rectangulaires d'une forme",
@@ -674,7 +676,9 @@
         "width": {"type": "number", "description": "Largeur totale"},
         "height": {"type": "number", "description": "Hauteur totale"}
       },
-      "usage": "const bounds = shape.bounds;"
+      "usage": [
+        "const bounds = shape.bounds;"
+      ]
     },
     "Point": {
       "description": "Coordonnées d'un point",
@@ -682,7 +686,9 @@
         "x": {"type": "number", "description": "Coordonnée X"},
         "y": {"type": "number", "description": "Coordonnée Y"}
       },
-      "usage": "const center = shape.center;"
+      "usage": [
+        "const center = shape.center;"
+      ]
     },
     "ImageData": {
       "description": "Données d'une image uploadée",
@@ -718,7 +724,9 @@
         "suffix": {"type": "string", "description": "Suffixe ajouté au nom du fichier"},
         "skipChildren": {"type": "boolean", "description": "Ignorer les formes enfants", "defaultValue": false}
       },
-      "usage": "await shape.export({type: 'png', scale: 2});"
+      "usage": [
+        "await shape.export({type: 'png', scale: 2});"
+      ]
     },
     "Font": {
       "description": "Configuration de police de caractères",

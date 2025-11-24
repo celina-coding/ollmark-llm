@@ -115,9 +115,8 @@ public class DocumentationAggregatorService {
 
         // SHAPE_CREATION - Mots-clés associés aux formes géométriques.
         if (containsAny(promptLower, new String[]{
-            "rectangle", "ellipse", "cercle", "circle", "path", "boolean", "board",
-            "carré", "square", "forme", "shape", "crée", "create", "créer",
-            "rond", "ovale", "tracé", "artboard"
+            "rectangle", "ellipse", "cercle", "badge", "path", "bouton", "board",
+            "carré", "forme", "crée", "créer", "rond", "ovale", "tracé", "cercle"
         })) {
             categories.add("SHAPE_CREATION");
         }
