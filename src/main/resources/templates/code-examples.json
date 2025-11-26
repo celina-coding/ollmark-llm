@@ -35,7 +35,7 @@
       "category": "TEXT",
       "description": "Crée un texte avec style et alignement",
       "tags": ["texte", "style", "label", "alignement"],
-      "code": "const text = penpot.createText('Texte Stylisé');\ntext.x = 200;\ntext.y = 200;\ntext.fontSize = 32;\ntext.fontWeight = '700';\ntext.textAlign = 'center';\ntext.fills = [{fillColor: '#2C3E50'}];\ntext.strokes = [{strokeColor: '#ECF0F1', strokeWidth: 1}];"
+      "code": "const text = penpot.createText('Texte Stylisé');\ntext.x = 200;\ntext.y = 200;\ntext.fontSize = 32;\ntext.fontWeight = '700';\ntext.fills = [{fillColor: '#2C3E50'}];\ntext.strokes = [{strokeColor: '#ECF0F1', strokeWidth: 1}];"
     },
     {
       "id": "example-008",
@@ -155,7 +155,15 @@
       "category": "SHAPE_CREATION",
       "description": "Crée un badge rond avec nombre",
       "tags": ["badge", "notification", "ui", "counter"],
-      "code": "const config = {width: 80,height: 30,radius: 5,rectColor: '#FF6B6B',text: 'PROMO',fontSize: 14,fontWeight: '700',textColor: '#FFFFFF',x: 200,y: 200};\nconst badgeRect = penpot.createRectangle();\nbadgeRect.resize(config.width, config.height);\nbadgeRect.borderRadius = config.radius;\nbadgeRect.fills = [{ fillColor: config.rectColor }];\nconst badgeText = penpot.createText(config.text);\nbadgeText.fontSize = config.fontSize;\nbadgeText.fontWeight = config.fontWeight;\nbadgeText.fills = [{ fillColor: config.textColor }];\nawait badgeText.loadFont();\nconst group = penpot.group([badgeRect, badgeText]);\ngroup.name = 'Marketing Badge';\ngroup.x = config.x;\ngroup.y = config.y;\nbadgeText.x = (config.width - badgeText.width) / 2;\nbadgeText.y = (config.height - badgeText.height) / 2;"
+      "code": "const badge = penpot.createEllipse();\nbadge.resize(24, 24);\nbadge.x = 200;\nbadge.y = 200;\nbadge.fills = [{fillColor: '#E74C3C'}];\n\nconst count = penpot.createText('5');\ncount.x = 208;\ncount.y = 205;\ncount.fontSize = 12;\ncount.fontWeight = '700';\ncount.fills = [{fillColor: '#FFFFFF'}];\n\nconst group = penpot.group([badge, count]);\ngroup.name = 'Notification Badge';"
+    },
+    {
+      "id": "example-029",
+      "title": "Icône de menu hamburger",
+      "category": "SHAPE_CREATION",
+      "description": "Crée une icône de menu à trois barres",
+      "tags": ["icône", "icon", "menu", "hamburger"],
+      "code": "const lines = [];\nfor (let i = 0; i < 3; i++) {\n  const line = penpot.createRectangle();\n  line.resize(30, 3);\n  line.x = 200;\n  line.y = 200 + (i * 8);\n  line.borderRadius = 1.5;\n  line.fills = [{fillColor: '#2C3E50'}];\n  lines.push(line);\n}\nconst menuIcon = penpot.group(lines);\nmenuIcon.name = 'Menu Icon';"
     },
     {
       "id": "example-030",
