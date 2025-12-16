@@ -38,4 +38,5 @@ logs/
 *.log
 
 target/
-src/main/resources/application.yml
+.mvn
+.metals
