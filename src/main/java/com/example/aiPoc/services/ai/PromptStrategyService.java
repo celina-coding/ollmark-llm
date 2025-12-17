@@ -80,6 +80,7 @@ public class PromptStrategyService {
      * </p>
      */
     public static class StrategyMetrics {
+
         /** Stratégie associée à ces métriques. */
         private final PromptStrategy strategy;
 

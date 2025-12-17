@@ -3,7 +3,8 @@ package com.example.aiPoc.controllers;
 import java.util.*;
 
 import org.slf4j.*;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.aiPoc.dto.request.*;
@@ -26,9 +27,15 @@ import com.example.aiPoc.services.orchestration.CodeGenerationOrchestrator;
  *
  * @see CodeGenerationOrchestrator
  */
-@CrossOrigin(origins = {"http://localhost:61873", "http://localhost:8080"})
+@CrossOrigin(origins = {
+    "http://localhost:61873",   // Plugin Penpot production
+    "http://localhost:8080",    // Application locale
+    "http://localhost:4400",    // Plugin Penpot en développement (Vite)
+    "http://127.0.0.1:4400"     // Alternative localhost pour plugin
+})
 @RestController
 @RequestMapping("/api/penpot")
+@Validated
 public class PenpotCodeController {
 
     /** Logger pour le suivi des requêtes et la journalisation des erreurs. */
@@ -55,21 +62,29 @@ public class PenpotCodeController {
      */
     @PostMapping("/generate")
     public ResponseEntity<?> generateCode(@RequestBody CodeGenerationRequest request) {
-        logger.info("Requête de génération: prompt='{}', strategy='{}'", 
-                   request.getPrompt(), request.getStrategy());
+        String sanitizedPrompt = request.getPrompt().substring(0, Math.min(100, request.getPrompt().length()));
+        logger.info("Requête de génération: prompt='{}...', strategy='{}'", 
+                   sanitizedPrompt, request.getStrategy());
 
         try {
-            if (request.getPrompt() == null || request.getPrompt().trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(new ErrorResponse("INVALID_REQUEST", "Le prompt ne peut pas être vide"));
-            }
-
             CodeGenerationResponse response = orchestrator.generateCode(request);
-            return ResponseEntity.ok(response);
+
+            // Retourne 200 si valide, 422 si code invalide mais généré
+            if (response.isValid()) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.warn("Paramètres invalides: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(new ErrorResponse("INVALID_PARAMETERS", e.getMessage()));
+                
         } catch (Exception e) {
-            logger.error("Erreur lors de la génération de code", e);
-            return ResponseEntity.internalServerError()
-                .body(new ErrorResponse("GENERATION_ERROR", e.getMessage()));
+            logger.error("Erreur inattendue lors de la génération", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("INTERNAL_ERROR", 
+                    "Une erreur interne est survenue. Veuillez réessayer."));
         }
     }
 
@@ -85,15 +100,11 @@ public class PenpotCodeController {
      */
     @PostMapping("/test-strategies")
     public ResponseEntity<?> testPromptStrategies(@RequestBody PromptTestRequest request) {
-        logger.info("Test de stratégie: prompt='{}', strategy='{}'", 
-                   request.getPrompt(), request.getStrategy());
+        logger.info("Test de stratégie: prompt='{}...', strategy='{}'", 
+                   request.getPrompt().substring(0, Math.min(50, request.getPrompt().length())),
+                   request.getStrategy());
 
         try {
-            if (request.getPrompt() == null || request.getPrompt().trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(new ErrorResponse("INVALID_REQUEST", "Le prompt ne peut pas être vide"));
-            }
-
             CodeGenerationRequest genRequest = new CodeGenerationRequest(
                 request.getPrompt(),
                 request.getStrategy()

@@ -1,12 +1,11 @@
-/*package com.example.aiPoc.services.ai;
+package com.example.aiPoc.services.ai;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.*;
 import org.springframework.stereotype.Service;
-*/
+
 /**
  * Implémentation concrète de l’interface {@link AIService} basée sur l’API OpenAI,
  * compatible avec le fournisseur <b>Groq</b>.
@@ -34,14 +33,14 @@ import org.springframework.stereotype.Service;
  * @see ChatClient
  * @see OpenAiChatModel
  */
-/*@Service
+@Service
 public class OpenAIService implements AIService {
 
     /** Logger SLF4J pour le suivi des opérations et des erreurs. */
-  //  private static final Logger logger = LoggerFactory.getLogger(OpenAIService.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpenAIService.class);
 
     /** Client de communication avec le modèle IA, fourni par Spring AI. */
-    //private final ChatClient chatClient;
+    private final ChatClient chatClient;
 
     /**
      * Construit un service OpenAI/Groq prêt à être utilisé.
@@ -55,7 +54,7 @@ public class OpenAIService implements AIService {
      * @param chatModel le modèle de chat OpenAI ou compatible Groq utilisé pour
      *                  générer les réponses IA
      */
-/*    public OpenAIService(OpenAiChatModel chatModel) {
+    public OpenAIService(OpenAiChatModel chatModel) {
         this.chatClient = ChatClient.builder(chatModel).build();
         logger.info("OpenAIService initialisé avec succès");
     }
@@ -68,7 +67,7 @@ public class OpenAIService implements AIService {
      * Pour un contrôle plus fin, utilisez {@link #chat(String, int, double)}.
      * </p>
      */
-  /*  @Override
+    @Override
     public String chat(String prompt) {
         return chat(prompt, 4096, 0.5);
     }
@@ -85,7 +84,7 @@ public class OpenAIService implements AIService {
      *   <li>Mesure précise du temps de réponse</li>
      * </ul>
      */
-   /* @Override
+    @Override
     public String chat(String prompt, int maxTokens, double temperature) {
         logger.debug("Envoi du prompt à l'IA: {} caractères (maxTokens={}, temperature={})", 
                     prompt.length(), maxTokens, temperature);
@@ -113,4 +112,4 @@ public class OpenAIService implements AIService {
             throw new RuntimeException("Échec de communication avec l'IA: " + e.getMessage(), e);
         }
     }
-}*/
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Générateur Code IA - Plugin Penpot</title>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🤖 Générateur code IA</h1>
+        <p class="subtitle">Générez du code Penpot avec l'IA</p>
+      </header>
+
+      <section class="config-section">
+        <div class="form-group">
+          <label for="strategy-select">Stratégie :</label>
+          <select id="strategy-select" data-appearance="secondary">
+            <option value="creation">Création</option>
+          </select>
+        </div>
+
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="include-validation" checked>
+            <span>Inclure la validation</span>
+          </label>
+          <label>
+            <input type="checkbox" id="clean-code" checked>
+            <span>Nettoyer le code</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="prompt-section">
+        <label for="prompt-input">Prompt :</label>
+        <textarea 
+          id="prompt-input" 
+          placeholder="Décrivez ce que vous voulez créer dans Penpot...&#10;Exemple: Créer un rectangle rouge de 200x100 pixels avec des coins arrondis"
+          rows="4"
+        ></textarea>
+        <div class="hint">💡 Astuce: Utilisez Ctrl+Enter pour générer rapidement</div>
+      </section>
+
+      <div class="button-group">
+        <button 
+          type="button" 
+          id="generate-btn"
+          data-appearance="primary"
+        >
+          Générer le code
+        </button>
+        <button 
+          type="button" 
+          id="clear-btn"
+          data-appearance="secondary"
+        >
+          Effacer
+        </button>
+      </div>
+
+      <div id="status" class="status" style="display: none;"></div>
+
+      <div id="metrics"></div>
+
+      <section class="code-section">
+        <div class="code-header">
+          <label>Code généré:</label>
+          <button 
+            type="button" 
+            id="execute-btn"
+            data-appearance="success"
+            disabled
+          >
+            Exécuter dans Penpot
+          </button>
+        </div>
+        <pre id="code-output" class="code-output">Le code généré apparaîtra ici...</pre>
+      </section>
+
+      <div id="validation"></div>
+
+      <footer>
+        <p class="info">
+          ℹ️ Connecté à: <code>http://localhost:8080/api/penpot</code>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

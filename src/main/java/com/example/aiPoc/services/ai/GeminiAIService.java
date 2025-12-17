@@ -1,4 +1,4 @@
-package com.example.aiPoc.services.ai;
+/*package com.example.aiPoc.services.ai;
 
 import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import com.example.aiPoc.exceptions.AIServiceException;
 import com.google.genai.Client;
 import com.google.genai.types.*;
-
+*/
 /**
  * Service d’intégration du modèle <b>Gemini</b> via le SDK officiel Google Gen AI.
  * 
@@ -18,25 +18,25 @@ import com.google.genai.types.*;
  * @see AIService
  * @see AIServiceException
  * @see com.google.genai.Client
- */
+ *//*
 @Service
 public class GeminiAIService implements AIService {
 
     /** Logger SLF4J pour le suivi des opérations et des erreurs. */
-    private static final Logger logger = LoggerFactory.getLogger(GeminiAIService.class);
+  /*  private static final Logger logger = LoggerFactory.getLogger(GeminiAIService.class);
 
     /** Client Google Gen AI utilisé pour l’appel au modèle Gemini. */
-    private final Client client;
+    /*private final Client client;
 
     /** Nom du modèle Gemini utilisé (ex. {@code gemini-2.0-flash-exp}). */
-    private final String model;
+    /*private final String model;
 
     /**
      * Construit une instance du service Gemini en initialisant le client Google Gen AI.
      *
      * @param apiKey clé API du compte Google Gen AI
      * @param model nom du modèle Gemini à utiliser (ex. {@code gemini-2.0-flash-exp})
-     */
+     *//*
     public GeminiAIService(
         @Value("${gemini.api-key}") String apiKey,
         @Value("${gemini.model}") String model
@@ -81,4 +81,4 @@ public class GeminiAIService implements AIService {
             throw new AIServiceException("Échec de génération Gemini : " + e.getMessage(), e);
         }
     }
-}
+}*/

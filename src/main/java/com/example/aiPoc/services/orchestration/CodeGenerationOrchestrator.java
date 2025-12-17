@@ -96,7 +96,7 @@ public class CodeGenerationOrchestrator {
             // 2. Construction du prompt
             String enrichedPrompt = promptBuilderService.buildPrompt(request.getPrompt(), strategy);
             response.setEnrichedPrompt(enrichedPrompt);
-
+System.out.println(enrichedPrompt);
             logger.debug("Prompt construit: {} caractères", enrichedPrompt.length());
 
             // 3. Appel à l'IA

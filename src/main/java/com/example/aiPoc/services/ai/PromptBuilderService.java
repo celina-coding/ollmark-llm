@@ -68,47 +68,46 @@ public class PromptBuilderService {
      * @param userPrompt la demande utilisateur
      * @return un prompt enrichi de documentation et d’instructions détaillées
      */
-     private String buildCreationPrompt(String userPrompt) {
-    String apiSummary = documentationAggregator.generateSummary(userPrompt);
+    private String buildCreationPrompt(String userPrompt) {
+        String apiSummary = documentationAggregator.generateSummary(userPrompt);
+        String ollcaContext = ollcaExtractorService.extractAndFormatData(userPrompt);
 
-    String ollcaContext = ollcaExtractorService.extractAndFormatData(userPrompt);
-    
+        return String.format("""
+            [SYSTÈME]
+            Tu es un générateur de code Penpot expert.
+            TU DOIS RESPECTER STRICTEMENT la documentation fournie.
 
-    return String.format("""
-        [SYSTÈME]
-        Tu es un générateur de code Penpot expert.
-        TU DOIS RESPECTER STRICTEMENT la documentation fournie.
+            [AVERTISSEMENT CRITIQUE]
+            - createImageFromUrl() N'EXISTE PAS dans l'API Penpot
+            - createImageFromData() N'EXISTE PAS dans l'API Penpot  
+            - setImageFill() N'EXISTE PAS dans l'API Penpot
+            - createImagePlaceholder() N'EXISTE PAS dans l'API Penpot
+
+            [MÉTHODES IMAGES AUTORISÉES UNIQUEMENT]
+            - uploadMediaUrl(name, url) : upload une image depuis une URL
+            - uploadMediaData(name, data, mimeType) : upload depuis données binaires
         
-        [AVERTISSEMENT CRITIQUE]
-        - createImageFromUrl() N'EXISTE PAS dans l'API Penpot
-        - createImageFromData() N'EXISTE PAS dans l'API Penpot  
-        - setImageFill() N'EXISTE PAS dans l'API Penpot
-        - createImagePlaceholder() N'EXISTE PAS dans l'API Penpot
-        
-        [MÉTHODES IMAGES AUTORISÉES UNIQUEMENT]
-        - uploadMediaUrl(name, url) : upload une image depuis une URL
-        - uploadMediaData(name, data, mimeType) : upload depuis données binaires
-    
 
-        [API DISPONIBLE]
-        %s
+            [API DISPONIBLE]
+            %s
 
-        [OLLCA CONTEXTE SUPPLÉMENTAIRE]
-        %s
+            [OLLCA CONTEXTE SUPPLÉMENTAIRE]
+            %s
 
-        [TÂCHE]
-        %s
+            [TÂCHE]
+            %s
 
-        [FORMAT DE SORTIE]
-        - Code JavaScript PUR uniquement
-        - PAS de commentaires
-        - DIRECTEMENT exécutable dans Penpot
-        """,
-        apiSummary,
-        ollcaContext,
-        userPrompt
-    );
-}
+            [FORMAT DE SORTIE]
+            - Code JavaScript PUR uniquement
+            - PAS de commentaires
+            - DIRECTEMENT exécutable dans Penpot
+            """,
+            apiSummary,
+            ollcaContext,
+            userPrompt
+        );
+    }
+
     /**
      * Construit un prompt destiné à corriger du code erroné généré par l’IA.
      *
@@ -122,29 +121,29 @@ public class PromptBuilderService {
      * @param errorMessage   le message d’erreur rencontré
      * @return un prompt demandant la correction du code sans explications textuelles
      */
-   public String buildCorrectionPrompt(String originalPrompt, String failedCode, String errorMessage) {
-    return String.format("""
-        Le code suivant a généré une erreur. Corrige-le en utilisant UNIQUEMENT les méthodes OFFICIELLES de l'API Penpot.
+    public String buildCorrectionPrompt(String originalPrompt, String failedCode, String errorMessage) {
+        return String.format("""
+            Le code suivant a généré une erreur. Corrige-le en utilisant UNIQUEMENT les méthodes OFFICIELLES de l'API Penpot.
 
-        Demande originale: %s
+            Demande originale: %s
 
-        Code généré (avec erreur):
-        %s
+            Code généré (avec erreur):
+            %s
 
-        Erreur: %s
+            Erreur: %s
 
-        [INSTRUCTIONS DE CORRECTION STRICTES]
-        - MÉTHODES AUTORISÉES UNIQUEMENT: uploadMediaUrl(), uploadMediaData()
-        - SYNTAXE EXACTE OBLIGATOIRE: rect.fills = [{fillImage: imageData}];
-        - INTERDICTION: createImageFromUrl, createImageFromData, setImageFill, createImagePlaceholder
-        - Vérifier que les méthodes async utilisent await
-        - Utiliser fillImage: PAS image:
+            [INSTRUCTIONS DE CORRECTION STRICTES]
+            - MÉTHODES AUTORISÉES UNIQUEMENT: uploadMediaUrl(), uploadMediaData()
+            - SYNTAXE EXACTE OBLIGATOIRE: rect.fills = [{fillImage: imageData}];
+            - INTERDICTION: createImageFromUrl, createImageFromData, setImageFill, createImagePlaceholder
+            - Vérifier que les méthodes async utilisent await
+            - Utiliser fillImage: PAS image:
 
-        Génère une version corrigée du code, sans explication.
-        """,
-        originalPrompt,
-        failedCode,
-        errorMessage
-    );
-}
+            Génère une version corrigée du code, sans explication.
+            """,
+            originalPrompt,
+            failedCode,
+            errorMessage
+        );
+    }
 }

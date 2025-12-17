@@ -2,6 +2,8 @@ package com.example.aiPoc.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * Représente la requête utilisée pour demander la génération de code Penpot.
  *
@@ -25,6 +27,7 @@ public class CodeGenerationRequest {
 
     /** Prompt fourni par l'utilisateur servant de base à la génération de code. */
     @JsonProperty("prompt")
+    @NotBlank(message = "Le prompt ne peut pas être vide")
     private String prompt;
 
     /**
