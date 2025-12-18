@@ -8,21 +8,19 @@
 5. [Structure du projet](#5-structure-du-projet)
 6. [Fonctionnement général](#6-fonctionnement-général)
 7. [Utilisation du service via API](#7-utilisation-du-service-via-api)
-8. [Intégration avec Penpot](#8-intégration-avec-penpot)
-9. [Exemples de prompts de test](#9-exemples-de-prompts-de-test)
-10. [Accès aux données de test](#10-accès-aux-données-de-test)
-11. [Logs et Debug](#11-logs-et-debug)
-12. [Gestion de l'environnement](#12-gestion-de-lenvironnement)
-13. [Dépannage](#13-dépannage)
-14. [Stack technologique](#14-stack-technologique)
-15. [Ressources et liens utiles](#15-ressources-et-liens-utiles)
+8. [Exemples de prompts de test](#8-exemples-de-prompts-de-test)
+9. [Accès aux données de test](#9-accès-aux-données-de-test)
+10. [Logs et Debug](#10-logs-et-debug)
+11. [Gestion de l'environnement](#11-gestion-de-lenvironnement)
+12. [Stack technologique](#12-stack-technologique)
+13. [Ressources et liens utiles](#13-ressources-et-liens-utiles)
 
 ## 1. Présentation générale du projet
 
-Ce projet constitue une preuve de concept (POC) visant à évaluer et comparer plusieurs modèles d'intelligence artificielle pour générer automatiquement du code compatible avec Penpot via un microservice Spring Boot. Le modèle principal testé est **Gemini 2.5 Flash** (API Google), avec possibilité d'extension vers d'autres modèles.
+Ce POC vise à évaluer et comparer plusieurs modèles d'intelligence artificielle pour générer automatiquement du code compatible avec Penpot via un microservice Spring Boot. Le modèle principal testé est **Gemini 2.5 Flash** (API Google), avec possibilité d'extension vers d'autres modèles.
 
 Le POC permet :
-- d'envoyer un prompt à l'IA Gemini
+- d'envoyer un prompt à l'IA
 - de recevoir du code Penpot prêt à copier-coller dans un plugin
 - d'évaluer la qualité du code généré à l'aide de plusieurs métriques
 - de réaliser des tests comparatifs de stabilité
@@ -58,7 +56,7 @@ Assurez‑vous qu'ils sont libres avant de démarrer.
 
 ### 3.1. Cloner le repository
 ```bash
-git clone <URL_DU_REPO>
+git clone git@gitlab-dpt-info-sciences.univ-rouen.fr:m2gil/ollmark/ollmark-poc/ollmark-poc-llm.git
 cd ollmark-poc-llm
 ```
 
@@ -67,18 +65,20 @@ cd ollmark-poc-llm
 Créez un fichier `.env` à la racine du projet avec le contenu suivant :
 
 ```env
-# Spring AI Vertex AI Gemini Configuration
-SPRING_AI_VERTEXAI_GEMINI_PROJECT_ID=ollmark
-SPRING_AI_VERTEXAI_GEMINI_LOCATION=us-central1
-
-# Gemini Configuration
-GEMINI_API_KEY=<CLE_API>
-GEMINI_MODEL=gemini-2.5-flash
+OPENAI_API_KEY=gsk_...
 
 # Database Configuration
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ollca
 SPRING_DATASOURCE_USERNAME=user
 SPRING_DATASOURCE_PASSWORD=password
+
+# Prompt Système
+PROMPT_SYSTEM_SECTION=[SYSTÈME]...
+PROMPT_CRITICAL_WARNINGS=[AVERTISSEMENT CRITIQUE]...
+PROMPT_ALLOWED_IMAGE_METHODS=[MÉTHODES IMAGES AUTORISÉES UNIQUEMENT]...
+PROMPT_OUTPUT_FORMAT=[FORMAT DE SORTIE]...
+PROMPT_CORRECTION_TEMPLATE=...
+PROMPT_CORRECTION_INSTRUCTIONS=[INSTRUCTIONS DE CORRECTION STRICTES]...
 ```
 
 ⚠️ **Important** : Ne committez JAMAIS le fichier `.env` !
@@ -136,10 +136,47 @@ Vous devriez voir :
 Started AiPocApplication in X.XXX seconds
 ```
 
-### 4.4. Tester l'API
-Ouvrez votre navigateur : http://localhost:8080
+### 4.4. Démarrer Penpot
 
-Vous devriez voir la page d'accueil du projet.
+### 4.4.1. Démarrer le studio
+
+Depuis la racine du projet
+```
+cd penpot-plugin-starter-template/
+docker compose up --build
+``` 
+
+### 4.4.2. Démarrer le plugin
+```
+npm install && npm run dev
+```
+
+### 4.4.3. Vérifier que tout fonctionne
+```bash
+docker ps
+```
+
+Vous devez voir :
+
+| Container         | Port        | Statut |
+|------------------|-------------|--------|
+| penpotapp/frontend  | 9001:8080   | Up     |
+
+
+### 4.5. Tester l'API
+
+### 4.5.1. Depuis le Microservice
+
+1. Ouvrez votre navigateur : http://localhost:8080
+2. Vous devriez voir la page d'accueil du projet.
+
+### 4.5.2. Depuis le Studio Penpot
+1. Ouvrez le studio Penpot : http://localhost:9001
+2. Créez un projet.
+3. Cliquez sur le menu "Extensions" <i>(Ctrl+Alt+P)</i>
+4. Rentrez cette URL : "http://localhost:4400/manifest.json"
+5. Ouvrez le plugin : "Générateur AI Penpot"
+
 
 ---
 
@@ -151,7 +188,6 @@ ollmark-poc-llm/
 │   ├── AiPocApplication.java              # Point d'entrée Spring Boot
 │   ├── config/                            # Configuration (CORS, AI Provider)
 │   ├── controllers/                       # Endpoints REST
-│   │   ├── ChatController.java            # Chat avec l'IA
 │   │   ├── EvaluationController.java      # Tests d'évaluation
 │   │   ├── HomeController.java            # Page d'accueil
 │   │   └── PenpotCodeController.java      # Génération de code Penpot
@@ -165,7 +201,7 @@ ollmark-poc-llm/
 │   │   └── PromptStrategy.java            # Stratégies de prompt
 │   ├── services/
 │   │   ├── ai/                            # Services IA
-│   │   │   ├── GeminiAIService.java       # Intégration Gemini
+│   │   │   ├── OpenAIService.java         # Intégration OpenAI
 │   │   │   ├── PromptBuilderService.java  # Construction des prompts
 │   │   │   └── PromptStrategyService.java # Gestion des stratégies
 │   │   ├── evaluation/                    # Service d'évaluation
@@ -182,8 +218,7 @@ ollmark-poc-llm/
 ├── Dockerfile                             # Image Docker de l'app
 ├── init.sql                               # Initialisation PostgreSQL
 ├── .env                                   # (à créer)
-├── pom.xml
-└── README.md
+└── pom.xml
 ```
 
 ---
@@ -259,20 +294,7 @@ Cette requête exécute **5 fois** le même prompt et évalue :
 
 ---
 
-## 8. Intégration avec Penpot
-
-### 8.1. Télécharger le template plugin Penpot
-```bash
-git clone https://github.com/penpot/penpot-plugin-starter-template
-cd penpot-plugin-starter-template
-```
-
-### 8.2. Suivre instructions
-Ensuite il suffit de suivre les indications de ce document : [Consulter le guide PDF](./RUN_PENPOT_PLUGIN.pdf)
-
----
-
-### 9. Exemples de prompts de test
+### 8. Exemples de prompts de test
 
 **Prompt 1 - Carte de visite** :
 ```
@@ -303,17 +325,17 @@ Crée une affiche A4 pour une promotion :
 
 ---
 
-## 10. Accès aux données de test
+## 9. Accès aux données de test
 
 Le microservice inclut des données de test pré-chargées :
 
-### 10.1. Boutiques disponibles
+### 9.1. Boutiques disponibles
 - **Boucherie Huet** (Versailles)
   - 3 produits : Côte de Boeuf, Filet Mignon, Saucisses
 - **La Fromagerie du Marché** (Paris)
   - 2 produits : Comté 18 mois, Camembert AOP
 
-### 10.2. Endpoints d'accès aux données
+### 9.2. Endpoints d'accès aux données
 ```
 GET /api/boutiques           # Liste toutes les boutiques
 GET /api/boutiques/{id}      # Détails d'une boutique
@@ -323,19 +345,19 @@ GET /api/produits/{id}       # Détails d'un produit
 
 ---
 
-## 11. Logs et Debug
+## 10. Logs et Debug
 
-### 11.1. Consulter les logs en temps réel
+### 10.1. Consulter les logs en temps réel
 ```bash
 docker logs -f ollca-spring-app
 ```
 
-### 11.2. Logs PostgreSQL
+### 10.2. Logs PostgreSQL
 ```bash
 docker logs -f ollca-postgres
 ```
 
-### 11.3. Niveaux de logging
+### 10.3. Niveaux de logging
 Configurés dans `application.properties` :
 ```properties
 logging.level.root=INFO
@@ -343,37 +365,30 @@ logging.level.com.example.aiPoc=INFO
 logging.level.org.springframework.ai=DEBUG
 ```
 
-### 11.4. Fichiers de logs
-Les logs sont également sauvegardés dans :
-```
-logs/app.log
-```
-
 ---
 
-## 12. Gestion de l'environnement
+## 11. Gestion de l'environnement
 
-### 12.1. Arrêter les services
+### 11.1. Arrêter les services
 ```bash
 docker compose down
 ```
 
-### 12.2. Redémarrer après modifications
+### 11.2. Redémarrer après modifications
 ```bash
 # Recompiler le JAR
 mvn clean package -DskipTests
 
 # Redémarrer Docker
-docker compose down
-docker compose up --build
+docker compose down && docker compose up --build
 ```
 
-### 12.3. Nettoyer complètement (⚠️ efface les données)
+### 11.3. Nettoyer complètement (⚠️ efface les données)
 ```bash
 docker compose down -v
 ```
 
-### 12.4. Accéder à la base de données
+### 11.4. Accéder à la base de données
 ```bash
 docker exec -it ollca-postgres psql -U user -d ollca
 ```
@@ -391,47 +406,18 @@ JOIN boutique b ON p.id_boutique = b.id_boutique;
 
 ---
 
-## 13. Dépannage
-
-### Problème : Le conteneur Spring Boot ne démarre pas
-**Solution** :
-1. Vérifiez que le JAR existe : `ls -lh target/*.jar`
-2. Si absent, recompilez : `mvn clean package -DskipTests`
-3. Vérifiez les logs : `docker logs ollca-spring-app`
-
-### Problème : Erreur "Vertex AI project-id must be set"
-**Solution** :
-Assurez-vous que `application.properties` contient :
-```properties
-spring.autoconfigure.exclude=org.springframework.ai.autoconfigure.vertexai.gemini.VertexAiGeminiAutoConfiguration
-```
-
-### Problème : Connexion refusée à PostgreSQL
-**Solution** :
-1. Vérifiez que PostgreSQL est démarré : `docker ps | grep postgres`
-2. Attendez 10-15 secondes après le démarrage
-3. Vérifiez les variables d'environnement dans `.env`
-
-### Problème : API Gemini retourne une erreur 401
-**Solution** :
-1. Vérifiez votre clé API dans `.env`
-2. Testez la clé sur https://ai.google.dev/
-3. Vérifiez les quotas de votre compte Google AI
-
----
-
-## 14. Stack technologique
+## 12. Stack technologique
 - **Backend** : Spring Boot 3.5.6
 - **Java** : 21
 - **Base de données** : PostgreSQL 15
-- **IA** : Google Gemini 2.5 Flash (via SDK Java)
+- **IA** : OpenAI (via SpringAI)
 - **ORM** : Spring Data JPA / Hibernate
 - **Build** : Maven
 - **Conteneurisation** : Docker + Docker Compose
 
 ---
 
-## 15. Ressources et liens utiles
+## 13. Ressources et liens utiles
 
 - **Documentation Gemini** : https://ai.google.dev/docs
 - **Penpot API** : https://penpot-plugins-api-doc.pages.dev/

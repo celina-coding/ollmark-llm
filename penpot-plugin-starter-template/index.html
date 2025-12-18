@@ -1,92 +1,201 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Générateur Code IA - Plugin Penpot</title>
-  </head>
-  <body>
-    <div class="container">
-      <header>
-        <h1>🤖 Générateur code IA</h1>
-        <p class="subtitle">Générez du code Penpot avec l'IA</p>
-      </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Générateur Code IA - Plugin Penpot</title>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🤖 Générateur code IA</h1>
+      <p class="subtitle">Générez du code Penpot avec l'IA</p>
+    </header>
+
+    <!-- Sélecteur de stratégie -->
+    <section class="strategy-selector">
+      <div class="form-group">
+        <label for="strategy-select">Mode de génération :</label>
+        <select id="strategy-select" data-appearance="secondary">
+          <option value="creation">✨ Création - Générer de nouveaux éléments</option>
+          <option value="modification">🔧 Modification - Modifier la page existante</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- VUE CRÉATION -->
+    <!-- ============================================ -->
+    <div id="creation-view" class="strategy-view">
+      <section class="view-header">
+        <h2>✨ Mode Création</h2>
+        <p class="view-description">Créez de nouveaux éléments directement dans Penpot</p>
+      </section>
 
       <section class="config-section">
-        <div class="form-group">
-          <label for="strategy-select">Stratégie :</label>
-          <select id="strategy-select" data-appearance="secondary">
-            <option value="creation">Création</option>
-          </select>
-        </div>
-
         <div class="checkbox-group">
           <label>
-            <input type="checkbox" id="include-validation" checked>
+            <input type="checkbox" id="include-validation-creation" checked>
             <span>Inclure la validation</span>
           </label>
           <label>
-            <input type="checkbox" id="clean-code" checked>
+            <input type="checkbox" id="clean-code-creation" checked>
             <span>Nettoyer le code</span>
           </label>
         </div>
       </section>
 
       <section class="prompt-section">
-        <label for="prompt-input">Prompt :</label>
+        <label for="prompt-input">Décrivez ce que vous voulez créer :</label>
         <textarea 
           id="prompt-input" 
-          placeholder="Décrivez ce que vous voulez créer dans Penpot...&#10;Exemple: Créer un rectangle rouge de 200x100 pixels avec des coins arrondis"
-          rows="4"
+          placeholder="Exemples :
+• Créer un rectangle rouge de 200x100 pixels avec des coins arrondis
+• Ajouter un texte 'Hello World' en Arial 24px au centre
+• Créer 5 cercles bleus espacés de 50 pixels horizontalement
+• Générer une grille de cartes 3x3 avec des images et des titres"
+          rows="6"
+        ></textarea>
+        <div class="hint">💡 Astuce: Utilisez Ctrl+Enter pour générer rapidement</div>
+      </section>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VUE MODIFICATION -->
+    <!-- ============================================ -->
+    <div id="modification-view" class="strategy-view" style="display: none;">
+      <section class="view-header">
+        <h2>🔧 Mode Modification</h2>
+        <p class="view-description">Modifiez les éléments existants de votre page</p>
+      </section>
+
+      <!-- Informations de page -->
+      <div id="page-info" class="page-info">
+        <div class="info-header">
+          <span class="info-icon">📄</span>
+          <span class="info-title">Contexte de la page</span>
+        </div>
+        <div class="info-content">
+          <div class="info-item loading">
+            <span class="status-icon">⏳</span>
+            <span>En attente d'export...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton d'export -->
+      <button 
+        type="button" 
+        id="export-btn"
+        data-appearance="secondary"
+        class="export-btn"
+      >
+        <span class="btn-icon">📥</span>
+        <span class="btn-text">Exporter la page courante</span>
+      </button>
+
+      <section class="config-section">
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="include-validation-modification" checked>
+            <span>Inclure la validation</span>
+          </label>
+          <label>
+            <input type="checkbox" id="clean-code-modification" checked>
+            <span>Nettoyer le code</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="modification-section">
+        <label for="modification-input">Décrivez les modifications souhaitées :</label>
+        <textarea 
+          id="modification-input" 
+          placeholder="Exemples :
+• Change tous les rectangles en bleu (#3B82F6)
+• Augmente la taille des textes de 20%
+• Déplace tous les éléments de 50px vers la droite
+• Ajoute une bordure rouge de 2px à tous les cercles
+• Aligne tous les éléments verticalement au centre"
+          rows="6"
         ></textarea>
         <div class="hint">💡 Astuce: Utilisez Ctrl+Enter pour générer rapidement</div>
       </section>
 
-      <div class="button-group">
-        <button 
-          type="button" 
-          id="generate-btn"
-          data-appearance="primary"
-        >
-          Générer le code
-        </button>
-        <button 
-          type="button" 
-          id="clear-btn"
-          data-appearance="secondary"
-        >
-          Effacer
-        </button>
-      </div>
-
-      <div id="status" class="status" style="display: none;"></div>
-
-      <div id="metrics"></div>
-
-      <section class="code-section">
-        <div class="code-header">
-          <label>Code généré:</label>
-          <button 
-            type="button" 
-            id="execute-btn"
-            data-appearance="success"
-            disabled
-          >
-            Exécuter dans Penpot
-          </button>
+      <!-- Aperçu du JSON (collapsible) -->
+      <details class="json-preview" id="json-preview-section" style="display: none;">
+        <summary>
+          <span class="summary-icon">🔍</span>
+          <span class="summary-text">Aperçu du contexte JSON</span>
+          <span class="summary-badge" id="json-objects-count">0 objets</span>
+        </summary>
+        <div class="json-content">
+          <pre id="json-preview-content" class="json-output"></pre>
         </div>
-        <pre id="code-output" class="code-output">Le code généré apparaîtra ici...</pre>
-      </section>
-
-      <div id="validation"></div>
-
-      <footer>
-        <p class="info">
-          ℹ️ Connecté à: <code>http://localhost:8080/api/penpot</code>
-        </p>
-      </footer>
+      </details>
     </div>
 
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <!-- ============================================ -->
+    <!-- ACTIONS ET RÉSULTATS (communs) -->
+    <!-- ============================================ -->
+    <div class="button-group">
+      <button 
+        type="button" 
+        id="generate-btn"
+        data-appearance="primary"
+      >
+        <span class="btn-icon">⚡</span>
+        <span class="btn-text">Générer le code</span>
+      </button>
+      <button 
+        type="button" 
+        id="clear-btn"
+        data-appearance="secondary"
+      >
+        <span class="btn-icon">🗑️</span>
+        <span class="btn-text">Effacer</span>
+      </button>
+    </div>
+
+    <div id="status" class="status" style="display: none;"></div>
+    <div id="metrics"></div>
+
+    <!-- Aperçu de la requête API -->
+    <details class="api-request-preview" id="api-request-section" style="display: none;">
+      <summary>
+        <span class="summary-icon">📡</span>
+        <span class="summary-text">Requête API envoyée</span>
+      </summary>
+      <div class="json-content">
+        <pre id="api-request-content" class="json-output"></pre>
+      </div>
+    </details>
+
+    <section class="code-section">
+      <div class="code-header">
+        <label>Code généré :</label>
+        <button 
+          type="button" 
+          id="execute-btn"
+          data-appearance="success"
+          disabled
+        >
+          <span class="btn-icon">▶️</span>
+          <span class="btn-text">Exécuter dans Penpot</span>
+        </button>
+      </div>
+      <pre id="code-output" class="code-output">Le code généré apparaîtra ici...</pre>
+    </section>
+
+    <div id="validation"></div>
+
+    <footer>
+      <p class="info">
+        ℹ️ Connecté à: <code id="api-endpoint">http://localhost:8080/api/penpot</code>
+      </p>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
 </html>
