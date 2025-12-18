@@ -2,9 +2,15 @@ import { MessageHandler } from "./handlers";
 import { CodeExecutor, PageExporter, StateMessenger } from "./services"
 import { PenpotMessage } from "./types";
 
+/**
+ * Point d'entrée principal du plugin Penpot.
+ *
+ * Ordonne l'initialisation, la communication UI
+ * et la gestion des événements globaux.
+ */
 export class PluginController {
-    private messageHandler: MessageHandler;
-    private stateMessenger: StateMessenger;
+    private readonly messageHandler: MessageHandler;
+    private readonly stateMessenger: StateMessenger;
 
     constructor() {
         const codeExecutor = new CodeExecutor();
@@ -28,35 +34,36 @@ export class PluginController {
     }
 
     private openUI(): void {
-        penpot.ui.open("AI Code Generator", `?theme=${penpot.theme}`, {
-            width: 600,
-            height: 750
-        });
+        penpot.ui.open(
+            'AI Code Generator',
+            `?theme=${penpot.theme}`,
+            { width: 600, height: 750 }
+        );
     }
 
     private setupMessageListener(): void {
-        penpot.ui.onMessage<PenpotMessage>(async (message) => {
-            await this.messageHandler.handle(message);
-        });
+        penpot.ui.onMessage<PenpotMessage>(message =>
+            this.messageHandler.handle(message)
+        );
     }
 
     private setupEventListeners(): void {
-        penpot.on("themechange", (theme) => {
-            this.stateMessenger.sendThemeChange(theme);
-        });
+        penpot.on('themechange', theme =>
+            this.stateMessenger.sendThemeChange(theme)
+        );
 
-        penpot.on("filechange", () => {
-            this.stateMessenger.sendCurrentState();
-        });
+        penpot.on('filechange', () =>
+            this.stateMessenger.sendCurrentState()
+        );
 
-        penpot.on("pagechange", () => {
-            this.stateMessenger.sendCurrentState();
-        });
+        penpot.on('pagechange', () =>
+            this.stateMessenger.sendCurrentState()
+        );
     }
 
     private sendInitialState(): void {
-        setTimeout(() => {
-            this.stateMessenger.sendCurrentState();
-        }, 100);
+        setTimeout(() =>
+            this.stateMessenger.sendCurrentState(), 100
+        );
     }
 }

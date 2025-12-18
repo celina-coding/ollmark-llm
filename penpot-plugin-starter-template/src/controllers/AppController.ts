@@ -3,7 +3,42 @@ import { IApiService, IPenpotMessenger, TransitParser } from "../services";
 import { StrategyFactory } from "../strategies/StrategyFactory";
 import { AppState } from "../types";
 
+/**
+ * Contrôleur principal de l'application AI Code Generator
+ * 
+ * Responsabilités:
+ * - Orchestrer la génération de code via l'API
+ * - Gérer l'export et le parsing du contexte de page Penpot
+ * - Coordonner les interactions entre les services et les composants d'affichage
+ * - Gérer le cycle de vie de l'application (génération, exécution, nettoyage)
+ * 
+ * @example
+ * ```typescript
+ * const controller = new AppController(
+ *   apiService,
+ *   messenger,
+ *   transitParser,
+ *   statusDisplay,
+ *   validationDisplay,
+ *   metricsDisplay,
+ *   pageInfoDisplay,
+ *   viewManager,
+ *   jsonPreview,
+ *   apiRequestPreview,
+ *   elements
+ * );
+ * ```
+ */
 export class AppController {
+    /**
+     * État actuel de l'application
+     * 
+     * Contient:
+     * - Le code généré en attente d'exécution
+     * - Le flag de génération en cours
+     * - Le contexte de page exporté (pour la stratégie MODIFICATION)
+     * - Les identifiants du fichier et de la page courants
+     */
     private state: AppState = {
         currentCode: "",
         isGenerating: false,
@@ -12,6 +47,21 @@ export class AppController {
         currentPageId: ""
     };
 
+    /**
+     * Initialise le contrôleur et injecte toutes les dépendances
+     * 
+     * @param apiService - Service de communication avec l'API backend
+     * @param messenger - Service de messagerie avec le plugin Penpot parent
+     * @param transitParser - Parser pour convertir le format Transit en JSON
+     * @param statusDisplay - Composant d'affichage du statut
+     * @param validationDisplay - Composant d'affichage des erreurs de validation
+     * @param metricsDisplay - Composant d'affichage des métriques
+     * @param pageInfoDisplay - Composant d'affichage des infos de page
+     * @param viewManager - Gestionnaire des vues (création/modification)
+     * @param jsonPreview - Composant de preview du JSON exporté
+     * @param apiRequestPreview - Composant de preview des requêtes API
+     * @param elements - Références aux éléments DOM de l'interface
+     */
     constructor(
         private apiService: IApiService,
         private messenger: IPenpotMessenger,
@@ -42,6 +92,14 @@ export class AppController {
         this.initializeMessaging();
     }
 
+    /**
+     * Configure tous les écouteurs d'événements de l'interface
+     * 
+     * Gère:
+     * - Les clics sur les boutons (générer, exécuter, effacer, exporter)
+     * - Le changement de stratégie (création/modification)
+     * - Les raccourcis clavier (Ctrl+Enter pour générer)
+     */
     private initializeEventListeners(): void {
         this.elements.generateBtn.addEventListener("click", () => this.generateCode());
         this.elements.executeBtn.addEventListener("click", () => this.executeCode());
@@ -60,6 +118,16 @@ export class AppController {
         this.elements.modificationInput.addEventListener("keydown", handleCtrlEnter);
     }
 
+    /**
+     * Configure la communication avec le plugin Penpot parent
+     * 
+     * Écoute les messages pour:
+     * - Les changements de thème
+     * - Les changements de fichier/page
+     * - Les résultats d'exécution du code
+     * 
+     * Demande l'état initial au démarrage
+     */
     private initializeMessaging(): void {
         this.messenger.onMessage((event) => {
             if (event.data.source === "penpot") {
@@ -73,6 +141,11 @@ export class AppController {
         this.handleStrategyChange();
     }
 
+    /**
+     * Traite les messages reçus du plugin Penpot parent
+     * 
+     * @param data - Données du message contenant le type et les informations
+     */
     private handlePenpotMessage(data: any): void {
         switch (data.type) {
             case "themechange":
@@ -107,9 +180,21 @@ export class AppController {
         );
     }
 
+    /**
+     * Génère du code Penpot via l'API en utilisant la stratégie sélectionnée
+     * 
+     * Flux:
+     * 1. Valide la stratégie (création ou modification)
+     * 2. Prépare la requête avec les options (validation, nettoyage)
+     * 3. Envoie la requête à l'API
+     * 4. Affiche le code généré et les métriques
+     * 5. Active le bouton d'exécution si succès
+     * 
+     * @throws {Error} Si la génération échoue ou si la validation est invalide
+     */
     async generateCode(): Promise<void> {
         const strategy = StrategyFactory.create(
-            this.elements.strategySelect.value,
+            this.elements.strategySelect.value as "creation" | "modification",
             this.elements.promptInput,
             this.elements.modificationInput,
             this.state.currentPageContext
@@ -139,7 +224,6 @@ export class AppController {
 
             const data = await this.apiService.generateCode(requestBody);
             this.handleGenerationSuccess(data);
-
         } catch (error) {
             this.handleGenerationError(error);
         } finally {
@@ -150,9 +234,7 @@ export class AppController {
     private setGeneratingState(isGenerating: boolean): void {
         this.state.isGenerating = isGenerating;
         this.elements.generateBtn.disabled = isGenerating;
-        
-        // Ne désactiver executeBtn que si on commence la génération
-        // Sinon, laisser handleGenerationSuccess l'activer
+
         if (isGenerating) {
             this.elements.executeBtn.disabled = true;
             this.statusDisplay.show("Génération du code en cours...", "info");
@@ -236,6 +318,18 @@ export class AppController {
         this.apiRequestPreview.hide();
     }
 
+    /**
+     * Exporte le contexte de la page Penpot courante
+     * 
+     * Processus:
+     * 1. Récupère les données du fichier via l'API RPC Penpot
+     * 2. Parse le format Transit en JSON standard
+     * 3. Extrait les données de la page courante
+     * 4. Normalise au format attendu par l'API de génération
+     * 5. Stocke le contexte et active la stratégie MODIFICATION
+     * 
+     * @throws {Error} Si l'export échoue ou si le format est invalide
+     */
     async exportPageContext(): Promise<void> {
         if (!this.state.currentFileId) {
             this.statusDisplay.show("❌ Aucun fichier Penpot détecté. Ouvrez un fichier d'abord.", "error");
@@ -246,58 +340,32 @@ export class AppController {
         this.statusDisplay.show("🔄 Export du contexte de la page en cours...", "info");
 
         try {
-            // 1. Récupérer les données du fichier via l'API RPC Penpot
             const rawResponse = await this.fetchFileData(this.state.currentFileId);
-
-            // 2. Parser la réponse Transit
             const parsedResponse = this.transitParser.parse(rawResponse);
-            
-            if (!parsedResponse?.data) {
-                throw new Error("Structure de fichier invalide");
-            }
 
-            // 3. Extraire l'index des pages
+            if (!parsedResponse?.data) throw new Error("Structure de fichier invalide");
+
             const pagesIndex = parsedResponse.data.pagesIndex || parsedResponse.data['pages-index'];
-            
-            if (!pagesIndex) {
-                throw new Error("Index des pages non trouvé");
-            }
+            if (!pagesIndex) throw new Error("Index des pages non trouvé");
 
-            // 4. Trouver et parser la page courante
             const pageDataRaw = this.findPageData(pagesIndex, parsedResponse.data);
-            
-            if (!pageDataRaw) {
-                throw new Error("Impossible de trouver les données de la page");
-            }
+            if (!pageDataRaw) throw new Error("Impossible de trouver les données de la page");
 
-            // 5. Parser et normaliser la page
             const pageData = this.transitParser.parse(pageDataRaw);
             const normalizedPage = this.transitParser.normalizePage(pageData);
-
             if (!normalizedPage.id || !normalizedPage.name) {
                 throw new Error("Données de page invalides après normalisation");
             }
 
-            // 6. Stocker et afficher
             this.state.currentPageContext = normalizedPage;
-            const objectsCount = normalizedPage.objects ? Object.keys(normalizedPage.objects).length : 0;
-
             this.jsonPreview.show(normalizedPage);
             this.statusDisplay.show("✓ Contexte de la page exporté avec succès", "success");
-            
-            console.log('Contexte exporté:', {
-                id: normalizedPage.id,
-                name: normalizedPage.name,
-                objectsCount
-            });
-
             this.updatePageInfo();
-            
+
             if (this.elements.strategySelect.value === "modification") {
                 this.elements.generateBtn.disabled = false;
             }
         } catch (error) {
-            console.error('Erreur lors de l\'export:', error);
             this.statusDisplay.show(
                 `❌ Erreur d'export: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
                 "error"
@@ -309,6 +377,13 @@ export class AppController {
         }
     }
 
+    /**
+     * Récupère les données du fichier Penpot via l'API RPC
+     * 
+     * @param fileId - Identifiant du fichier Penpot
+     * @returns Promesse contenant les données brutes au format Transit
+     * @throws {Error} Si la requête échoue ou retourne une erreur HTTP
+     */
     private async fetchFileData(fileId: string): Promise<any> {
         const response = await fetch('/api/rpc/command/get-file', {
             method: 'POST',
@@ -317,26 +392,32 @@ export class AppController {
             body: JSON.stringify({ id: fileId })
         });
 
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
         return response.json();
     }
 
+    /**
+     * Recherche les données de la page courante dans l'index des pages
+     * 
+     * Stratégie de recherche:
+     * 1. Essaie avec currentPageId si disponible
+     * 2. Essaie avec la première page de la liste
+     * 3. Prend la première clé disponible en dernier recours
+     * 
+     * @param pagesIndex - Index des pages du fichier
+     * @param data - Données complètes du fichier
+     * @returns Les données brutes de la page ou null si introuvable
+     */
     private findPageData(pagesIndex: any, data: any): any {
-        // Essayer avec le currentPageId
         if (this.state.currentPageId && pagesIndex[this.state.currentPageId]) {
             return pagesIndex[this.state.currentPageId];
         }
 
-        // Essayer avec la première page de la liste
         const pages = data.pages || [];
         if (pages.length > 0 && pagesIndex[pages[0]]) {
             return pagesIndex[pages[0]];
         }
 
-        // En dernier recours, prendre la première clé disponible
         const firstKey = Object.keys(pagesIndex)[0];
         return firstKey ? pagesIndex[firstKey] : null;
     }

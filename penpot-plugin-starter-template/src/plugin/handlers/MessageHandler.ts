@@ -1,15 +1,24 @@
 import { CodeExecutor, PageExporter, StateMessenger } from "../services";
 import { PenpotMessage } from "../types";
 
+/**
+ * Commande déclenchée suite à un message Penpot.
+ */
 export interface IMessageCommand {
+    /**
+     * Exécute la commande associée.
+     */
     execute(): Promise<void>;
 }
 
+/**
+ * Commande d'exécution de code utilisateur.
+ */
 export class ExecuteCodeCommand implements IMessageCommand {
     constructor(
-        private codeExecutor: CodeExecutor,
-        private stateMessenger: StateMessenger,
-        private code: string
+        private readonly codeExecutor: CodeExecutor,
+        private readonly stateMessenger: StateMessenger,
+        private readonly code: string
     ) {}
 
     async execute(): Promise<void> {
@@ -18,18 +27,26 @@ export class ExecuteCodeCommand implements IMessageCommand {
     }
 }
 
+/**
+ * Commande demandant l'état courant du plugin.
+ */
 export class RequestStateCommand implements IMessageCommand {
-    constructor(private stateMessenger: StateMessenger) {}
+    constructor(
+        private readonly stateMessenger: StateMessenger
+    ) {}
 
     async execute(): Promise<void> {
         this.stateMessenger.sendCurrentState();
     }
 }
 
+/**
+ * Commande d'export de la page courante.
+ */
 export class ExportPageCommand implements IMessageCommand {
     constructor(
-        private pageExporter: PageExporter,
-        private stateMessenger: StateMessenger
+        private readonly pageExporter: PageExporter,
+        private readonly stateMessenger: StateMessenger
     ) {}
 
     async execute(): Promise<void> {
@@ -38,38 +55,56 @@ export class ExportPageCommand implements IMessageCommand {
     }
 }
 
+/**
+ * Route les messages Penpot vers les commandes appropriées.
+ */
 export class MessageHandler {
-    private commands: Map<string, (message: PenpotMessage) => IMessageCommand>;
+    private readonly commands = new Map<
+        string,
+        (message: PenpotMessage) => IMessageCommand
+    >();
 
     constructor(
-        private codeExecutor: CodeExecutor,
-        private pageExporter: PageExporter,
-        private stateMessenger: StateMessenger
+        private readonly codeExecutor: CodeExecutor,
+        private readonly pageExporter: PageExporter,
+        private readonly stateMessenger: StateMessenger
     ) {
-        this.commands = new Map();
         this.registerCommands();
     }
 
+    /**
+     * Associe chaque type de message à sa commande.
+     */
     private registerCommands(): void {
-        this.commands.set('execute-code', (message) => 
-            new ExecuteCodeCommand(this.codeExecutor, this.stateMessenger, message.code!)
+        this.commands.set('execute-code', message =>
+            new ExecuteCodeCommand(
+                this.codeExecutor,
+                this.stateMessenger,
+                message.code!
+            )
         );
 
-        this.commands.set('request-state', () => 
+        this.commands.set('request-state', () =>
             new RequestStateCommand(this.stateMessenger)
         );
 
-        this.commands.set('export-page', () => 
-            new ExportPageCommand(this.pageExporter, this.stateMessenger)
+        this.commands.set('export-page', () =>
+            new ExportPageCommand(
+                this.pageExporter,
+                this.stateMessenger
+            )
         );
     }
 
+    /**
+     * Traite un message entrant depuis l'UI Penpot.
+     *
+     * @param message Message reçu.
+     */
     async handle(message: PenpotMessage): Promise<void> {
         const commandFactory = this.commands.get(message.type);
-
         if (commandFactory) {
-            const command = commandFactory(message);
-            await command.execute();
+            await commandFactory(message).execute();
         }
     }
 }

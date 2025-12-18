@@ -1,54 +1,56 @@
 import { Board, Group, Shape } from "@penpot/plugin-types";
 import { PageExportResult } from "../types";
 
+/**
+ * Exporte la structure d'une page Penpot sous forme sérialisée.
+ */
 export class PageExporter {
-    export(page: any): PageExportResult {
+    /**
+     * Exporte la page fournie.
+     *
+     * @param page Page Penpot active.
+     * @returns Résultat de l'export.
+     */
+    export(page: unknown): PageExportResult {
+        if (!page) {
+            return { success: false, error: 'Aucune page active' };
+        }
+
         try {
-            if (!page) {
-                return {
-                    success: false,
-                    error: 'Aucune page active'
-                };
-            }
-
             const pageData = {
-                id: page.id,
-                name: page.name,
-                objects: {}
+                id: (page as any).id,
+                name: (page as any).name,
+                objects: {} as Record<string, unknown>
             };
 
-            const rootShape = page.root;
+            const root = (page as any).root;
 
-            if (rootShape && this.hasChildren(rootShape)) {
-                rootShape.children.forEach((shape: any) => {
-                    this.extractShapes(shape, pageData.objects);
-                });
+            if (this.hasChildren(root)) {
+                root.children.forEach(child =>
+                    this.extractShapes(child, pageData.objects)
+                );
             }
 
-            console.log('Page exportée:', {
-                id: pageData.id,
-                name: pageData.name,
-                objectsCount: Object.keys(pageData.objects).length
-            });
-
-            return {
-                success: true,
-                pageData
-            };
+            return { success: true, pageData };
         } catch (error) {
-            console.error('Erreur lors de l\'export de la page:', error);
+            console.error('Erreur lors de l’export:', error);
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Erreur inconnue'
+                error: error instanceof Error
+                    ? error.message
+                    : 'Erreur inconnue'
             };
         }
     }
 
-    private hasChildren(shape: any): shape is Board | Group {
-        return 'children' in shape && Array.isArray(shape.children);
+    private hasChildren(shape: Shape): shape is Board | Group {
+        return !!shape && typeof shape === 'object' && 'children' in shape;
     }
 
-    private extractShapes(shape: Shape, objects: any): void {
+    private extractShapes(
+        shape: Shape,
+        objects: Record<string, unknown>
+    ): void {
         objects[shape.id] = {
             id: shape.id,
             type: shape.type,
@@ -57,20 +59,15 @@ export class PageExporter {
             y: shape.y,
             width: shape.width,
             height: shape.height,
-            fills: shape.fills,
-            strokes: shape.strokes,
             opacity: shape.opacity,
             rotation: shape.rotation,
-            parentId: shape.parent?.id || null
+            parentId: shape.parent?.id ?? null
         };
 
-        if (shape.type === 'text' && 'content' in shape) {
-            objects[shape.id].content = (shape as any).content;
-        }
-
         if (this.hasChildren(shape)) {
-            objects[shape.id].children = shape.children.map((child: any) => child.id);
-            shape.children.forEach((child: any) => this.extractShapes(child, objects));
+            shape.children.forEach(child =>
+                this.extractShapes(child, objects)
+            );
         }
     }
 }

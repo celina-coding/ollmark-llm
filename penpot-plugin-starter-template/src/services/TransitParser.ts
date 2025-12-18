@@ -1,39 +1,54 @@
+/**
+ * Convertit des structures Transit Penpot en objets JavaScript normalisés.
+ *
+ * Ce parser :
+ * - décode les formats Transit spécifiques
+ * - remappe les clés compressées
+ * - normalise les objets de page pour un usage métier
+ */
 export class TransitParser {
+    /**
+     * Table de correspondance Transit → clés normalisées.
+     */
     private handlers: Map<string, string> = new Map();
 
     constructor() {
         this.initializeHandlers();
     }
 
+    /**
+     * Initialise les mappings Transit connus.
+     */
     private initializeHandlers(): void {
-        // Mapping des clés Transit vers les clés normalisées
         const mappings: [string, string][] = [
             // Clés de page
             ['^M', 'objects'],
             ['^A', 'id'],
             ['^=', 'name'],
-            
+
             // Propriétés géométriques
             ['^T', 'width'],
+            ['^18', 'height'],
             ['^X', 'rotation'],
             ['^19', 'x1'],
             ['^1:', 'y1'],
             ['^1;', 'x2'],
             ['^1<', 'y2'],
-            
+
             // Propriétés de forme
             ['^14', 'proportion'],
             ['^P', 'hideFillOnExport'],
             ['^Y', 'proportionLock'],
-            ['^[', 'r2'],
-            ['^10', 'r3'],
-            ['^15', 'r4'],
-            
+            ['^[', 'r1'],
+            ['^10', 'r2'],
+            ['^15', 'r3'],
+            ['^0', 'r4'],
+
             // Relations
             ['^11', 'parentId'],
             ['^12', 'frameId'],
             ['^1B', 'shapes'],
-            
+
             // Transformations
             ['^1@', 'flipX'],
             ['^1A', 'flipY'],
@@ -44,19 +59,23 @@ export class TransitParser {
             ['^W', 'point'],
             ['^R', 'matrix'],
             ['^17', 'rect'],
-            
+
             // Styles
             ['^13', 'strokes'],
             ['^1=', 'fills'],
             ['^1>', 'fillColor'],
             ['^1?', 'fillOpacity'],
-            
+
             // Types
-            ['^U', 'frame'],
+            ['^U', 'board'],
             ['^29', 'rect'],
-            ['^N', 'shape'],
-            ['^O', 'object'],
-            
+            ['^3', 'circle'],
+            ['^2:', 'path'],
+            ['^2;', 'image'],
+            ['^2<', 'svg-raw'],
+            ['^2=', 'group'],
+            ['^2>', 'bool'],
+
             // Texte
             ['^1D', 'growType'],
             ['^1F', 'content'],
@@ -76,128 +95,113 @@ export class TransitParser {
             ['^1T', 'text'],
             ['^1Y', 'positionData'],
             ['^1Z', 'direction'],
-            ['^20', 'auto-width']
+
+            // Valeurs spéciales
+            ['^20', 'auto-width'],
+            ['^21', 'auto-height'],
+            ['^22', 'fixed'],
+            
+            // Types génériques
+            ['^4', 'type'],
+            ['^N', 'shape'],
+            ['^O', 'object']
         ];
 
         mappings.forEach(([key, value]) => this.handlers.set(key, value));
     }
 
     /**
-     * Parse un tableau Transit en objet JavaScript
-     * Format Transit: ["^ ", "~:key1", value1, "~:key2", value2, ...]
+     * Parse récursivement une structure Transit.
+     *
+     * @param data Donnée Transit brute.
+     * @returns Structure JavaScript décodée.
      */
     parse(data: any): any {
-        if (data === null || data === undefined) {
-            return data;
-        }
+        if (data === null || data === undefined) return data;
 
-        if (typeof data === 'string') {
-            return this.parseString(data);
-        }
-
-        if (Array.isArray(data)) {
-            return this.parseArray(data);
-        }
-
-        if (typeof data === 'object') {
-            return this.parseObject(data);
-        }
+        if (typeof data === 'string') return this.parseString(data);
+        if (Array.isArray(data)) return this.parseArray(data);
+        if (typeof data === 'object') return this.parseObject(data);
 
         return data;
     }
 
     private parseString(str: string): any {
-        // UUID avec préfixe ~u
-        if (str.startsWith('~u')) {
-            return str.substring(2);
-        }
-        // Clé avec préfixe ~:
-        if (str.startsWith('~:')) {
-            return str.substring(2);
-        }
-        // Timestamp avec préfixe ~m
-        if (str.startsWith('~m')) {
-            return parseInt(str.substring(2), 10);
-        }
+        if (str.startsWith('~u')) return str.substring(2);
+        if (str.startsWith('~:')) return str.substring(2);
+        if (str.startsWith('~m')) return parseInt(str.substring(2), 10);
         return str;
     }
 
     private parseArray(arr: any[]): any {
         if (arr.length === 0) return arr;
-
         const first = arr[0];
 
-        // Map Transit: ["^ ", key1, val1, key2, val2, ...]
-        if (first === "^ ") {
-            return this.parseTransitMap(arr);
-        }
+        if (first === "^ ") return this.parseTransitMap(arr);
+        if (first === "~#set") return arr[1] ? this.parse(arr[1]) : [];
+        if (first === "~#ordered-set") return arr[1] ? this.parse(arr[1]) : [];
 
-        // Set Transit: ["~#set", [...]]
-        if (first === "~#set") {
-            return arr[1] ? this.parse(arr[1]) : [];
-        }
-
-        // Ordered set: ["~#ordered-set", [...]]
-        if (first === "~#ordered-set") {
-            return arr[1] ? this.parse(arr[1]) : [];
-        }
-
-        // Tagged value: ["^type", value]
         if (typeof first === 'string' && first.startsWith('^') && arr.length === 2) {
             return this.parse(arr[1]);
         }
 
-        // Array normal
         return arr.map(item => this.parse(item));
     }
 
     private parseTransitMap(arr: any[]): any {
         const result: any = {};
-        
-        // Sauter le premier élément "^ " et itérer par paires
+
         for (let i = 1; i < arr.length; i += 2) {
             const key = arr[i];
             const value = arr[i + 1];
-            
+
             if (key === undefined) break;
-            
+
             const normalizedKey = this.parseString(key);
             const parsedValue = this.parse(value);
             const finalKey = this.handlers.get(normalizedKey) || normalizedKey;
-            
+
             result[finalKey] = parsedValue;
         }
-        
+
         return result;
     }
 
     private parseObject(obj: any): any {
         const result: any = {};
-        
+
         for (const [key, value] of Object.entries(obj)) {
             const normalizedKey = this.handlers.get(key) || key;
             result[normalizedKey] = this.parse(value);
         }
-        
+
         return result;
     }
 
     /**
-     * Normalise un objet de page pour correspondre au format standardisé
+     * Normalise une page exportée vers un format standardisé.
+     *
+     * @param pageData Données de page brutes.
+     * @returns Page normalisée.
      */
     normalizePage(pageData: any): any {
         if (!pageData || !pageData.objects) {
             return pageData;
         }
 
-        const normalized: any = {
-            id: this.normalizeId(pageData.id),
-            name: pageData.name,
-            objects: {}
+        const page = pageData as {
+            id: string;
+            name: string;
+            objects: Record<string, unknown>;
         };
 
-        // Parcourir et normaliser tous les objets
-        for (const [objId, objData] of Object.entries(pageData.objects)) {
+        const normalized = {
+            id: this.normalizeId(page.id),
+            name: page.name,
+            objects: {} as Record<string, unknown>
+        };
+
+        for (const [objId, objData] of Object.entries(page.objects)) {
             const cleanId = this.normalizeId(objId);
             const parsedObj = this.parse(objData);
             normalized.objects[cleanId] = this.normalizeObject(parsedObj);
@@ -212,20 +216,20 @@ export class TransitParser {
     }
 
     private normalizeObject(obj: any): any {
-        if (!obj) return obj;
+        if (!obj || typeof obj !== 'object') return obj;
 
-        // Propriétés de base
+        const shapeType = this.determineShapeType(obj);
+
         const normalized: any = {
             id: this.normalizeId(obj.id),
             name: obj.name || 'Unnamed',
-            type: obj.type || 'unknown',
+            type: shapeType,
             x: obj.x ?? 0,
             y: obj.y ?? 0,
             width: obj.width ?? 0,
             height: obj.height ?? 0,
             rotation: obj.rotation ?? 0,
-            
-            // Sélection rectangle
+
             selrect: obj.selrect || {
                 x: obj.x ?? 0,
                 y: obj.y ?? 0,
@@ -236,35 +240,20 @@ export class TransitParser {
                 x2: (obj.x ?? 0) + (obj.width ?? 0),
                 y2: (obj.y ?? 0) + (obj.height ?? 0)
             },
-            
-            // Points et transformations
+
             points: obj.points,
-            transform: obj.transform,
-            transformInverse: obj.transformInverse,
-            
-            // Relations
             parentId: this.normalizeId(obj.parentId),
             frameId: this.normalizeId(obj.frameId),
-            
-            // Flags
-            flipX: obj.flipX ?? null,
-            flipY: obj.flipY ?? null,
-            hideFillOnExport: obj.hideFillOnExport ?? false,
-            proportionLock: obj.proportionLock ?? false,
-            
-            // Coins arrondis
-            r1: obj.r1 ?? 0,
-            r2: obj.r2 ?? 0,
-            r3: obj.r3 ?? 0,
-            r4: obj.r4 ?? 0,
-            
-            // Styles
             strokes: obj.strokes || [],
             fills: obj.fills || [],
-            proportion: obj.proportion ?? 1
         };
 
-        // Propriétés conditionnelles
+        // Coins arrondis
+        if (obj.r1 !== undefined) normalized.r1 = obj.r1;
+        if (obj.r2 !== undefined) normalized.r2 = obj.r2;
+        if (obj.r3 !== undefined) normalized.r3 = obj.r3;
+        if (obj.r4 !== undefined) normalized.r4 = obj.r4;
+
         if (obj.shapes) {
             normalized.shapes = Array.isArray(obj.shapes) 
                 ? obj.shapes.map((id: any) => this.normalizeId(id))
@@ -276,5 +265,71 @@ export class TransitParser {
         if (obj.positionData) normalized.positionData = obj.positionData;
 
         return normalized;
+    }
+
+    /**
+     * Détermine le type de forme à partir des propriétés de l'objet.
+     * 
+     * @param obj Objet parsé contenant les données de la forme.
+     * @returns Type de forme Penpot ('board', 'rect', 'text', etc.).
+     */
+    private determineShapeType(obj: any): string {
+        if (obj.type && this.isValidShapeType(obj.type)) {
+            return obj.type;
+        }
+
+        // Board/Frame : a des shapes enfants
+        if (obj.shapes && Array.isArray(obj.shapes) && obj.shapes.length > 0) {
+            return 'board';
+        }
+
+        // Text : a du contenu textuel, growType ou positionData
+        if (obj.content || obj.growType || obj.positionData) {
+            return 'text';
+        }
+
+        // Rectangle : a des points formant un rectangle (4 points)
+        if (obj.points && Array.isArray(obj.points) && obj.points.length === 4) {
+            if (this.isRectangularShape(obj.points)) {
+                return 'rect';
+            }
+        }
+
+        // Path : a des points mais pas rectangulaire
+        if (obj.points && Array.isArray(obj.points)) return 'path';
+
+        // Group : nom contient "group"
+        if (obj.name && obj.name.toLowerCase().includes('group')) {
+            return 'group';
+        }
+
+        // Par défaut, rectangle
+        return 'rect';
+    }
+
+    /**
+     * Vérifie si le type est un type de forme Penpot valide.
+     */
+    private isValidShapeType(type: string): boolean {
+        const validTypes = [
+            'board', 'group', 'boolean', 'rect', 'rectangle',
+            'path', 'text', 'ellipse', 'svg-raw', 'image'
+        ];
+        return validTypes.includes(type);
+    }
+
+    /**
+     * Vérifie si les points forment un rectangle.
+     * 
+     * @param points Tableau de points {x, y}.
+     * @returns true si les points forment un rectangle.
+     */
+    private isRectangularShape(points: Array<{x: number, y: number}>): boolean {
+        if (points.length !== 4) return false;
+
+        const xValues = [...new Set(points.map(p => p.x))];
+        const yValues = [...new Set(points.map(p => p.y))];
+
+        return xValues.length === 2 && yValues.length === 2;
     }
 }

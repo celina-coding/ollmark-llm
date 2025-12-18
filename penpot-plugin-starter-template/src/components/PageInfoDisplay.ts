@@ -1,6 +1,21 @@
+/**
+ * Affiche les informations liées à la page courante et à son contexte.
+ */
 export class PageInfoDisplay {
-    constructor(private element: HTMLDivElement) {}
+    constructor(
+        /**
+         * Élément DOM racine de l'affichage.
+         */
+        private readonly element: HTMLDivElement
+    ) {}
 
+    /**
+     * Met à jour l'affichage des informations de page.
+     *
+     * @param fileId Identifiant du fichier courant.
+     * @param pageId Identifiant de la page courante.
+     * @param hasContext Indique si un contexte de page est disponible.
+     */
     update(fileId: string, pageId: string, hasContext: boolean): void {
         const content = this.element.querySelector('.info-content');
         if (!content) return;
