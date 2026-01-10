@@ -1,0 +1,34 @@
+server:
+  port: 4401
+  address: ${PENPOT_MCP_SERVER_LISTEN_ADDRESS:localhost}
+
+penpot:
+  mcp:
+    server-address: ${PENPOT_MCP_SERVER_ADDRESS:localhost}
+    websocket-port: ${PENPOT_MCP_WEBSOCKET_PORT:4401}
+    repl-port: ${PENPOT_MCP_REPL_PORT:4403}
+    remote-mode: ${PENPOT_MCP_REMOTE_MODE:false}
+    multi-user: ${PENPOT_MCP_MULTI_USER:false}
+    task-timeout-seconds: 30
+    log-level: ${PENPOT_MCP_LOG_LEVEL:debug}
+    log-dir: ${PENPOT_MCP_LOG_DIR:logs}
+    file-system-access: true
+
+spring:
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${OLLAMA_MODEL:phi3:latest}
+          temperature: ${OLLAMA_TEMPERATURE:0.7}
+          max-tokens: ${OLLAMA_MAX_TOKENS:4096}
+
+logging:
+  level:
+    com.penpot.mcp: ${penpot.mcp.log-level}
+  file:
+    name: ${penpot.mcp.log-dir}/penpot-mcp.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
