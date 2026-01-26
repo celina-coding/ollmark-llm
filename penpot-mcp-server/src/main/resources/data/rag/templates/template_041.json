@@ -1,0 +1,13 @@
+{
+  "id": "email_restaurant_special_event",
+  "type": "email",
+  "tags": ["restaurant", "événement", "newsletter"],
+  "description": "Newsletter annonçant un événement spécial au restaurant.",
+  "design_recipe": {
+    "sections": [
+      { "type": "event_header" },
+      { "type": "event_details" },
+      { "type": "reservation_cta" }
+    ]
+  }
+}

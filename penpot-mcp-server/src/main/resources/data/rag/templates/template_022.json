@@ -1,0 +1,14 @@
+{
+  "id": "email_bakery_weekly_news",
+  "type": "email",
+  "tags": ["boulangerie", "newsletter", "hebdomadaire"],
+  "description": "Newsletter hebdomadaire de boulangerie présentant pains, viennoiseries et infos boutique.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "sections": [
+      { "type": "hero_image", "height": 240 },
+      { "type": "product_highlight", "count": 3 },
+      { "type": "cta_button", "style": "rounded" }
+    ]
+  }
+}

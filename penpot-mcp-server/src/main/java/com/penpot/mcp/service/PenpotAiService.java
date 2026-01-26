@@ -1,11 +1,13 @@
 package com.penpot.mcp.service;
 
+import com.penpot.mcp.tools.MarketingTemplateTools;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.*;
 
@@ -35,6 +37,9 @@ public class PenpotAiService {
     /** Service de documentation API */
     private final ApiDocsService apiDocsService;
 
+    @Autowired(required = false)
+    private MarketingTemplateTools marketingTemplateTools;
+
     /**
      * Engage une conversation avec l'assistant AI.
      * <p>
@@ -56,10 +61,16 @@ public class PenpotAiService {
             messages.add(new UserMessage(userMessage));
 
             Prompt prompt = new Prompt(messages);
-            ChatClient chatClient = chatClientBuilder.build();
+            
+            ChatClient.Builder builder = chatClientBuilder;
+            if (marketingTemplateTools != null) {
+                builder = builder.defaultTools(marketingTemplateTools);
+            }
+
+            ChatClient chatClient = builder.build();
             ChatResponse response = chatClient.prompt(prompt).call().chatResponse();
 
-            return response.getResult().getOutput().getContent();
+            return response.getResult().getOutput().getText();
         } catch (Exception e) {
             log.error("Error during AI chat", e);
             throw new RuntimeException("AI service error: " + e.getMessage(), e);
@@ -152,7 +163,7 @@ public class PenpotAiService {
         ChatClient chatClient = chatClientBuilder.build();
         ChatResponse response = chatClient.prompt(prompt).call().chatResponse();
 
-        String code = response.getResult().getOutput().getContent();
+        String code = response.getResult().getOutput().getText();
         code = cleanGeneratedCode(code);
 
         return code;

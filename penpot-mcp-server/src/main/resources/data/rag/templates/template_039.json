@@ -1,0 +1,13 @@
+{
+  "id": "email_butcher_cooking_tips",
+  "type": "email",
+  "tags": ["boucherie", "conseil", "cuisson", "newsletter"],
+  "description": "Newsletter éducative donnant des conseils de cuisson pour différentes viandes.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "sections": [
+      { "type": "intro_text" },
+      { "type": "tip_blocks", "count": 4 }
+    ]
+  }
+}

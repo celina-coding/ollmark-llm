@@ -1,0 +1,20 @@
+{
+  "id": "email_newsletter_butcher_recipes",
+  "type": "email",
+  "tags": ["boucherie", "newsletter", "recettes", "long_read"],
+  "description": "Newsletter email présentant des recettes de viande, conseils de cuisson et offres du mois.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "background_color": "#FFFFFF",
+    "header": {
+      "logo_position": "left",
+      "height": 160
+    },
+    "sections": [
+      { "type": "hero_recipe", "image_ratio": "16:9" },
+      { "type": "text_block", "columns": 2 },
+      { "type": "recipe_cards", "cards": 3 },
+      { "type": "cta_button", "style": "solid_dark" }
+    ]
+  }
+}

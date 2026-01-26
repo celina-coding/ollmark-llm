@@ -1,0 +1,17 @@
+{
+  "id": "story_bakery_morning",
+  "type": "social_media_story",
+  "tags": ["bakery", "breakfast", "warm", "vertical", "morning"],
+  "description": "Story Instagram chaleureuse pour le matin. Gros plan sur viennoiserie (croissant/pain). Ambiance dorée. Texte 'Sorti du four' avec l'heure. Filtre chaud.",
+  "design_recipe": {
+    "layout_mode": "full_image_background",
+    "overlay": { "type": "gradient_bottom", "color": "#000000", "opacity": 0.5 },
+    "typography": {
+      "main": { "font": "Handwritten Script", "color": "#FFD700", "size": "giant" },
+      "secondary": { "font": "Sans-Serif", "color": "#FFFFFF" }
+    },
+    "stickers": [
+      { "type": "time_badge", "content": "7h00", "style": "glassmorphism" }
+    ]
+  }
+}

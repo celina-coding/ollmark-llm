@@ -1,0 +1,13 @@
+{
+  "id": "email_primeur_seasonal_focus",
+  "type": "email",
+  "tags": ["primeur", "saisonnier", "newsletter"],
+  "description": "Newsletter expliquant les fruits et légumes de saison avec visuels et conseils.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "sections": [
+      { "type": "editorial_intro" },
+      { "type": "seasonal_products", "grid": 2 }
+    ]
+  }
+}

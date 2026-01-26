@@ -1,0 +1,11 @@
+{
+  "id": "sm_story_bakery_baking_process",
+  "type": "social_media_story",
+  "tags": ["boulangerie", "fabrication", "artisan"],
+  "description": "Story montrant les étapes clés de fabrication du pain.",
+  "design_recipe": {
+    "background_mode": "sequence_frames",
+    "steps": 3,
+    "step_labels": true
+  }
+}

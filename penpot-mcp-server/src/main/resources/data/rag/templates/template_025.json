@@ -1,0 +1,14 @@
+{
+  "id": "email_restaurant_menu",
+  "type": "email",
+  "tags": ["restaurant", "menu", "newsletter"],
+  "description": "Newsletter présentant le menu du restaurant avec sections claires.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "sections": [
+      { "type": "menu_section", "category": "entrées" },
+      { "type": "menu_section", "category": "plats" },
+      { "type": "menu_section", "category": "desserts" }
+    ]
+  }
+}

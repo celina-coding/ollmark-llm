@@ -1,0 +1,11 @@
+{
+  "id": "sm_story_restaurant_kitchen",
+  "type": "social_media_story",
+  "tags": ["restaurant", "coulisses", "humain", "story"],
+  "description": "Story montrant les coulisses de la cuisine avec ambiance authentique.",
+  "design_recipe": {
+    "background_mode": "video_frame",
+    "text_style": "handwritten",
+    "overlay_elements": ["time_stamp"]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "sm_story_fishmonger_arrival",
+  "type": "social_media_story",
+  "tags": ["poissonnerie", "fraîcheur", "arrivage", "story"],
+  "description": "Story mettant en avant l'arrivage du jour en poissonnerie avec message très court et badge fraîcheur.",
+  "design_recipe": {
+    "background_mode": "full_image",
+    "main_text": {
+      "position": "bottom_left",
+      "font_size": "large"
+    },
+    "badge": {
+      "type": "freshness",
+      "position": "top_right"
+    }
+  }
+}

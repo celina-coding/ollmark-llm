@@ -1,0 +1,17 @@
+{
+  "id": "promo_bundle_lunch",
+  "type": "social_media_square",
+  "tags": ["food", "lunch", "deal", "bundle"],
+  "description": "Mise en avant formule. 'Sandwich + Boisson'. Signe 'Plus' (+) entre les photos. Prix total mis en avant.",
+  "design_recipe": {
+    "layout_mode": "equation_row",
+    "background": { "color": "#FF9800" },
+    "elements": [
+      { "type": "photo_circle", "label": "Sandwich" },
+      { "type": "icon_plus" },
+      { "type": "photo_circle", "label": "Boisson" },
+      { "type": "icon_equals" },
+      { "type": "price_burst", "color": "Red" }
+    ]
+  }
+}

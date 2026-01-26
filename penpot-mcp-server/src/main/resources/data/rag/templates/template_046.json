@@ -1,0 +1,11 @@
+{
+  "id": "email_food_market_digest",
+  "type": "email",
+  "tags": ["alimentaire", "marché", "newsletter"],
+  "description": "Newsletter regroupant les actualités de plusieurs commerces alimentaires.",
+  "design_recipe": {
+    "sections": [
+      { "type": "shop_highlight", "repeat": true }
+    ]
+  }
+}

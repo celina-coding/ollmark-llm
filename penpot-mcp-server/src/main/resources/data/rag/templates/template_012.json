@@ -1,0 +1,19 @@
+{
+  "id": "sm_story_bakery_daily_offer",
+  "type": "social_media_story",
+  "tags": ["boulangerie", "promo", "story", "vertical"],
+  "description": "Story Instagram verticale annonçant l'offre du jour en boulangerie avec visuel plein écran et message immédiat.",
+  "design_recipe": {
+    "canvas_size": "1080x1920",
+    "background_mode": "full_image",
+    "overlay_opacity": 0.35,
+    "headline": {
+      "alignment": "center",
+      "font_size": "giant"
+    },
+    "cta": {
+      "type": "swipe_hint",
+      "position": "bottom"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "email_newsletter_festive",
+  "type": "email",
+  "tags": ["christmas", "food", "newsletter", "list", "menu"],
+  "description": "Newsletter structurée pour menu de fêtes. Bandeau titre rouge/or. Liste de plats (Entrée, Plat, Dessert) avec petites vignettes photos à gauche. Bouton 'Je commande'.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "background_color": "#FFFFFF",
+    "sections": [
+      { "type": "hero_banner", "theme": "festive_red_gold", "text_align": "center" },
+      { "type": "intro_text_block" },
+      { "type": "menu_item_row", "layout": "thumbnail_left_text_right" },
+      { "type": "menu_item_row", "layout": "thumbnail_left_text_right" },
+      { "type": "cta_button", "text": "Commander", "style": "rounded_filled" }
+    ]
+  }
+}

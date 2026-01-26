@@ -1,0 +1,16 @@
+{
+  "id": "promo_bundle_deal",
+  "type": "social_media_square",
+  "tags": ["food", "lunch", "deal", "bundle", "math"],
+  "description": "Mise en avant formule. 'Produit A + Produit B'. Signes mathématiques (+) et (=) entre les photos. Prix total barré et nouveau prix mis en avant.",
+  "design_recipe": {
+    "layout_mode": "equation_row",
+    "background": { "color": "Brand_Secondary" },
+    "elements": [
+      { "type": "circle_image", "label": "Product A" },
+      { "type": "icon_plus" },
+      { "type": "circle_image", "label": "Product B" },
+      { "type": "price_burst", "style": "strikethrough_old_price" }
+    ]
+  }
+}

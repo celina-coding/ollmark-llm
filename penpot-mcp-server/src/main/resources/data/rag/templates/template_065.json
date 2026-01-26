@@ -1,0 +1,12 @@
+{
+  "id": "invitation_event_vip",
+  "type": "card_landscape",
+  "tags": ["event", "luxury", "gold", "black", "party"],
+  "description": "Carton d'invitation virtuel. Fond noir ou marbre. Texte doré. Typographie fine et espacée (Kerning large). Cadre doré fin.",
+  "design_recipe": {
+    "layout_mode": "centered_formal",
+    "background": { "texture": "black_marble" },
+    "border": { "style": "double_line_gold" },
+    "typography": { "title": "Gold Gradient Serif", "tracking": "wide", "case": "uppercase" }
+  }
+}

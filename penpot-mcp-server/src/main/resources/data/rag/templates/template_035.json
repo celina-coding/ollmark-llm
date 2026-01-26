@@ -1,0 +1,13 @@
+{
+  "id": "sm_carousel_restaurant_tasting_menu",
+  "type": "social_media_post",
+  "tags": ["restaurant", "menu", "gastronomie", "carousel"],
+  "description": "Carousel présentant un menu dégustation plat par plat.",
+  "design_recipe": {
+    "slides": {
+      "type": "dish_focus",
+      "count": 6
+    },
+    "progress_indicator": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "flyer_food_rustic_dark",
+  "type": "flyer_a5",
+  "tags": ["food", "butcher", "dark_mode", "traditional"],
+  "description": "Flyer gastronomique sur fond sombre (noir/ardoise). Photo culinaire vue de dessus occupant 60% de l'espace. Titre blanc gras. Pastille de prix circulaire bien visible. Idéal pour boucherie ou traiteur.",
+  "design_recipe": {
+    "layout_mode": "split_horizontal_60_40",
+    "background": { "color": "#1A1A1A", "texture": "slate" },
+    "hero_image": { "position": "top", "style": "full_bleed" },
+    "typography": {
+      "headline": { "font": "Sans-Serif Bold", "color": "#FFFFFF", "case": "uppercase" },
+      "price_badge": { "shape": "circle", "color": "#E07A5F", "text_color": "#FFFFFF" }
+    },
+    "footer": { "type": "reservation_info", "alignment": "center" }
+  }
+}

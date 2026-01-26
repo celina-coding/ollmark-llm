@@ -1,0 +1,12 @@
+{
+  "id": "email_grocery_new_arrivals",
+  "type": "email",
+  "tags": ["épicerie", "produits", "newsletter"],
+  "description": "Newsletter annonçant les nouveaux produits disponibles en boutique alimentaire.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "sections": [
+      { "type": "product_cards", "columns": 3 }
+    ]
+  }
+}

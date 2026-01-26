@@ -1,0 +1,18 @@
+{
+  "id": "insta_story_fishmonger_daily_catch",
+  "type": "social_media_story",
+  "tags": ["poissonnerie", "arrivage", "vertical", "food"],
+  "description": "Story Instagram mettant en avant l'arrivage du jour en poissonnerie avec photo fraîche et texte minimal.",
+  "design_recipe": {
+    "background_mode": "full_image",
+    "overlay_opacity": 0.2,
+    "main_element": {
+      "type": "bottom_text_block",
+      "font_size": "large"
+    },
+    "icon": {
+      "type": "freshness_stamp",
+      "position": "top_left"
+    }
+  }
+}

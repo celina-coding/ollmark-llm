@@ -1,0 +1,19 @@
+{
+  "id": "flyer_butcher_slate",
+  "type": "flyer_a5",
+  "tags": ["food", "butcher", "dark", "traditional", "premium"],
+  "description": "Flyer gastronomique sur fond ardoise sombre. Photo culinaire vue de dessus occupant 60% de l'espace. Titre blanc gras sans serif. Pastille de prix circulaire et mise en avant des ingrédients.",
+  "design_recipe": {
+    "layout_mode": "split_vertical_60_40",
+    "background": { "color": "#1A1A1A", "texture": "slate_stone" },
+    "hero_image": { "position": "top", "style": "full_bleed" },
+    "typography": {
+      "headline": { "font": "Bold Sans-Serif", "color": "#FFFFFF", "case": "uppercase" },
+      "accent_text": { "color": "#E07A5F", "style": "handwritten_caption" }
+    },
+    "elements": [
+      { "type": "price_badge", "shape": "circle_solid", "color": "blue_grey" },
+      { "type": "ingredients_list", "position": "overlay_bottom" }
+    ]
+  }
+}

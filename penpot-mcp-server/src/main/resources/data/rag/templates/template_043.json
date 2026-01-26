@@ -1,0 +1,11 @@
+{
+  "id": "email_cheese_new_producers",
+  "type": "email",
+  "tags": ["fromagerie", "producteurs", "newsletter"],
+  "description": "Newsletter présentant de nouveaux producteurs partenaires.",
+  "design_recipe": {
+    "sections": [
+      { "type": "producer_profile", "repeat": true }
+    ]
+  }
+}

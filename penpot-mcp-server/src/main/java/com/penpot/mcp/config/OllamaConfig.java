@@ -46,8 +46,8 @@ public class OllamaConfig {
     public ChatClient chatClient(OllamaChatModel chatModel) {
         return ChatClient.builder(chatModel)
                 .defaultOptions(OllamaOptions.builder()
-                    .withModel(modelName)
-                    .withTemperature(0.7)
+                    .model(modelName)
+                    .temperature(0.7)
                     .build())
                 .build();
     }

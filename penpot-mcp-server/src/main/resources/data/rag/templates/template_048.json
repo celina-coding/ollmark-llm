@@ -1,0 +1,12 @@
+{
+  "id": "poster_sales_warning",
+  "type": "poster_a3",
+  "tags": ["sales", "warning", "yellow", "bold", "urgent"],
+  "description": "Design type 'Chantier' ou 'Attention'. Couleurs Jaune/Noir. Texte immense 'SOLDES'. Effet de bande de signalisation. Impact visuel maximal.",
+  "design_recipe": {
+    "layout_mode": "heavy_impact",
+    "background": { "color": "#FFD700", "pattern": "diagonal_warning_stripes" },
+    "typography": { "font": "Impact / Heavy", "color": "#000000", "size": "max_possible" },
+    "elements": ["percentage_badge_red_circle"]
+  }
+}

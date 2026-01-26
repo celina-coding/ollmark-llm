@@ -1,0 +1,11 @@
+{
+  "id": "poster_info_hours",
+  "type": "poster_a4",
+  "tags": ["info", "store", "clean", "utility"],
+  "description": "Affiche informative simple. 'Nos Horaires'. Icône d'horloge. Tableau des jours propre et lisible. Fond couleur de marque.",
+  "design_recipe": {
+    "layout_mode": "header_body_footer",
+    "icon": { "type": "clock_large", "position": "top_center" },
+    "content_structure": { "type": "grid_table_days" }
+  }
+}

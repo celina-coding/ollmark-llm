@@ -1,0 +1,14 @@
+{
+  "id": "poster_retail_modern_geo",
+  "type": "poster_a4",
+  "tags": ["furniture", "tech", "modern", "sale", "bold_colors"],
+  "description": "Affiche très colorée (Bleu/Orange). Formes géométriques abstraites en fond. Produit détouré qui 'flotte'. Badge de réduction fanion en haut à droite. Typographie blanche grasse.",
+  "design_recipe": {
+    "layout_mode": "diagonal_composition",
+    "background": { "color": "#0055FF", "shapes": ["orange_circle", "diagonal_lines"] },
+    "product_display": { "style": "floating_3d_effect", "position": "center" },
+    "badges": [
+      { "type": "ribbon_vertical", "position": "top_right", "text": "SALE", "color": "#FF4444" }
+    ]
+  }
+}

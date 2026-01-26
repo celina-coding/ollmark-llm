@@ -1,0 +1,14 @@
+{
+  "id": "sm_story_cheese_origin",
+  "type": "social_media_story",
+  "tags": ["fromagerie", "origine", "terroir", "story"],
+  "description": "Story éducative mettant en avant l'origine géographique d'un fromage.",
+  "design_recipe": {
+    "background_mode": "image_with_map_overlay",
+    "map_marker": true,
+    "text_blocks": [
+      { "type": "headline", "position": "top" },
+      { "type": "caption", "position": "bottom" }
+    ]
+  }
+}

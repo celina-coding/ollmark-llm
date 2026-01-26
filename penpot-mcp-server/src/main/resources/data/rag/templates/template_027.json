@@ -1,0 +1,15 @@
+{
+  "id": "sm_post_bakery_product_comparison",
+  "type": "social_media_post",
+  "tags": ["boulangerie", "pain", "comparatif", "produits"],
+  "description": "Post comparant deux pains différents avec visuels côte à côte et texte explicatif.",
+  "design_recipe": {
+    "format": "square",
+    "layout_mode": "split_screen",
+    "comparison": {
+      "left": "product_a",
+      "right": "product_b"
+    },
+    "text_zone": "center_overlay"
+  }
+}

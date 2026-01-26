@@ -1,0 +1,14 @@
+{
+  "id": "insta_post_restaurant_signature",
+  "type": "social_media_post",
+  "tags": ["restaurant", "gastronomie", "branding"],
+  "description": "Post Instagram mettant en avant le plat signature d'un restaurant avec photo artistique et texte discret.",
+  "design_recipe": {
+    "format": "square",
+    "image_style": "cinematic",
+    "text_overlay": {
+      "position": "bottom",
+      "opacity": 0.6
+    }
+  }
+}

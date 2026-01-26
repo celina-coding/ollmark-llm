@@ -1,0 +1,12 @@
+{
+  "id": "social_review_quote",
+  "type": "social_media_square",
+  "tags": ["social_proof", "review", "quote", "trust", "bold"],
+  "description": "Mise en avant d'un avis client. Fond couleur unie vive. Gros guillemets (Quotes) graphiques en filigrane. Texte de l'avis en italique blanc. 5 étoiles jaunes.",
+  "design_recipe": {
+    "layout_mode": "centered_quote",
+    "background": { "color": "Brand_Primary" },
+    "iconography": { "quote_mark": "giant_transparent_bg", "stars": "row_of_5_yellow" },
+    "typography": { "body": "Serif Italic", "color": "#FFFFFF", "size": "medium" }
+  }
+}

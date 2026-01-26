@@ -1,0 +1,15 @@
+{
+  "id": "email_local_market_weekly_deals",
+  "type": "email",
+  "tags": ["supermarché", "promo", "weekly", "retail"],
+  "description": "Email promotionnel listant les meilleures offres de la semaine dans un supermarché local.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "background_color": "#EFEFEF",
+    "sections": [
+      { "type": "promo_banner", "height": 220 },
+      { "type": "product_list", "rows": 6 },
+      { "type": "cta_button", "style": "high_visibility" }
+    ]
+  }
+}

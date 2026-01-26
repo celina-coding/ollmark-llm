@@ -1,0 +1,11 @@
+{
+  "id": "sm_post_grocery_new_products",
+  "type": "social_media_post",
+  "tags": ["épicerie", "nouveautés", "produits", "retail"],
+  "description": "Post présentant les nouveautés produits d'une épicerie avec plusieurs visuels.",
+  "design_recipe": {
+    "format": "square",
+    "layout_mode": "product_row",
+    "items_visible": 3
+  }
+}

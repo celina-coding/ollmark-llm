@@ -1,0 +1,12 @@
+{
+  "id": "sm_carousel_organic_products",
+  "type": "social_media_post",
+  "tags": ["bio", "alimentaire", "produits", "carousel"],
+  "description": "Carousel Instagram mettant en avant une gamme de produits bio avec messages pédagogiques.",
+  "design_recipe": {
+    "slides": {
+      "structure": "image_center_text_below"
+    },
+    "tone": "educational"
+  }
+}

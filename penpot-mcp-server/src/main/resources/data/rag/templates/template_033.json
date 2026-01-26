@@ -1,0 +1,16 @@
+{
+  "id": "sm_story_primeur_flash_arrival",
+  "type": "social_media_story",
+  "tags": ["primeur", "arrivage", "urgence", "story"],
+  "description": "Story très courte annonçant un arrivage express de fruits.",
+  "design_recipe": {
+    "background_mode": "full_color",
+    "headline": {
+      "font_size": "extra_large",
+      "alignment": "center"
+    },
+    "timer": {
+      "type": "countdown"
+    }
+  }
+}

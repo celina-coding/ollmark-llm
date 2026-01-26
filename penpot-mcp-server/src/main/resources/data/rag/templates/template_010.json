@@ -1,0 +1,11 @@
+{
+  "id": "poster_farmers_market_event",
+  "type": "poster_a3",
+  "tags": ["marché", "local", "événement", "print"],
+  "description": "Affiche événementielle pour marché de producteurs locaux avec illustrations et ambiance conviviale.",
+  "design_recipe": {
+    "layout_mode": "illustrated_scene",
+    "color_palette": "warm_natural",
+    "illustration_style": "flat_handdrawn"
+  }
+}

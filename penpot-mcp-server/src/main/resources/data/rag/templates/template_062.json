@@ -1,0 +1,11 @@
+{
+  "id": "social_teasing_mystery",
+  "type": "social_media_story",
+  "tags": ["teasing", "new_product", "shadow", "mystery"],
+  "description": "Teasing produit. Objet caché dans l'ombre/flou. Texte 'Bientôt...'. Point d'interrogation.",
+  "design_recipe": {
+    "layout_mode": "centered_mystery",
+    "background": { "image_effect": "blur_heavy_darken" },
+    "typography": { "text": "COMING SOON", "font": "Wide Spacing Sans", "color": "#FFFFFF" }
+  }
+}

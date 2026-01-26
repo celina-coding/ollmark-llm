@@ -1,0 +1,14 @@
+{
+  "id": "sm_carousel_primeur_seasonal",
+  "type": "social_media_post",
+  "tags": ["primeur", "fruits", "légumes", "saisonnier", "carousel"],
+  "description": "Post carrousel présentant les fruits et légumes de saison avec une slide par produit.",
+  "design_recipe": {
+    "format": "carousel",
+    "slides": {
+      "structure": "image_top_label_bottom",
+      "count": 6
+    },
+    "label_style": "price_or_origin"
+  }
+}

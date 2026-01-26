@@ -1,0 +1,12 @@
+{
+  "id": "sm_post_fishmonger_before_after",
+  "type": "social_media_post",
+  "tags": ["poissonnerie", "transformation", "produit"],
+  "description": "Post montrant le poisson brut puis préparé, valorisant le travail du poissonnier.",
+  "design_recipe": {
+    "format": "landscape",
+    "layout_mode": "before_after",
+    "divider_style": "vertical_line",
+    "labels": true
+  }
+}

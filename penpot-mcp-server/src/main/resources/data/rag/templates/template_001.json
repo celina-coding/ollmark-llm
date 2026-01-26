@@ -1,0 +1,22 @@
+{
+  "id": "insta_story_bakery_morning_deal",
+  "type": "social_media_story",
+  "tags": ["boulangerie", "promo", "matin", "vertical", "food"],
+  "description": "Story Instagram verticale pour promotion du matin en boulangerie. Image gourmande en plein écran avec texte très lisible et badge prix.",
+  "design_recipe": {
+    "canvas_size": "1080x1920",
+    "background_mode": "full_image",
+    "overlay_gradient": "bottom_dark",
+    "main_element": {
+      "type": "headline_text",
+      "alignment": "center",
+      "font_weight": "bold",
+      "font_size": "giant"
+    },
+    "price_badge": {
+      "shape": "circle",
+      "position": "top_right",
+      "contrast": "high"
+    }
+  }
+}

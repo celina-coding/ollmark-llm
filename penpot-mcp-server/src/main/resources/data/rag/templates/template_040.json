@@ -1,0 +1,12 @@
+{
+  "id": "email_primeur_weekly_basket",
+  "type": "email",
+  "tags": ["primeur", "panier", "saisonnier"],
+  "description": "Newsletter présentant le panier de fruits et légumes de la semaine.",
+  "design_recipe": {
+    "sections": [
+      { "type": "basket_overview" },
+      { "type": "product_list", "layout": "compact" }
+    ]
+  }
+}

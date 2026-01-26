@@ -1,0 +1,12 @@
+{
+  "id": "email_grocery_theme_selection",
+  "type": "email",
+  "tags": ["épicerie", "sélection", "thématique"],
+  "description": "Newsletter présentant une sélection de produits autour d'un thème culinaire.",
+  "design_recipe": {
+    "sections": [
+      { "type": "theme_intro" },
+      { "type": "themed_products", "grid": 3 }
+    ]
+  }
+}

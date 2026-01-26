@@ -13,6 +13,10 @@ penpot:
     log-level: ${PENPOT_MCP_LOG_LEVEL:debug}
     log-dir: ${PENPOT_MCP_LOG_DIR:logs}
     file-system-access: true
+    rag:
+      templates-path: classpath:data/rag/templates/*.json
+      similarity-threshold: 0.6
+      top-k: 3
 
 spring:
   ai:
@@ -20,9 +24,12 @@ spring:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       chat:
         options:
-          model: ${OLLAMA_MODEL:phi3:latest}
+          model: ${OLLAMA_MODEL:qwen3:8b}
           temperature: ${OLLAMA_TEMPERATURE:0.7}
           max-tokens: ${OLLAMA_MAX_TOKENS:4096}
+      embedding:
+        options:
+          model: ${OLLAMA_EMBEDDING_MODEL:mxbai-embed-large:latest}
 
 logging:
   level:

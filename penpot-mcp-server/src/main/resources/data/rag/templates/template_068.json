@@ -1,0 +1,18 @@
+{
+  "id": "email_loyalty_reward",
+  "type": "email",
+  "tags": ["loyalty", "gift", "coupon", "corporate", "reward"],
+  "description": "Email de remerciement. Design carte cadeau centrée. Gros titre 'Un Cadeau'. Code promo encadré au centre. Couleurs douces.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "background_color": "#F5F5F5",
+    "sections": [
+      { "type": "centered_logo" },
+      { "type": "card_container", "content": [
+          { "type": "headline", "text": "UN CADEAU", "size": "h1" },
+          { "type": "coupon_box", "style": "dashed_border" }
+        ]
+      }
+    ]
+  }
+}

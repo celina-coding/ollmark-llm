@@ -1,0 +1,13 @@
+{
+  "id": "sm_story_grocery_price_hit",
+  "type": "social_media_story",
+  "tags": ["épicerie", "promo", "prix", "story"],
+  "description": "Story promotionnelle très contrastée mettant en avant un prix choc.",
+  "design_recipe": {
+    "background_mode": "solid_color",
+    "price_display": {
+      "font_size": "massive",
+      "contrast": "maximum"
+    }
+  }
+}

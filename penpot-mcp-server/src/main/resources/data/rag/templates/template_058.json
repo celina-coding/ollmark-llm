@@ -1,0 +1,15 @@
+{
+  "id": "social_food_eco",
+  "type": "social_media_square",
+  "tags": ["organic", "food", "eco", "clean", "typography"],
+  "description": "Visuel épuré sur fond beige/crème. Met en avant la proximité (km) ou l'origine. Typographie mélangeant gros chiffres géants et texte serif élégant.",
+  "design_recipe": {
+    "layout_mode": "asymmetric_split",
+    "background": { "color": "#F5F5F0" },
+    "typography": {
+      "highlight_number": { "font": "Impact", "size": "max", "color": "#C0392B" },
+      "subtext": { "font": "Elegant Serif", "color": "#333333" }
+    },
+    "elements": ["organic_texture_zoom", "paper_texture_overlay"]
+  }
+}

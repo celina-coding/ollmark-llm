@@ -1,0 +1,12 @@
+{
+  "id": "email_bakery_subscription",
+  "type": "email",
+  "tags": ["boulangerie", "abonnement", "fidélité"],
+  "description": "Newsletter expliquant une offre d'abonnement pain ou viennoiseries.",
+  "design_recipe": {
+    "sections": [
+      { "type": "offer_explanation" },
+      { "type": "pricing_table" }
+    ]
+  }
+}

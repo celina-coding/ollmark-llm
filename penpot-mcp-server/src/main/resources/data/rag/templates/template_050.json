@@ -1,0 +1,15 @@
+{
+  "id": "poster_food_minimalist",
+  "type": "poster_a3",
+  "tags": ["vegetables", "food", "minimalist", "humor", "retail"],
+  "description": "Affiche minimaliste sur fond blanc. Un seul produit détouré au centre avec ombre portée réaliste. Typographie géante de couleur vive prenant toute la largeur. Texte court et percutant.",
+  "design_recipe": {
+    "layout_mode": "centered_object",
+    "background": { "color": "#FFFFFF" },
+    "typography": {
+      "headline": { "font": "Extra Condensed Bold", "color": "Brand Primary", "size": "max_width" },
+      "body": { "font": "Sans-Serif", "size": "small" }
+    },
+    "image_style": { "effect": "drop_shadow_realistic", "position": "center" }
+  }
+}

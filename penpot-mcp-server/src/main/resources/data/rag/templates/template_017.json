@@ -1,0 +1,13 @@
+{
+  "id": "sm_story_restaurant_daily_dish",
+  "type": "social_media_story",
+  "tags": ["restaurant", "plat du jour", "story", "food"],
+  "description": "Story verticale présentant le plat du jour d'un restaurant avec photo immersive.",
+  "design_recipe": {
+    "background_mode": "full_image",
+    "overlay_gradient": "top_dark",
+    "headline": {
+      "position": "top_center"
+    }
+  }
+}

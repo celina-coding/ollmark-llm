@@ -1,0 +1,12 @@
+{
+  "id": "poster_cheese_selection_month",
+  "type": "poster_a2",
+  "tags": ["fromagerie", "terroir", "print", "food"],
+  "description": "Affiche mettant en avant la sélection de fromages du mois avec photos multiples et labels terroir.",
+  "design_recipe": {
+    "layout_mode": "grid_showcase",
+    "grid": { "columns": 3 },
+    "label_system": "origin_badges",
+    "background_color": "#FFF9F0"
+  }
+}

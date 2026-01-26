@@ -1,0 +1,13 @@
+{
+  "id": "email_butcher_special_offers",
+  "type": "email",
+  "tags": ["boucherie", "promo", "newsletter"],
+  "description": "Newsletter promotionnelle pour boucherie avec offres limitées.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "sections": [
+      { "type": "promo_banner" },
+      { "type": "offer_list", "rows": 4 }
+    ]
+  }
+}

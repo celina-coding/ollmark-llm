@@ -1,0 +1,18 @@
+{
+  "id": "poster_butcher_artisan_cut",
+  "type": "poster_a3",
+  "tags": ["boucherie", "artisan", "viande", "print"],
+  "description": "Affiche A3 pour boucherie artisanale. Mise en avant d'une pièce de viande premium avec typographie traditionnelle et fond sombre.",
+  "design_recipe": {
+    "layout_mode": "hero_product",
+    "background": { "color": "#1A1A1A" },
+    "product_image": {
+      "scale": 0.8,
+      "lighting": "dramatic"
+    },
+    "typography": {
+      "headline": { "font": "Serif Bold", "color": "#F5E6C8" },
+      "caption": { "font": "Serif Italic", "size": "small" }
+    }
+  }
+}

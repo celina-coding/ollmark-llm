@@ -1,0 +1,12 @@
+{
+  "id": "email_food_shop_values",
+  "type": "email",
+  "tags": ["boutique", "alimentaire", "valeurs"],
+  "description": "Newsletter axée sur les valeurs de la boutique alimentaire.",
+  "design_recipe": {
+    "sections": [
+      { "type": "manifesto_text" },
+      { "type": "icon_values_list" }
+    ]
+  }
+}

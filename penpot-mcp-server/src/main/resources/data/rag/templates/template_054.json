@@ -1,0 +1,17 @@
+{
+  "id": "email_transactional_receipt",
+  "type": "email",
+  "tags": ["transactional", "receipt", "minimal", "table", "clean"],
+  "description": "Email transactionnel. Tableau récapitulatif de commande. Totaux alignés à droite. Fond gris clair, conteneur blanc.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "background_color": "#F0F0F0",
+    "wrapper_style": "white_shadow_box",
+    "sections": [
+      { "type": "success_icon_header" },
+      { "type": "order_table", "columns": ["Item", "Qty", "Price"] },
+      { "type": "total_row", "align": "right", "bold": true },
+      { "type": "footer_help_links" }
+    ]
+  }
+}

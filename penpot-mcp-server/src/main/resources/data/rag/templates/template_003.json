@@ -1,0 +1,16 @@
+{
+  "id": "insta_carousel_fruits_season",
+  "type": "social_media_post",
+  "tags": ["alimentaire", "fruits", "saisonnier", "carousel"],
+  "description": "Post Instagram en carrousel présentant les fruits et légumes de saison avec une slide par produit.",
+  "design_recipe": {
+    "format": "carousel",
+    "slides": {
+      "count": 5,
+      "structure": "image_top_text_bottom"
+    },
+    "background_color": "#FAFAFA",
+    "image_style": "cutout_clean",
+    "text_style": "friendly_bold"
+  }
+}

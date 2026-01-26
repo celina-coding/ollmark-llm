@@ -1,0 +1,16 @@
+{
+  "id": "menu_chalkboard_list",
+  "type": "flyer_a4",
+  "tags": ["restaurant", "menu", "vintage", "list", "chalk"],
+  "description": "Style ardoise de bistro. Fond noir texturé craie. Texte blanc effet 'écrit à la main'. Liste de produits avec prix reliés par des pointillés. Illustrations craie simples.",
+  "design_recipe": {
+    "layout_mode": "list_view",
+    "background": { "texture": "chalkboard_black" },
+    "list_items": {
+      "font_name": "Chalk Script",
+      "price_separator": "dotted_line",
+      "color": "#FFFFFF"
+    },
+    "decorations": ["corner_chalk_doodles", "underline_swash"]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "social_carousel_tutorial",
+  "type": "social_media_square",
+  "tags": ["tutorial", "howto", "steps", "grid", "education"],
+  "description": "Design pédagogique étape par étape. Titre 'Comment faire...'. Grille de 4 cases numérotées avec photos ou icônes.",
+  "design_recipe": {
+    "layout_mode": "grid_2x2",
+    "background": { "color": "#FFFFFF" },
+    "step_indicators": { "style": "number_circle_corner", "color": "Brand_Secondary" },
+    "typography": { "title": "Bold Header Top", "steps": "Small Sans-Serif" }
+  }
+}
