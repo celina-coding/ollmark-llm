@@ -1,15 +1,89 @@
 {
   "id": "poster_food_minimalist",
   "type": "poster_a3",
-  "tags": ["vegetables", "food", "minimalist", "humor", "retail"],
+  "tags": [
+    "poster",
+    "affiche",
+    "a3",
+    "print",
+    "impression",
+    "vitrine",
+    "plv",
+    "publicité",
+    "retail",
+    "magasin",
+    "campagne",
+    "communication_visuelle",
+    "food",
+    "alimentaire",
+    "vegetables",
+    "légumes",
+    "fruits",
+    "frais",
+    "nature",
+    "bio",
+    "ingrédient",
+    "épicerie_fine",
+    "minimalist",
+    "minimalisme",
+    "épuré",
+    "clean",
+    "blanc",
+    "white_space",
+    "sobriété",
+    "élégance",
+    "design",
+    "contemporain",
+    "moderne",
+    "tendance",
+    "pop",
+    "détouré",
+    "isolé",
+    "packshot",
+    "héros",
+    "focus_produit",
+    "ombre_portée",
+    "réalisme",
+    "humour",
+    "slogan",
+    "accroche",
+    "punchline",
+    "jeu_de_mots",
+    "esprit",
+    "ton_décalé",
+    "witty",
+    "complicité",
+    "typographie",
+    "titrage",
+    "extra_large",
+    "hauteur",
+    "verticalité",
+    "impact",
+    "audace",
+    "gras",
+    "bold",
+    "message"
+  ],
   "description": "Affiche minimaliste sur fond blanc. Un seul produit détouré au centre avec ombre portée réaliste. Typographie géante de couleur vive prenant toute la largeur. Texte court et percutant.",
   "design_recipe": {
     "layout_mode": "centered_object",
-    "background": { "color": "#FFFFFF" },
-    "typography": {
-      "headline": { "font": "Extra Condensed Bold", "color": "Brand Primary", "size": "max_width" },
-      "body": { "font": "Sans-Serif", "size": "small" }
+    "background": {
+      "color": "#FFFFFF"
     },
-    "image_style": { "effect": "drop_shadow_realistic", "position": "center" }
+    "typography": {
+      "headline": {
+        "font": "Extra Condensed Bold",
+        "color": "Brand Primary",
+        "size": "max_width"
+      },
+      "body": {
+        "font": "Sans-Serif",
+        "size": "small"
+      }
+    },
+    "image_style": {
+      "effect": "drop_shadow_realistic",
+      "position": "center"
+    }
   }
 }

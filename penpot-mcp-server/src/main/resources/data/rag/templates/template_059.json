@@ -1,17 +1,99 @@
 {
   "id": "story_bakery_morning",
-  "type": "social_media_story",
-  "tags": ["bakery", "breakfast", "warm", "vertical", "morning"],
-  "description": "Story Instagram chaleureuse pour le matin. Gros plan sur viennoiserie (croissant/pain). Ambiance dorée. Texte 'Sorti du four' avec l'heure. Filtre chaud.",
+  "type": "social_media_post",
+  "tags": [
+    "bakery",
+    "boulangerie",
+    "viennoiserie",
+    "croissant",
+    "pain",
+    "pain_au_chocolat",
+    "baguette",
+    "boulange",
+    "fournil",
+    "artisan",
+    "artisanal",
+    "fait_maison",
+    "tradition",
+    "breakfast",
+    "petit-déjeuner",
+    "brunch",
+    "matin",
+    "morning",
+    "réveil",
+    "aube",
+    "rituel",
+    "quotidien",
+    "café",
+    "bonne_humeur",
+    "énergie",
+    "frais",
+    "fraîcheur",
+    "chaud",
+    "warm",
+    "sorti_du_four",
+    "minute",
+    "gourmand",
+    "appétissant",
+    "délicieux",
+    "yummy",
+    "foodporn",
+    "croustillant",
+    "moelleux",
+    "doré",
+    "texture",
+    "saveur",
+    "réconfort",
+    "cocooning",
+    "plaisir",
+    "social_media",
+    "instagram",
+    "post",
+    "réel",
+    "reel",
+    "snack_content",
+    "vertical",
+    "9:16",
+    "plein_écran",
+    "mobile_first",
+    "visuel",
+    "macro",
+    "close-up",
+    "focus",
+    "moderne",
+    "tendance",
+    "glassmorphism",
+    "transparence",
+    "élégant",
+    "manuscrit",
+    "script",
+    "lifestyle"
+  ],
+  "description": "Post Instagram chaleureuse pour le matin. Gros plan sur viennoiserie (croissant/pain). Ambiance dorée. Texte 'Sorti du four' avec l'heure. Filtre chaud.",
   "design_recipe": {
     "layout_mode": "full_image_background",
-    "overlay": { "type": "gradient_bottom", "color": "#000000", "opacity": 0.5 },
+    "overlay": {
+      "type": "gradient_bottom",
+      "color": "#000000",
+      "opacity": 0.5
+    },
     "typography": {
-      "main": { "font": "Handwritten Script", "color": "#FFD700", "size": "giant" },
-      "secondary": { "font": "Sans-Serif", "color": "#FFFFFF" }
+      "main": {
+        "font": "Handwritten Script",
+        "color": "#FFD700",
+        "size": "giant"
+      },
+      "secondary": {
+        "font": "Sans-Serif",
+        "color": "#FFFFFF"
+      }
     },
     "stickers": [
-      { "type": "time_badge", "content": "7h00", "style": "glassmorphism" }
+      {
+        "type": "time_badge",
+        "content": "7h00",
+        "style": "glassmorphism"
+      }
     ]
   }
 }

@@ -1,14 +1,54 @@
 {
   "id": "flyer_gourmet_store_opening",
   "type": "flyer_a5",
-  "tags": ["épicerie", "ouverture", "print", "premium"],
+  "tags": [
+    "épicerie",
+    "gastronomie",
+    "delicatessen",
+    "traiteur",
+    "terroir",
+    "gourmand",
+    "vin",
+    "cadeau",
+    "ouverture",
+    "inauguration",
+    "lancement",
+    "invitation",
+    "evenement",
+    "nouveauté",
+    "marketing_local",
+    "print",
+    "flyer",
+    "prospectus",
+    "affiche",
+    "A5",
+    "papier",
+    "texture",
+    "grain",
+    "craft",
+    "premium",
+    "luxe",
+    "elegant",
+    "chic",
+    "sophistiqué",
+    "raffiné",
+    "classique",
+    "serif",
+    "didone",
+    "typographie",
+    "assortiment",
+    "vitrine"
+  ],
   "description": "Flyer A5 annonçant l'ouverture d'une épicerie fine avec ambiance élégante et produits haut de gamme.",
   "design_recipe": {
     "layout_mode": "vertical_split",
     "background_texture": "paper_grain",
     "visual_focus": "product_grid",
     "typography": {
-      "headline": { "font": "Didone", "tracking": "wide" }
+      "headline": {
+        "font": "Didone",
+        "tracking": "wide"
+      }
     }
   }
 }

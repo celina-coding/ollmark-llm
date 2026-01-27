@@ -6,7 +6,6 @@ import java.util.UUID;
 
 /**
  * Requête de tâche envoyée au plugin Penpot via WebSocket.
- * <p>
  * Représente une instruction à exécuter dans le plugin, identifiée
  * par un ID unique pour le suivi de la réponse asynchrone.
  */
@@ -16,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PluginTaskRequest {
+
     /** Identifiant unique de la tâche */
     private String id;
 
@@ -34,9 +34,9 @@ public class PluginTaskRequest {
      */
     public static PluginTaskRequest create(String task, Object params) {
         return PluginTaskRequest.builder()
-                .id(UUID.randomUUID().toString())
-                .task(task)
-                .params(params)
-                .build();
+            .id(UUID.randomUUID().toString())
+            .task(task)
+            .params(params)
+            .build();
     }
 }

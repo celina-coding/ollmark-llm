@@ -1,19 +1,110 @@
 {
   "id": "flyer_butcher_slate",
   "type": "flyer_a5",
-  "tags": ["food", "butcher", "dark", "traditional", "premium"],
+  "tags": [
+    "flyer",
+    "a5",
+    "tract",
+    "prospectus",
+    "imprimé",
+    "print",
+    "papier",
+    "publicité",
+    "marketing_local",
+    "food",
+    "alimentaire",
+    "gastronomie",
+    "cuisine",
+    "boucherie",
+    "boucher",
+    "charcuterie",
+    "traiteur",
+    "viande",
+    "pièce",
+    "morceau",
+    "bœuf",
+    "grillade",
+    "ingrédients",
+    "recette",
+    "composition",
+    "préparation",
+    "artisan",
+    "artisanat",
+    "savoir-faire",
+    "bistrot",
+    "tradition",
+    "traditionnel",
+    "authentique",
+    "rustique",
+    "brut",
+    "matière",
+    "minéral",
+    "ardoise",
+    "slate",
+    "pierre",
+    "texture",
+    "sombre",
+    "dark",
+    "dark_mode",
+    "noir",
+    "anthracite",
+    "premium",
+    "élégance",
+    "chic",
+    "luxe",
+    "haut_de_gamme",
+    "visuel",
+    "photo_culinaire",
+    "flatlay",
+    "vue_de_dessus",
+    "zénithale",
+    "mise_en_scène",
+    "gourmand",
+    "appétissant",
+    "prix",
+    "tarif",
+    "badge",
+    "pastille",
+    "macaron",
+    "offre",
+    "vente",
+    "manuscrit",
+    "note",
+    "conseil",
+    "proximité"
+  ],
   "description": "Flyer gastronomique sur fond ardoise sombre. Photo culinaire vue de dessus occupant 60% de l'espace. Titre blanc gras sans serif. Pastille de prix circulaire et mise en avant des ingrédients.",
   "design_recipe": {
     "layout_mode": "split_vertical_60_40",
-    "background": { "color": "#1A1A1A", "texture": "slate_stone" },
-    "hero_image": { "position": "top", "style": "full_bleed" },
+    "background": {
+      "color": "#1A1A1A",
+      "texture": "slate_stone"
+    },
+    "hero_image": {
+      "position": "top",
+      "style": "full_bleed"
+    },
     "typography": {
-      "headline": { "font": "Bold Sans-Serif", "color": "#FFFFFF", "case": "uppercase" },
-      "accent_text": { "color": "#E07A5F", "style": "handwritten_caption" }
+      "headline": {
+        "font": "Bold Sans-Serif",
+        "color": "#FFFFFF",
+        "case": "uppercase"
+      },
+      "accent_text": {
+        "color": "#E07A5F",
+        "style": "handwritten_caption"
+      }
     },
     "elements": [
-      { "type": "price_badge", "shape": "circle_solid", "color": "blue_grey" },
-      { "type": "ingredients_list", "position": "overlay_bottom" }
+      {
+        "type": "price_badge",
+        "shape": "circle_solid",
+        "color": "blue_grey"
+      },
+      {
+        "type": "ingredients_list",
+        "position": "overlay_bottom"
+      }
     ]
   }
 }

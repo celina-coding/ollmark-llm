@@ -5,7 +5,6 @@ import lombok.*;
 
 /**
  * Réponse d'une tâche reçue du plugin Penpot via WebSocket.
- * <p>
  * Contient le résultat de l'exécution d'une tâche, avec indication
  * de succès ou d'échec et les données retournées.
  *
@@ -17,6 +16,7 @@ import lombok.*;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PluginTaskResponse<T> {
+
     /** Identifiant de la tâche correspondante */
     private String id;
 

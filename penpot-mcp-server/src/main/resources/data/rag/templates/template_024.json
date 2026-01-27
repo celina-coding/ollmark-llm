@@ -1,13 +1,69 @@
 {
   "id": "email_primeur_seasonal_focus",
   "type": "email",
-  "tags": ["primeur", "saisonnier", "newsletter"],
+  "tags": [
+    "primeur",
+    "maraîcher",
+    "fruits",
+    "légumes",
+    "marché",
+    "agriculture",
+    "terroir",
+    "local",
+    "circuit_court",
+    "saisonnier",
+    "saison",
+    "calendrier",
+    "mois",
+    "cycle",
+    "bio",
+    "nature",
+    "frais",
+    "santé",
+    "healthy",
+    "nutrition",
+    "vitamine",
+    "bien-être",
+    "végétarien",
+    "vegan",
+    "cuisine",
+    "recette",
+    "newsletter",
+    "email",
+    "mailing",
+    "e-mailing",
+    "digital",
+    "éditorial",
+    "magazine",
+    "blog",
+    "article",
+    "informatif",
+    "pédagogie",
+    "éducation",
+    "conseil",
+    "guide",
+    "astuce",
+    "inspiration",
+    "responsive",
+    "mobile_friendly",
+    "vertical",
+    "grille",
+    "colonnes",
+    "visuel",
+    "clean",
+    "aéré"
+  ],
   "description": "Newsletter expliquant les fruits et légumes de saison avec visuels et conseils.",
   "design_recipe": {
     "layout_direction": "vertical_stack",
     "sections": [
-      { "type": "editorial_intro" },
-      { "type": "seasonal_products", "grid": 2 }
+      {
+        "type": "editorial_intro"
+      },
+      {
+        "type": "seasonal_products",
+        "grid": 2
+      }
     ]
   }
 }

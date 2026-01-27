@@ -1,15 +1,62 @@
 {
   "id": "email_local_market_weekly_deals",
   "type": "email",
-  "tags": ["supermarché", "promo", "weekly", "retail"],
+  "tags": [
+    "supermarché",
+    "hypermarché",
+    "supérette",
+    "commerce_local",
+    "grande_distribution",
+    "retail",
+    "courses",
+    "alimentaire",
+    "promo",
+    "promotion",
+    "discount",
+    "rabais",
+    "soldes",
+    "économie",
+    "bon_plan",
+    "prix_bas",
+    "weekly",
+    "hebdomadaire",
+    "newsletter",
+    "email",
+    "mailing",
+    "e-mailing",
+    "marketing_direct",
+    "digital",
+    "responsive",
+    "mobile_friendly",
+    "vertical",
+    "catalogue",
+    "liste",
+    "vitrine",
+    "selection",
+    "call_to_action",
+    "conversion",
+    "clean",
+    "simple",
+    "efficace",
+    "professionnel"
+  ],
   "description": "Email promotionnel listant les meilleures offres de la semaine dans un supermarché local.",
   "design_recipe": {
     "layout_direction": "vertical_stack",
     "background_color": "#EFEFEF",
     "sections": [
-      { "type": "promo_banner", "height": 220 },
-      { "type": "product_list", "rows": 6 },
-      { "type": "cta_button", "style": "high_visibility" }
+      {
+        "type": "promo_banner",
+        "height": 220
+      },
+      {
+        "type": "product_list",
+        "rows": 6
+      },
+      {
+        "type": "cta_button",
+        "style": "high_visibility"
+      }
     ]
   }
 }

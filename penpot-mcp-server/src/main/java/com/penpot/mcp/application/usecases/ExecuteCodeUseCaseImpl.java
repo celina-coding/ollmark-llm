@@ -1,0 +1,123 @@
+package com.penpot.mcp.application.usecases;
+
+import com.penpot.mcp.core.domain.*;
+import com.penpot.mcp.core.ports.in.ExecuteCodeUseCase;
+import com.penpot.mcp.core.ports.out.PluginCommunicationPort;
+import com.penpot.mcp.infrastructure.factory.*;
+import com.penpot.mcp.model.*;
+import com.penpot.mcp.shared.exception.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import java.util.*;
+
+/**
+ * Implémentation du use case d'exécution de code.
+ * Orchestration de haut niveau respectant le Single Responsibility Principle.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ExecuteCodeUseCaseImpl implements ExecuteCodeUseCase {
+
+    private final PluginCommunicationPort pluginPort;
+    private final ResultFormatterFactory formatterFactory;
+    private final TaskFactory taskFactory;
+
+    @Value("${penpot.mcp.task-timeout-seconds:30}")
+    private int timeoutSeconds;
+
+    @Override
+    public TaskResult execute(ExecuteCodeCommand command) {
+        log.info("Executing code use case (code length: {} chars)", 
+            command.getCode().length());
+
+        ensurePluginConnected();
+        Task task = taskFactory.createExecuteCodeTask(
+            command.getCode(),
+            command.getUserToken().orElse(null)
+        );
+
+        log.debug("Created task with ID: {}", task.getId());
+
+        try {
+            PluginTaskResponse<?> response = pluginPort.sendTask(task, timeoutSeconds);
+            return convertResponse(response);
+        } catch (TaskExecutionException e) {
+            log.error("Task execution failed", e);
+            return TaskResult.failure(e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error during task execution", e);
+            return TaskResult.failure("Unexpected error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Vérifie qu'une connexion plugin est disponible.
+     * 
+     * @throws PluginConnectionException si aucune connexion
+     */
+    private void ensurePluginConnected() {
+        if (!pluginPort.hasActiveConnection()) {
+            throw new PluginConnectionException(
+                "No active Penpot plugin connection. " +
+                "Please ensure the plugin is loaded and connected."
+            );
+        }
+    }
+
+    /**
+     * Convertit une PluginTaskResponse en TaskResult du domaine.
+     * Applique le formatage approprié selon le type de données.
+     * 
+     * @param response la réponse du plugin
+     * @return le résultat converti
+     */
+    private TaskResult convertResponse(PluginTaskResponse<?> response) {
+        if (!response.getSuccess()) {
+            return TaskResult.failure(
+                response.getError() != null 
+                    ? response.getError() 
+                    : "Task failed without error message"
+            );
+        }
+
+        Object data = response.getData();
+        if (data == null) return TaskResult.success(null);
+
+        var formatter = formatterFactory.getFormatterForObject(data);
+        String formattedData = formatter.format(data);
+
+        log.debug("Formatted result using: {}", formatter.getClass().getSimpleName());
+
+        var logs = extractLogs(data);
+        return logs.isEmpty()
+            ? TaskResult.success(formattedData)
+            : TaskResult.success(formattedData, logs);
+    }
+
+    /**
+     * Extrait les logs des données de réponse si présents.
+     * 
+     * @param data les données de réponse
+     * @return la liste des logs ou une liste vide
+     */
+    private List<String> extractLogs(Object data) {
+        if (data instanceof ExecuteCodeTaskResultData<?> resultData) {
+            String log = resultData.getLog();
+            return log != null && !log.isBlank()
+                ? List.of(log)
+                : List.of();
+        }
+
+        if (data instanceof Map<?, ?> map) {
+            Object logValue = map.get("log");
+            if (logValue instanceof String log && !log.isBlank()) {
+                return List.of(log);
+            }
+        }
+
+        return List.of();
+    }
+}

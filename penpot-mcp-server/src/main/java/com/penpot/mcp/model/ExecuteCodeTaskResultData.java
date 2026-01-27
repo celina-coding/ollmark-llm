@@ -4,7 +4,6 @@ import lombok.*;
 
 /**
  * Données de résultat pour une tâche d'exécution de code.
- * <p>
  * Contient le résultat de l'exécution du code ainsi que les logs
  * éventuels générés pendant l'exécution.
  *
@@ -15,6 +14,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExecuteCodeTaskResultData<T> {
+
     /** Le résultat de l'exécution du code */
     private T result;
 
