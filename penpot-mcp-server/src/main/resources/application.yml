@@ -85,9 +85,7 @@ spring:
       embedding:
         options:
           # Modèle d'embedding pour le RAG
-          # Recommandé : mxbai-embed-large, nomic-embed-text
-          model: ${OLLAMA_EMBEDDING_MODEL:mxbai-embed-large:latest}
-    
+          model: ${OLLAMA_EMBEDDING_MODEL:hf.co/unsloth/embeddinggemma-300m-GGUF:Q8_0}
     # Configuration de la mémoire de conversation (ChatMemory)
     chat:
       memory:
