@@ -1,20 +1,30 @@
 package com.penpot.mcp.core.ports.in;
 
-import com.penpot.mcp.core.domain.TaskResult;
-import com.penpot.mcp.core.domain.ExecuteCodeCommand;
+import com.penpot.mcp.core.domain.*;
 
 /**
  * Port d'entrée pour l'exécution de code JavaScript dans le plugin Penpot.
- * Interface du use case suivant le principe de ségrégation des interfaces (ISP).
  */
 public interface ExecuteCodeUseCase {
+
     /**
-     * Exécute du code JavaScript dans le contexte du plugin Penpot.
+     * Exécute une commande de code JavaScript dans le plugin Penpot.
      * 
-     * @param command la commande d'exécution contenant le code et les paramètres
-     * @return le résultat de l'exécution
+     * <h3>Workflow</h3>
+     * <ol>
+     *     <li>Validation de la commande</li>
+     *     <li>Vérification de la connexion plugin</li>
+     *     <li>Création de la tâche</li>
+     *     <li>Envoi au plugin via WebSocket</li>
+     *     <li>Attente de la réponse (avec timeout)</li>
+     *     <li>Conversion et formatage du résultat</li>
+     * </ol>
+     * 
+     * @param command commande contenant le code et les paramètres
+     * @return résultat de l'exécution
      * @throws PluginConnectionException si aucune connexion plugin n'est active
-     * @throws TaskExecutionException si l'exécution échoue
+     * @throws TaskExecutionException    si l'exécution échoue
+     * @throws TaskTimeoutException      si le délai d'attente est dépassé
      */
     TaskResult execute(ExecuteCodeCommand command);
 }

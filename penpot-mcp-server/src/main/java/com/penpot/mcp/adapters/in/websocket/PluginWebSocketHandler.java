@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.penpot.mcp.application.service.TaskOrchestrator;
 import com.penpot.mcp.infrastructure.session.SessionManager;
 import com.penpot.mcp.model.PluginTaskResponse;
+import com.penpot.mcp.shared.util.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,8 +15,6 @@ import java.util.Map;
 
 /**
  * Handler WebSocket pour la communication avec le plugin Penpot.
- * Refactorisé pour utiliser SessionManager et TaskOrchestrator.
- * Suit le Single Responsibility Principle en déléguant les responsabilités.
  */
 @Slf4j
 @Component
@@ -58,7 +57,6 @@ public class PluginWebSocketHandler extends TextWebSocketHandler {
 
             if (response != null) {
                 boolean handled = responseOrchestrator.notifyResponse(response);
-
                 if (!handled) {
                     log.warn("Response for task {} was not handled (no pending task)", 
                         response.getId());
@@ -79,7 +77,6 @@ public class PluginWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sessionManager.unregisterSession(session);
-
         log.info("WebSocket connection closed: {} - {} (active connections: {})", 
             session.getId(),
             status, 
@@ -96,9 +93,7 @@ public class PluginWebSocketHandler extends TextWebSocketHandler {
             session.getId(), exception);
 
         try {
-            if (session.isOpen()) {
-                session.close(CloseStatus.SERVER_ERROR);
-            }
+            if (session.isOpen()) session.close(CloseStatus.SERVER_ERROR);
         } catch (IOException e) {
             log.error("Failed to close session after transport error", e);
         }
@@ -115,9 +110,15 @@ public class PluginWebSocketHandler extends TextWebSocketHandler {
      */
     private PluginTaskResponse<?> parseTaskResponse(String payload) {
         try {
+            if (!JsonUtils.isValidJson(payload)) {
+                log.warn("Received invalid JSON payload");
+                return null;
+            }
+
             @SuppressWarnings("unchecked")
             Map<String, Object> messageMap = objectMapper.readValue(payload, Map.class);
 
+            // Format enveloppe: {type: "task-response", response: {...}}
             if ("task-response".equals(messageMap.get("type"))) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> responseMap = 
@@ -125,6 +126,7 @@ public class PluginWebSocketHandler extends TextWebSocketHandler {
                 return objectMapper.convertValue(responseMap, PluginTaskResponse.class);
             }
 
+            // Format direct: {id: "...", success: true, ...}
             if (messageMap.containsKey("id") && messageMap.containsKey("success")) {
                 return objectMapper.convertValue(messageMap, PluginTaskResponse.class);
             }

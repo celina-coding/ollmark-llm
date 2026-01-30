@@ -4,6 +4,7 @@ import com.penpot.mcp.core.domain.AiContext;
 import com.penpot.mcp.core.ports.out.*;
 import com.penpot.mcp.application.service.PromptsConfigService;
 import com.penpot.mcp.application.tools.TemplateSearchTools;
+import com.penpot.mcp.shared.exception.ToolExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -14,12 +15,35 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import java.util.*;
 
+import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
+
 /**
- * Adapter pour le service AI Ollama.
- * Implémente le port AiServicePort (Hexagonal Architecture).
- * Transforme les requêtes du domaine en appels Ollama.
+ * Adaptateur sortant centralisé vers le service d'IA conversationnelle Ollama.
  * 
- * Now includes RAG template search tools for function calling.
+ * <h2>Responsabilités uniques</h2>
+ * Cet adaptateur est le SEUL point d'accès à l'IA dans l'application :
+ * <ul>
+ *     <li>Chat conversationnel avec mémoire persistée (ChatMemory)</li>
+ *     <li>Génération de code JavaScript pour Penpot</li>
+ *     <li>Accès à la documentation API</li>
+ *     <li>Intégration des tools RAG (recherche de templates marketing)</li>
+ * </ul>
+ *
+ * <h2>Gestion de la mémoire conversationnelle</h2>
+ * Utilise {@link org.springframework.ai.chat.memory.ChatMemory} via les advisors Spring AI :
+ * <ul>
+ *     <li>Chargement automatique de l'historique via {@code conversationId}</li>
+ *     <li>Injection dans le contexte du prompt</li>
+ *     <li>Sauvegarde automatique des messages utilisateur et réponses IA</li>
+ * </ul>
+ *
+ * <h2>Function Calling avec Templates</h2>
+ * Expose les {@link TemplateSearchTools} à l'IA pour permettre la recherche
+ * et la génération de templates marketing directement depuis la conversation.
+ *
+ * @see AiServicePort Port de sortie implémenté
+ * @see TemplateSearchTools Tools RAG disponibles pour l'IA
+ * @see PromptsConfigService Configuration des prompts système
  */
 @Slf4j
 @Component
@@ -27,44 +51,49 @@ import java.util.*;
 @RequiredArgsConstructor
 public class OllamaAiAdapter implements AiServicePort {
 
+    /** 
+     * Client Spring AI configuré avec ChatMemory et advisors.
+     * Injecté depuis {@link com.penpot.mcp.infrastructure.config.OllamaConfig}
+     */
     private final ChatClient chatClient;
+
+    /** Service centralisant les prompts système et la configuration IA. */
     private final PromptsConfigService promptsConfigService;
+
+    /** Port d'accès à la documentation de l'API Penpot. */
     private final ApiDocumentationPort apiDocumentationPort;
+
+    /** Tools IA pour la recherche de templates marketing (RAG). */
     private final TemplateSearchTools templateSearchTools;
 
     @Override
-    public String chat(String userMessage, List<Message> conversationHistory) {
+    public String chat(String conversationId, String userMessage) {
         try {
-            log.info("Processing chat request (message length: {} chars)", 
-                userMessage.length());
+            log.info(
+                "Processing chat request (conversation: {}, message length: {} chars)", 
+                conversationId, userMessage.length()
+            );
 
-            List<Message> messages = new ArrayList<>();
-            String systemInstructions = buildChatSystemPrompt();
-            messages.add(new SystemMessage(systemInstructions));
+            String systemPrompt = buildChatSystemPrompt();
 
-            if (conversationHistory != null && !conversationHistory.isEmpty()) {
-                messages.addAll(conversationHistory);
-                log.debug("Added {} messages from conversation history", 
-                    conversationHistory.size());
-            }
+            String response = chatClient.prompt()
+                .system(systemPrompt)
+                .user(userMessage)
+                .advisors(advisor -> advisor.param(CONVERSATION_ID, conversationId))
+                .tools(templateSearchTools)
+                .call()
+                .content();
 
-            messages.add(new UserMessage(userMessage));
-            Prompt prompt = new Prompt(messages);
-            
-            // Use ChatClient with template search tools
-            ChatResponse response = chatClient.prompt(prompt)
-                    .tools(templateSearchTools)  // Make RAG tools available
-                    .call()
-                    .chatResponse();
-
-            String result = response.getResult().getOutput().getText();
             log.info("Chat response generated successfully (length: {} chars)", 
-                result.length());
+                response.length());
 
-            return result;
+            return response;
         } catch (Exception e) {
-            log.error("Error during AI chat", e);
-            throw new RuntimeException("AI service error: " + e.getMessage(), e);
+            log.error("Error during AI chat for conversation: {}", conversationId, e);
+            throw new ToolExecutionException(
+                "AI chat service error for conversation " + conversationId + ": " + e.getMessage(), 
+                e
+            );
         }
     }
 
@@ -82,10 +111,8 @@ public class OllamaAiAdapter implements AiServicePort {
             );
 
             Prompt prompt = new Prompt(messages);
-            
-            // Use ChatClient with template search tools for code generation too
             ChatResponse response = chatClient.prompt(prompt)
-                    .tools(templateSearchTools)  // RAG tools available during code gen
+                    .tools(templateSearchTools)
                     .call()
                     .chatResponse();
 
@@ -98,8 +125,11 @@ public class OllamaAiAdapter implements AiServicePort {
 
             return code;
         } catch (Exception e) {
-            log.error("Error during code generation", e);
-            throw new RuntimeException("Code generation failed: " + e.getMessage(), e);
+            log.error("Error during code generation for task: {}", context.getTask(), e);
+            throw new ToolExecutionException(
+                "Code generation failed: " + e.getMessage(), 
+                e
+            );
         }
     }
 
@@ -117,98 +147,148 @@ public class OllamaAiAdapter implements AiServicePort {
     }
 
     /**
-     * Construit le prompt système pour le chat.
-     * Inclut les instructions sur l'utilisation des tools RAG.
+     * Construit le prompt système pour le chat conversationnel.
+     * 
+     * <h3>Contenu du prompt</h3>
+     * <ul>
+     *     <li>Instructions initiales (depuis PromptsConfigService)</li>
+     *     <li>Capacités de recherche de templates (tools RAG)</li>
+     *     <li>Workflow recommandé pour l'utilisation des templates</li>
+     *     <li>Contexte conversationnel (géré automatiquement par ChatMemory)</li>
+     * </ul>
+     *
+     * @return prompt système formaté pour le chat
      */
     private String buildChatSystemPrompt() {
         StringBuilder prompt = new StringBuilder();
-        
+
         prompt.append(promptsConfigService.getInitialInstructions());
         prompt.append("\n\n");
-        
         prompt.append("""
-            TEMPLATE SEARCH CAPABILITIES:
-            You have access to tools for searching and generating marketing design templates:
-            
-            1. searchTemplates(query) - Find templates using natural language
-               Examples: "social media post", "email newsletter"
-            
-            2. generateFromTemplate(templateId) - Generate JavaScript code from a template
-               Use this after finding a template to create the actual design
-            
-            3. listTemplateTypes() - Show all available template categories
-            
-            4. getTemplatesByType(type) - Get templates of a specific category
-            
-            WHEN TO USE TEMPLATES:
-            - User asks to create marketing materials (posts, stories, emails, posters, flyers)
-            - User mentions specific design types (social media, email marketing, print)
-            - User wants to start from a template or example
-            
-            WORKFLOW:
-            1. Search for relevant templates using searchTemplates()
-            2. Present options to user with descriptions
-            3. When user selects, use generateFromTemplate() to get the code
-            4. Execute the generated code or present it to the user
-            
-            Always explain what templates you found and let the user choose before generating.
+            # CAPACITÉS DE RECHERCHE DE TEMPLATES MARKETING
+
+            Tu as accès à des tools pour rechercher et générer des templates de design marketing :
+
+            ## Tools disponibles
+
+            1. **searchTemplates(query)** - Recherche sémantique de templates
+               - Exemples : "post sur les réseaux sociaux", "newsletter par email"
+               - Retourne : liste de templates pertinents avec ID, type, description, tags
+
+            2. **generateFromTemplate(templateId)** - Génère le code JavaScript depuis un template
+               - Utilise ceci après avoir trouvé un template pour créer le design
+               - Retourne : code JavaScript exécutable pour Penpot
+
+            3. **listTemplateTypes()** - Liste toutes les catégories de templates
+               - Exemples : social_media_post, email, poster_a3, flyer_a5
+
+            4. **getTemplatesByType(type)** - Récupère tous les templates d'une catégorie
+
+            ## Quand utiliser les templates
+
+            Utilise les tools de templates lorsque l'utilisateur :
+            - Demande à créer du contenu marketing (posts, stories, emails, posters, flyers)
+            - Mentionne des types de design spécifiques (réseaux sociaux, email marketing, print)
+            - Veut partir d'un template ou d'un exemple
+            - Parle de contenu promotionnel ou publicitaire
+
+            ## Workflow recommandé
+
+            1. **Recherche** : Utilise `searchTemplates()` avec une requête décrivant le besoin
+            2. **Présentation** : Présente les options trouvées à l'utilisateur avec leurs descriptions
+            3. **Sélection** : Demande à l'utilisateur de choisir (ou choisis le plus pertinent)
+            4. **Génération** : Utilise `generateFromTemplate(templateId)` pour obtenir le code
+            5. **Personnalisation** : Explique comment personnaliser le résultat si nécessaire
+
+            ## Contexte conversationnel
+
+            - Tu as accès à tout l'historique de la conversation automatiquement
+            - Fais référence aux messages précédents naturellement
+            - Maintiens le contexte sur plusieurs tours de conversation
+            - Pose des questions de clarification si nécessaire
+
+            ## Principes importants
+
+            - Explique toujours quels templates tu as trouvés
+            - Laisse l'utilisateur choisir avant de générer (sauf si évident)
+            - Sois conversationnel et amical
+            - Adapte-toi au niveau technique de l'utilisateur
+            - Propose des améliorations et des suggestions créatives
             """);
-        
+
         return prompt.toString();
     }
 
     /**
      * Construit le prompt système pour la génération de code.
-     * Inclut les règles, exemples et contraintes.
+     * Inclut les règles strictes, la documentation API, exemples et contraintes.
+     *
+     * @param context contexte enrichi avec documentation et exemples
+     * @return prompt système formaté pour la génération
      */
     private String buildCodeGenerationSystemPrompt(AiContext context) {
         StringBuilder prompt = new StringBuilder();
 
         prompt.append("""
-            You are an expert in the Penpot Plugin API. Your task is to generate JavaScript code
-            that accomplishes the given task using the Penpot API.
-            
-            CRITICAL RULES:
-            1. Return ONLY executable JavaScript code, NO markdown backticks, NO explanations
-            2. The code will be executed directly in the Penpot plugin context
-            3. Available global objects: penpot, penpotUtils, storage, console
-            4. DO NOT use require() or import statements - everything is already available
-            5. DO NOT log information that you are also returning
-            
-            TEMPLATE SEARCH CAPABILITY:
-            You can use searchTemplates() to find marketing templates when the user wants to create:
-            - Social media content (posts, stories)
-            - Email marketing materials
-            - Print materials (posters, flyers)
-            Then use generateFromTemplate(templateId) to get ready-to-use code.
+            # EXPERT PENPOT PLUGIN API - GÉNÉRATION DE CODE JAVASCRIPT
+
+            Tu es un expert de l'API Penpot Plugin. Ta tâche est de générer du code JavaScript
+            qui accomplit la tâche demandée en utilisant l'API Penpot.
+
+            ## RÈGLES CRITIQUES (ABSOLUES)
+
+            1. Retourne UNIQUEMENT du code JavaScript exécutable
+               - PAS de backticks markdown (```javascript ou ```)
+               - PAS d'explications avant ou après le code
+               - PAS de commentaires sauf si demandés explicitement
+
+            2. Le code sera exécuté directement dans le contexte du plugin Penpot
+               - Objets globaux disponibles : penpot, penpotUtils, storage, console
+               - N'utilise PAS require() ou import
+               - N'utilise PAS localStorage ou sessionStorage
+
+            3. Ne log PAS d'informations que tu retournes déjà
+               - Si tu retournes une valeur, n'utilise pas console.log() pour la même info
+
+            ## CAPACITÉ DE RECHERCHE DE TEMPLATES
+
+            Tu peux utiliser `searchTemplates()` pour trouver des templates marketing quand :
+            - L'utilisateur veut créer du contenu pour les réseaux sociaux
+            - L'utilisateur veut créer du matériel d'email marketing
+            - L'utilisateur veut créer du matériel imprimé (posters, flyers)
+
+            Ensuite utilise `generateFromTemplate(templateId)` pour obtenir du code prêt à l'emploi.
             """);
 
+        // Documentation API pertinente
         if (!context.getApiDocumentation().isEmpty()) {
-            prompt.append("\nRELEVANT API DOCUMENTATION:\n");
+            prompt.append("\n## DOCUMENTATION API PERTINENTE\n\n");
             context.getApiDocumentation().forEach((type, doc) -> {
-                prompt.append("\n### ").append(type).append("\n");
-                prompt.append(doc).append("\n");
+                prompt.append("### ").append(type).append("\n\n");
+                prompt.append(doc).append("\n\n");
             });
-            prompt.append("\n");
         }
 
+        // Exemples de code
         if (!context.getExamples().isEmpty()) {
-            prompt.append("PENPOT API EXAMPLES:\n\n");
+            prompt.append("## EXEMPLES D'UTILISATION DE L'API PENPOT\n\n");
             context.getExamples().forEach(example -> {
                 prompt.append(example).append("\n\n");
             });
         }
 
+        // Best practices
         if (!context.getBestPractices().isEmpty()) {
-            prompt.append("BEST PRACTICES:\n");
+            prompt.append("## BONNES PRATIQUES\n\n");
             context.getBestPractices().forEach(practice -> {
                 prompt.append("- ").append(practice).append("\n");
             });
             prompt.append("\n");
         }
 
+        // Contraintes
         if (!context.getConstraints().isEmpty()) {
-            prompt.append("CONSTRAINTS:\n");
+            prompt.append("## CONTRAINTES TECHNIQUES\n\n");
             context.getConstraints().forEach(constraint -> {
                 prompt.append("- ").append(constraint).append("\n");
             });
@@ -220,15 +300,18 @@ public class OllamaAiAdapter implements AiServicePort {
 
     /**
      * Construit le message utilisateur pour la génération de code.
+     *
+     * @param context contexte contenant la tâche et le contexte utilisateur
+     * @return message utilisateur formaté
      */
     private String buildCodeGenerationUserPrompt(AiContext context) {
         StringBuilder prompt = new StringBuilder();
 
-        prompt.append("Generate ONLY executable JavaScript code (no markdown, no explanations) for: ");
+        prompt.append("Génère UNIQUEMENT du code JavaScript exécutable (pas de markdown, pas d'explications) pour : ");
         prompt.append(context.getTask());
 
         if (!context.getUserContext().isBlank()) {
-            prompt.append("\n\nAdditional context: ");
+            prompt.append("\n\nContexte additionnel : ");
             prompt.append(context.getUserContext());
         }
 
@@ -237,7 +320,10 @@ public class OllamaAiAdapter implements AiServicePort {
 
     /**
      * Nettoie le code généré par l'IA.
-     * Supprime les artefacts markdown et les commentaires inutiles.
+     * Supprime les artefacts markdown, commentaires inutiles et espaces superflus.
+     *
+     * @param code code brut généré par l'IA
+     * @return code nettoyé prêt à l'exécution
      */
     private String cleanGeneratedCode(String code) {
         if (code == null || code.isBlank()) return "";

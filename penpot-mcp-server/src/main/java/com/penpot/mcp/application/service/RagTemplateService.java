@@ -19,18 +19,11 @@ import java.util.stream.Collectors;
 /**
  * Service RAG (Retrieval-Augmented Generation) pour les templates marketing.
  * 
- * REFACTORED: Utilise maintenant EmbeddingCacheService pour optimiser les performances.
- * 
  * Architecture RAG avec Cache:
  * 1. Chargement : Lit les templates JSON depuis resources/data/rag/templates/
  * 2. Vectorisation : Convertit chaque template en embedding via Ollama (avec cache)
  * 3. Stockage : Enregistre les embeddings dans VectorStore (en mémoire)
  * 4. Recherche : Trouve les templates similaires à une requête utilisateur (avec cache)
- * 
- * Performance avec Cache:
- * - Première recherche "social media post": ~100-200ms (calcul embedding)
- * - Recherches suivantes "social media post": <1ms (cache hit)
- * - Gain: 100x-200x sur requêtes répétées
  */
 @Slf4j
 @Service

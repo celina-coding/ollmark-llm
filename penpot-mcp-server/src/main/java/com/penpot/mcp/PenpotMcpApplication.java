@@ -31,26 +31,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
  *   <li>Support multi-utilisateur optionnel</li>
  * </ul>
  * 
- * <h3>Design Patterns Utilisés</h3>
- * <ul>
- *   <li><b>Hexagonal Architecture</b> : Séparation domaine/infrastructure</li>
- *   <li><b>Strategy Pattern</b> : Formatage résultats, sélection session</li>
- *   <li><b>Factory Pattern</b> : Création tâches, formatters, chaînes</li>
- *   <li><b>Chain of Responsibility</b> : Enrichissement contexte AI</li>
- *   <li><b>Observer Pattern</b> : Gestion réponses WebSocket async</li>
- *   <li><b>Template Method</b> : Structure commune enrichisseurs</li>
- *   <li><b>Adapter Pattern</b> : Intégration services externes</li>
- * </ul>
- * 
- * <h3>Principes SOLID</h3>
- * <ul>
- *   <li><b>S</b>ingle Responsibility : Une classe = une responsabilité</li>
- *   <li><b>O</b>pen/Closed : Ouvert extension, fermé modification</li>
- *   <li><b>L</b>iskov Substitution : Sous-types substituables</li>
- *   <li><b>I</b>nterface Segregation : Interfaces ciblées</li>
- *   <li><b>D</b>ependency Inversion : Dépendance aux abstractions</li>
- * </ul>
- * 
  * @see com.penpot.mcp.core.ports.in Use Cases (ports d'entrée)
  * @see com.penpot.mcp.core.ports.out Ports de sortie
  * @see com.penpot.mcp.adapters Adapters (implémentations)

@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manager pour gérer les sessions WebSocket du plugin.
- * Utilise le Strategy Pattern pour la sélection de session.
  * Centralise la gestion des sessions et déléguée la logique de sélection.
  */
 @Slf4j
