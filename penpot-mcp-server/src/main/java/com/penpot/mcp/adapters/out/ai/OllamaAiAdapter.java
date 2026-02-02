@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -84,9 +85,7 @@ public class OllamaAiAdapter implements AiServicePort {
                 .call()
                 .content();
 
-            log.info("Chat response generated successfully (length: {} chars)", 
-                response.length());
-
+            log.info("Chat response generated (length: {} chars)", response.length());
             return response;
         } catch (Exception e) {
             log.error("Error during AI chat for conversation: {}", conversationId, e);
@@ -164,7 +163,28 @@ public class OllamaAiAdapter implements AiServicePort {
 
         prompt.append(promptsConfigService.getInitialInstructions());
         prompt.append("\n\n");
+
         prompt.append("""
+            # TU ES UN ASSISTANT POUR L'API PENPOT PLUGIN
+
+            Tu aides les utilisateurs à :
+            1. **Coder en JavaScript** pour Penpot
+            2. **Utiliser des templates marketing** (posts réseaux sociaux, emails, posters)
+
+            ## RÈGLE IMPORTANTE : ANALYSE L'INTENTION
+
+            Avant de répondre, identifie ce que l'utilisateur veut VRAIMENT :
+
+            ### Si l'utilisateur veut du CODE JAVASCRIPT SIMPLE :
+            - Exemples : "créer un rectangle", "ajouter du texte", "changer une couleur"
+            - → Génère directement du code JavaScript pour Penpot
+            - → N'utilise PAS les tools de templates
+
+            ### Si l'utilisateur veut du CONTENU MARKETING :
+            - Exemples : "post Instagram", "email newsletter", "affiche promotionnelle"
+            - → Utilise les tools de recherche de templates
+            - → Propose des templates prêts à l'emploi
+
             # CAPACITÉS DE RECHERCHE DE TEMPLATES MARKETING
 
             Tu as accès à des tools pour rechercher et générer des templates de design marketing :
@@ -184,15 +204,7 @@ public class OllamaAiAdapter implements AiServicePort {
 
             4. **getTemplatesByType(type)** - Récupère tous les templates d'une catégorie
 
-            ## Quand utiliser les templates
-
-            Utilise les tools de templates lorsque l'utilisateur :
-            - Demande à créer du contenu marketing (posts, stories, emails, posters, flyers)
-            - Mentionne des types de design spécifiques (réseaux sociaux, email marketing, print)
-            - Veut partir d'un template ou d'un exemple
-            - Parle de contenu promotionnel ou publicitaire
-
-            ## Workflow recommandé
+            ## Workflow recommandé pour les TEMPLATES
 
             1. **Recherche** : Utilise `searchTemplates()` avec une requête décrivant le besoin
             2. **Présentation** : Présente les options trouvées à l'utilisateur avec leurs descriptions
@@ -203,14 +215,15 @@ public class OllamaAiAdapter implements AiServicePort {
             ## Contexte conversationnel
 
             - Tu as accès à tout l'historique de la conversation automatiquement
-            - Fais référence aux messages précédents naturellement
+            - Fais référence aux messages précédents AVEC PRÉCISION
+            - Cite EXACTEMENT ce que l'utilisateur a demandé
             - Maintiens le contexte sur plusieurs tours de conversation
             - Pose des questions de clarification si nécessaire
 
             ## Principes importants
 
-            - Explique toujours quels templates tu as trouvés
-            - Laisse l'utilisateur choisir avant de générer (sauf si évident)
+            - Réponds DIRECTEMENT à la question posée
+            - Ne propose pas de templates si l'utilisateur veut juste du code simple
             - Sois conversationnel et amical
             - Adapte-toi au niveau technique de l'utilisateur
             - Propose des améliorations et des suggestions créatives

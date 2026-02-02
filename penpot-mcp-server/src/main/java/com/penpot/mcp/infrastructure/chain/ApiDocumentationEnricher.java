@@ -28,7 +28,6 @@ public class ApiDocumentationEnricher extends ContextEnricher {
     @Override
     protected AiContext doEnrich(AiContext context) {
         log.debug("Enriching context with API documentation");
-
         Set<String> relevantTypes = extractRelevantTypes(context);
         Map<String, String> documentation = new HashMap<>();
 
@@ -41,7 +40,7 @@ public class ApiDocumentationEnricher extends ContextEnricher {
                 });
         }
 
-        return context.withApiDocumentation(documentation);
+        return context.addApiDocumentation(documentation);
     }
 
     @Override

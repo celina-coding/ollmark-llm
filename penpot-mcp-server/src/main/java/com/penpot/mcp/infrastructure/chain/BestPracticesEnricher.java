@@ -32,8 +32,8 @@ public class BestPracticesEnricher extends ContextEnricher {
     protected AiContext doEnrich(AiContext context) {
         log.debug("Enriching context with best practices");
         return context
-            .withBestPractices(BEST_PRACTICES)
-            .withConstraints(CONSTRAINTS);
+            .addBestPractices(BEST_PRACTICES)
+            .addConstraints(CONSTRAINTS);
     }
 
     @Override

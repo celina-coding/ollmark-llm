@@ -35,9 +35,9 @@ public class ExampleCodeEnricher extends ContextEnricher {
     protected AiContext doEnrich(AiContext context) {
         log.debug("Enriching context with code examples");
         List<String> relevantExamples = findRelevantExamples(context);
-
         if (relevantExamples.isEmpty()) return context;
-        return context.withExamples(relevantExamples);
+
+        return context.addExamples(relevantExamples);
     }
 
     @Override

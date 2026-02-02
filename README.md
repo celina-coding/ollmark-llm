@@ -120,9 +120,9 @@ Réponse :
 ```bash
 curl -X POST http://localhost:4401/mcp/chat \
   -H "Content-Type: application/json" \
-  -d '{
+  -d $'{
     "conversationId": "conv_abc123",
-    "message": "Comment créer un rectangle rouge?"
+    "message": "Comment créer un rectangle rouge ?"
   }'
 ```
 

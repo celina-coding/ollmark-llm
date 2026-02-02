@@ -70,7 +70,7 @@ public class AiContext {
             .codeGeneration(true)
             .build();
     }
-    
+
     /**
      * Factory method pour créer un contexte de chat.
      */
@@ -80,7 +80,7 @@ public class AiContext {
             .codeGeneration(false)
             .build();
     }
-    
+
     /**
      * Factory method depuis une chaîne de contexte.
      */
@@ -96,10 +96,22 @@ public class AiContext {
      * @param documentation map type -> doc
      * @return nouveau contexte avec la documentation
      */
-    public AiContext withApiDocumentation(Map<String, String> documentation) {
+    public AiContext addApiDocumentation(Map<String, String> documentation) {
         Map<String, String> newDocs = new HashMap<>(this.apiDocumentation);
         newDocs.putAll(documentation);
         return this.withApiDocumentation(Collections.unmodifiableMap(newDocs));
+    }
+
+    /**
+     * Ajoute la documentation API au contexte.
+     * 
+     * @param documentation map type -> doc
+     * @return nouveau contexte avec la documentation
+     */
+    public AiContext addExamples(List<String> newExamples) {
+        List<String> combined = new ArrayList<>(this.examples);
+        combined.addAll(newExamples);
+        return this.withExamples(Collections.unmodifiableList(combined));
     }
 
     /**
@@ -108,10 +120,10 @@ public class AiContext {
      * @param newExamples exemples à ajouter
      * @return nouveau contexte avec les exemples
      */
-    public AiContext withExamples(List<String> newExamples) {
-        List<String> combined = new ArrayList<>(this.examples);
-        combined.addAll(newExamples);
-        return this.withExamples(Collections.unmodifiableList(combined));
+    public AiContext addBestPractices(List<String> practices) {
+        List<String> combined = new ArrayList<>(this.bestPractices);
+        combined.addAll(practices);
+        return this.withBestPractices(Collections.unmodifiableList(combined));
     }
 
     /**
@@ -120,28 +132,16 @@ public class AiContext {
      * @param practices best practices à ajouter
      * @return nouveau contexte
      */
-    public AiContext withBestPractices(List<String> practices) {
-        return this.withBestPractices(
-            Collections.unmodifiableList(new ArrayList<>(practices))
-        );
+    public AiContext addConstraints(List<String> newConstraints) {
+        List<String> combined = new ArrayList<>(this.constraints);
+        combined.addAll(newConstraints);
+        return this.withConstraints(Collections.unmodifiableList(combined));
     }
 
     /**
      * Ajoute les contraintes.
      * 
      * @param newConstraints contraintes à ajouter
-     * @return nouveau contexte
-     */
-    public AiContext withConstraints(List<String> newConstraints) {
-        return this.withConstraints(
-            Collections.unmodifiableList(new ArrayList<>(newConstraints))
-        );
-    }
-
-    /**
-     * Remplace l'historique par une version tronquée.
-     * 
-     * @param trimmedHistory historique tronqué
      * @return nouveau contexte
      */
     public AiContext withTrimmedHistory(List<String> trimmedHistory) {
@@ -156,7 +156,6 @@ public class AiContext {
      * @return true si des exemples seraient utiles
      */
     public boolean requiresExamples() {
-        // Heuristique: si la tâche contient certains mots-clés
         String taskLower = task.toLowerCase();
         return taskLower.contains("create") 
             || taskLower.contains("make") 
