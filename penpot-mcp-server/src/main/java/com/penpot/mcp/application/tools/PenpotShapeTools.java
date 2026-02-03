@@ -129,7 +129,12 @@ public class PenpotShapeTools {
                 return formatError(result.getError().orElse("Unknown error"));
             }
 
-            return formatSuccess("ellipse", result.getData().orElse(null));
+            log.debug(code);
+            String shapeId = result.getData()
+                .map(Object::toString)
+                .orElse("unknown");
+
+            return formatSuccess("ellipse", shapeId);
         } catch (Exception e) {
             log.error("Failed to create ellipse", e);
             return formatError(e.getMessage());
@@ -182,7 +187,12 @@ public class PenpotShapeTools {
                 return formatError(result.getError().orElse("Unknown error"));
             }
 
-            return formatSuccess("text", result.getData().orElse(null));
+            log.debug(code);
+            String shapeId = result.getData()
+                .map(Object::toString)
+                .orElse("unknown");
+
+            return formatSuccess("text", shapeId);
         } catch (Exception e) {
             log.error("Failed to create text", e);
             return formatError(e.getMessage());
