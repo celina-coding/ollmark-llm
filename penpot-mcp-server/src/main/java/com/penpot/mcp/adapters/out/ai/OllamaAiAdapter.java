@@ -4,6 +4,7 @@ import com.penpot.mcp.core.domain.AiContext;
 import com.penpot.mcp.core.ports.out.AiServicePort;
 import com.penpot.mcp.application.service.PromptsConfigService;
 import com.penpot.mcp.application.tools.*;
+
 import com.penpot.mcp.shared.exception.ToolExecutionException;
 import com.penpot.mcp.shared.util.CodeCleanupUtils;
 import lombok.RequiredArgsConstructor;
@@ -76,6 +77,9 @@ public class OllamaAiAdapter implements AiServicePort {
     /** Tools Penpot pour la gestion des assets et styles. */
     private final PenpotAssetTools penpotAssetTools;
 
+    /** Tools Penpot pour la gestion du contenu. */
+    private final PenpotContentTools penpotContentTools;
+
     @Override
     public String chat(String conversationId, String userMessage) {
         try {
@@ -95,7 +99,8 @@ public class OllamaAiAdapter implements AiServicePort {
                     penpotShapeTools,
                     penpotTransformTools,
                     penpotLayoutTools,
-                    penpotAssetTools
+                    penpotAssetTools,
+                    penpotContentTools
                 )
                 .call()
                 .content();
@@ -132,7 +137,8 @@ public class OllamaAiAdapter implements AiServicePort {
                         penpotShapeTools,
                         penpotTransformTools,
                         penpotLayoutTools,
-                        penpotAssetTools
+                        penpotAssetTools,
+                        penpotContentTools
                     )
                     .call()
                     .chatResponse();
