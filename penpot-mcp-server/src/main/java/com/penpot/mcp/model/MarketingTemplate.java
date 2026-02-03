@@ -35,7 +35,7 @@ public class MarketingTemplate {
     private String id;
 
     /**
-     * Type de template (ex: "social_media_story", "poster_a3", "email")
+     * Type de template (ex: "social_media_post", "poster_a3", "email")
      */
     private String type;
 

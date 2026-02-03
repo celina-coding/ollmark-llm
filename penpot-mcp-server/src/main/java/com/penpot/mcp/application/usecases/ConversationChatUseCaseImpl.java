@@ -94,8 +94,11 @@ public class ConversationChatUseCaseImpl implements ConversationChatUseCase {
         log.info("Clearing conversation history: {}", conversationId);
 
         try {
-            // TODO: Implémenter via AiServicePort.clearConversation(conversationId)
-            log.warn("Clear conversation not yet implemented - requires ChatMemory injection");
+            aiService.clearConversation(conversationId);
+            log.info("Conversation {} cleared successfully", conversationId);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid conversation ID: {}", conversationId, e);
+            throw e;
         } catch (Exception e) {
             log.error("Failed to clear conversation: {}", conversationId, e);
             throw new ToolExecutionException(
@@ -132,6 +135,13 @@ public class ConversationChatUseCaseImpl implements ConversationChatUseCase {
         return String.format("anonymous-%s", uuid8);
     }
 
+    /**
+     * Valide les entrées du chat.
+     * 
+     * @param conversationId l'ID de conversation
+     * @param message le message de l'utilisateur
+     * @throws ValidationException si les paramètres sont invalides
+     */
     private void validateChatInput(String conversationId, String message) {
         ValidationUtils.requireNonBlank(conversationId, "Conversation ID");
         ValidationUtils.validateString(message, "Message", 10000);

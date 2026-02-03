@@ -15,13 +15,12 @@ public interface PluginCommunicationPort {
      * Envoie une tâche au plugin et attend la réponse.
      * 
      * @param task la tâche à exécuter
-     * @param timeoutSeconds délai d'attente maximum en secondes
      * @param <T> type des données de réponse attendues
      * @return la réponse de la tâche
      * @throws TaskExecutionException si l'exécution échoue
      * @throws TimeoutException si le délai est dépassé
      */
-    <T> PluginTaskResponse<T> sendTask(Task task, int timeoutSeconds);
+    <T> PluginTaskResponse<T> sendTask(Task task);
 
     /**
      * Vérifie si au moins une connexion plugin est active.

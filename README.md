@@ -150,55 +150,6 @@ curl -X POST http://localhost:4401/mcp/execute-code \
   -d '{"code": "return penpot.currentFile?.name || \"No file\";"}'
 ```
 
-### Génération de Code avec IA
-
-**Générer et exécuter du code automatiquement**
-```bash
-curl -X POST http://localhost:4401/mcp/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "task": "Créer un rectangle rouge de 100x50 pixels",
-    "context": "Page actuelle vide",
-    "executeImmediately": true
-  }'
-```
-
-### Templates Marketing
-
-**Rechercher des templates**
-```bash
-curl -X POST http://localhost:4401/mcp/templates/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "instagram post bakery"}'
-```
-
-**Obtenir tous les templates**
-```bash
-curl -X GET http://localhost:4401/mcp/templates
-```
-
-**Filtrer par type**
-```bash
-curl -X GET http://localhost:4401/mcp/templates/type/instagram_post
-```
-
-**Filtrer par tag**
-```bash
-curl -X GET http://localhost:4401/mcp/templates/tag/food
-```
-
-### Informations API Penpot
-
-**Obtenir l'aperçu de l'API**
-```bash
-curl -X GET http://localhost:4401/mcp/overview
-```
-
-**Obtenir des infos sur un type API**
-```bash
-curl -X GET "http://localhost:4401/mcp/api-info?type=penpot&member=createRectangle"
-```
-
 ## WebSocket
 
 **Connexion du plugin**

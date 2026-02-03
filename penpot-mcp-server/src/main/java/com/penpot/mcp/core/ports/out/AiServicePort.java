@@ -23,42 +23,33 @@ public interface AiServicePort {
      * Engage une conversation avec l'assistant IA avec gestion automatique
      * de la mémoire conversationnelle.
      * 
-     * <h3>Gestion automatique de la mémoire</h3>
-     * L'implémentation doit :
-     * <ul>
-     *     <li>Charger automatiquement l'historique via {@code conversationId}</li>
-     *     <li>Injecter l'historique dans le contexte du prompt</li>
-     *     <li>Sauvegarder automatiquement le message utilisateur</li>
-     *     <li>Sauvegarder automatiquement la réponse générée</li>
-     * </ul>
-     * 
-     * <h3>Function Calling / Tools</h3>
-     * L'IA doit avoir accès à des tools (function calling) pour :
-     * <ul>
-     *     <li>Rechercher des templates marketing (RAG)</li>
-     *     <li>Générer du code depuis des templates</li>
-     *     <li>Lister les catégories de templates</li>
-     *     <li>Filtrer par type ou tag</li>
-     * </ul>
-     * 
-     * <h3>Exemples d'utilisation</h3>
-     * <pre>
-     * // Première interaction
-     * String response1 = aiService.chat("user-alice-abc", "Crée un post Instagram");
-     * // → L'IA invoque searchTemplates("instagram post")
-     * // → Retourne : "J'ai trouvé 3 templates Instagram..."
-     * 
-     * // Deuxième interaction (avec contexte)
-     * String response2 = aiService.chat("user-alice-abc", "Utilise le premier");
-     * // → L'IA se souvient du contexte précédent
-     * // → Invoque generateFromTemplate(templateId)
-     * // → Retourne le code JavaScript généré
-     * </pre>
-     * 
      * @param conversationId identifiant unique de la conversation
      * @param userMessage    message envoyé par l'utilisateur
      * @return réponse textuelle générée par l'IA
      * @throws RuntimeException si l'appel IA échoue
      */
     String chat(String conversationId, String userMessage);
+
+    /**
+     * Efface complètement l'historique d'une conversation.
+     * 
+     * <h3>Comportement</h3>
+     * <ul>
+     *     <li>Supprime tous les messages de la conversation dans ChatMemory</li>
+     *     <li>La conversation peut continuer après avec un contexte vierge</li>
+     *     <li>L'ID de conversation reste valide</li>
+     * </ul>
+     * 
+     * <h3>Cas d'usage</h3>
+     * <ul>
+     *     <li>L'utilisateur veut recommencer à zéro</li>
+     *     <li>Changement de contexte ou de sujet</li>
+     *     <li>Nettoyage des données personnelles</li>
+     * </ul>
+     * 
+     * @param conversationId identifiant de la conversation à effacer
+     * @throws IllegalArgumentException si l'ID est null ou vide
+     * @throws RuntimeException si la suppression échoue
+     */
+    void clearConversation(String conversationId);
 }

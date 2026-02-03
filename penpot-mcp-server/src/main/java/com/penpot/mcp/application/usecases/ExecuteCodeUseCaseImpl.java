@@ -32,9 +32,6 @@ public class ExecuteCodeUseCaseImpl implements ExecuteCodeUseCase {
     private final ResultFormatterFactory formatterFactory;
     private final TaskFactory taskFactory;
 
-    @Value("${penpot.mcp.task-timeout-seconds:30}")
-    private int timeoutSeconds;
-
     @Override
     public TaskResult execute(ExecuteCodeCommand command) {
         log.info("Executing code use case (code length: {} chars)", 
@@ -50,11 +47,8 @@ public class ExecuteCodeUseCaseImpl implements ExecuteCodeUseCase {
         log.debug("Created task with ID: {}", task.getId());
 
         try {
-            PluginTaskResponse<?> response = pluginPort.sendTask(task, timeoutSeconds);
+            PluginTaskResponse<?> response = pluginPort.sendTask(task);
             return convertResponse(response);
-        } catch (TaskTimeoutException e) {
-            log.error("Task {} timed out after {}s", task.getId(), timeoutSeconds, e);
-            throw e;
         } catch (TaskExecutionException e) {
             log.error("Task {} execution failed", task.getId(), e);
             throw e;

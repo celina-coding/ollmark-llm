@@ -171,7 +171,7 @@ public class RagTemplateService {
     /**
      * Recherche des templates par type.
      *
-     * @param type le type recherché (ex: "social_media_story", "email")
+     * @param type le type recherché (ex: "social_media_post", "email")
      * @return liste des templates de ce type
      */
     public List<MarketingTemplate> getTemplatesByType(String type) {

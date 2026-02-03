@@ -396,7 +396,6 @@ public class DesignRecipeInterpreter {
 
     private Dimensions getDefaultDimensionsForType(String type) {
         return switch (type) {
-            case "social_media_story" -> new Dimensions(1080, 1920);
             case "social_media_post" -> new Dimensions(1080, 1080);
             case "poster_a3" -> new Dimensions(2480, 3508); // 297x420mm à 300dpi
             case "poster_a2" -> new Dimensions(3508, 4961); // 420x594mm à 300dpi

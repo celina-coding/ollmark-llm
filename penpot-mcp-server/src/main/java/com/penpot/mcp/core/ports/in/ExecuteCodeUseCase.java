@@ -24,7 +24,6 @@ public interface ExecuteCodeUseCase {
      * @return résultat de l'exécution
      * @throws PluginConnectionException si aucune connexion plugin n'est active
      * @throws TaskExecutionException    si l'exécution échoue
-     * @throws TaskTimeoutException      si le délai d'attente est dépassé
      */
     TaskResult execute(ExecuteCodeCommand command);
 }

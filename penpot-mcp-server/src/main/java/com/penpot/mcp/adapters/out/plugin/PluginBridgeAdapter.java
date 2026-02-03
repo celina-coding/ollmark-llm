@@ -27,9 +27,9 @@ public class PluginBridgeAdapter implements PluginCommunicationPort {
     private final TaskOrchestrator responseOrchestrator;
 
     @Override
-    public <T> PluginTaskResponse<T> sendTask(Task task, int timeoutSeconds) {
-        log.info("Sending task {} to plugin (timeout: {}s)", 
-            task.getId(), timeoutSeconds);
+    public <T> PluginTaskResponse<T> sendTask(Task task) {
+        log.info("Sending task {} to plugin)", 
+            task.getId());
 
         SessionCriteria criteria = buildCriteria(task);
         WebSocketSession session = sessionManager.findSession(criteria)
@@ -47,7 +47,7 @@ public class PluginBridgeAdapter implements PluginCommunicationPort {
             log.debug("Task {} sent successfully", task.getId());
 
             PluginTaskResponse<?> response = future.get(
-                timeoutSeconds, 
+                1000000,
                 TimeUnit.SECONDS
             );
 
@@ -55,12 +55,6 @@ public class PluginBridgeAdapter implements PluginCommunicationPort {
                 task.getId(), response.getSuccess());
 
             return (PluginTaskResponse<T>) response;
-        } catch (TimeoutException e) {
-            log.error("Task {} timed out after {}s", task.getId(), timeoutSeconds);
-            throw new TaskTimeoutException(
-                String.format("Task timed out after %d seconds", timeoutSeconds),
-                e
-            );
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new TaskExecutionException("Task interrupted", e);

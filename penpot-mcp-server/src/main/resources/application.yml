@@ -21,8 +21,6 @@ penpot:
     remote-mode: ${PENPOT_MCP_REMOTE_MODE:false}
     # Mode multi-utilisateur : permet plusieurs connexions simultanées
     multi-user: ${PENPOT_MCP_MULTI_USER:false}
-    # Timeout pour l'exécution des tâches dans le plugin (en secondes)
-    task-timeout-seconds: ${PENPOT_MCP_TASK_TIMEOUT_SECONDS:30}
     # Niveau de log : trace, debug, info, warn, error
     log-level: ${PENPOT_MCP_LOG_LEVEL:debug}
     # Répertoire pour les fichiers de log
@@ -53,10 +51,7 @@ spring:
     ollama:
       # URL de base d'Ollama sur la VM distante
       # Interface graphique Open WebUI : http://10.130.163.62:3000/
-      # VM
-      base-url: ${OLLAMA_BASE_URL:http://10.130.163.62:11434}
-      # PC FAC
-      #base-url: ${OLLAMA_BASE_URL:http://192.168.41.3:11434}
+      base-url: ${OLLAMA_BASE_URL:http://192.168.41.75:11434}
 
       # Configuration du chat (génération de texte)
       chat:

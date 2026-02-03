@@ -4,18 +4,13 @@ import com.penpot.mcp.core.domain.AiContext;
 import com.penpot.mcp.core.ports.out.AiServicePort;
 import com.penpot.mcp.application.service.PromptsConfigService;
 import com.penpot.mcp.application.tools.*;
-
 import com.penpot.mcp.shared.exception.ToolExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.*;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
-import java.util.*;
 
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
@@ -27,20 +22,9 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
  * <ul>
  *     <li>Chat conversationnel avec mémoire persistée (ChatMemory)</li>
  *     <li>Génération de code JavaScript pour Penpot</li>
+ *     <li>Gestion de l'historique conversationnel</li>
  *     <li>Intégration des tools RAG (recherche de templates marketing)</li>
  * </ul>
- *
- * <h2>Gestion de la mémoire conversationnelle</h2>
- * Utilise {@link org.springframework.ai.chat.memory.ChatMemory} via les advisors Spring AI :
- * <ul>
- *     <li>Chargement automatique de l'historique via {@code conversationId}</li>
- *     <li>Injection dans le contexte du prompt</li>
- *     <li>Sauvegarde automatique des messages utilisateur et réponses IA</li>
- * </ul>
- *
- * <h2>Function Calling avec Templates</h2>
- * Expose les {@link TemplateSearchTools} à l'IA pour permettre la recherche
- * et la génération de templates marketing directement depuis la conversation.
  *
  * @see AiServicePort Port de sortie implémenté
  * @see TemplateSearchTools Tools RAG disponibles pour l'IA
@@ -52,11 +36,11 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 @RequiredArgsConstructor
 public class OllamaAiAdapter implements AiServicePort {
 
-    /** 
-     * Client Spring AI configuré avec ChatMemory et advisors.
-     * Injecté depuis {@link com.penpot.mcp.infrastructure.config.OllamaConfig}
-     */
+    /** Client Spring AI configuré avec ChatMemory et advisors. */
     private final ChatClient chatClient;
+
+    /** Mémoire de conversation persistée (ChatMemory). */
+    private final ChatMemory chatMemory;
 
     /** Service centralisant les prompts système et la configuration IA. */
     private final PromptsConfigService promptsConfigService;
@@ -111,6 +95,29 @@ public class OllamaAiAdapter implements AiServicePort {
             log.error("Error during AI chat for conversation: {}", conversationId, e);
             throw new ToolExecutionException(
                 "AI chat service error for conversation " + conversationId + ": " + e.getMessage(), 
+                e
+            );
+        }
+    }
+
+    @Override
+    public void clearConversation(String conversationId) {
+        if (conversationId == null || conversationId.isBlank()) {
+            throw new IllegalArgumentException("Conversation ID cannot be null or empty");
+        }
+
+        try {
+            log.info("Clearing conversation history for: {}", conversationId);
+
+            int messageCountBefore = chatMemory.get(conversationId).size();
+            chatMemory.clear(conversationId);
+
+            log.info("Successfully cleared conversation {} ({} messages removed)", 
+                conversationId, messageCountBefore);
+        } catch (Exception e) {
+            log.error("Failed to clear conversation: {}", conversationId, e);
+            throw new ToolExecutionException(
+                "Failed to clear conversation " + conversationId + ": " + e.getMessage(),
                 e
             );
         }
