@@ -9,7 +9,6 @@ import java.util.*;
 
 /**
  * Stratégie de sélection par round-robin pour répartir la charge.
- * Utile pour les tests ou les déploiements avec plusieurs plugins.
  */
 @Slf4j
 public class RoundRobinSessionStrategy implements SessionSelectionStrategy {

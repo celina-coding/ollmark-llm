@@ -84,11 +84,8 @@ public class SessionManager {
             criteria
         );
 
-        if (session.isPresent()) {
-            log.debug("Found session: {}", session.get().getId());
-        } else {
-            log.debug("No session found matching criteria");
-        }
+        if (session.isPresent()) log.debug("Found session: {}", session.get().getId());
+        else log.debug("No session found matching criteria");
 
         return session;
     }

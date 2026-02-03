@@ -16,7 +16,6 @@ import java.util.concurrent.*;
 
 /**
  * Adapter pour la communication avec le plugin Penpot via WebSocket.
- * Implémente le port de sortie PluginCommunicationPort (Hexagonal Architecture).
  */
 @Slf4j
 @Component

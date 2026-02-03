@@ -14,25 +14,17 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ContextEnrichmentChainFactory {
 
-    private final ExampleCodeEnricher exampleEnricher;
-    private final BestPracticesEnricher bestPracticesEnricher;
     private final ConversationHistoryEnricher historyEnricher;
 
     /**
      * Crée la chaîne complète d'enrichissement.
-     * L'ordre : exemples → best practices → historique.
+     * L'ordre : exemples → historique.
      * 
      * @return le premier enrichisseur de la chaîne
      */
     public ContextEnricher createChain() {
         log.debug("Building context enrichment chain");
-
-        exampleEnricher.setNext(bestPracticesEnricher);
-        bestPracticesEnricher.setNext(historyEnricher);
-
-        log.debug("Context enrichment chain built: Examples -> BestPractices -> History");
-
-        return exampleEnricher;
+        return historyEnricher;
     }
 
     /**
@@ -43,17 +35,5 @@ public class ContextEnrichmentChainFactory {
     public ContextEnricher createChatChain() {
         log.debug("Building chat enrichment chain");
         return historyEnricher;
-    }
-
-    /**
-     * Crée une chaîne minimale pour les cas simples.
-     * 
-     * @return le premier enrichisseur de la chaîne minimale
-     */
-    public ContextEnricher createMinimalChain() {
-        log.debug("Building minimal enrichment chain");
-
-        bestPracticesEnricher.setNext(historyEnricher);
-        return bestPracticesEnricher;
     }
 }

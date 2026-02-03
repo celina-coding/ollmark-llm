@@ -31,24 +31,6 @@ public class AiContext {
     boolean codeGeneration = false;
 
     /**
-     * Exemples de code pertinents.
-     */
-    @Builder.Default
-    List<String> examples = Collections.emptyList();
-
-    /**
-     * Best practices à appliquer.
-     */
-    @Builder.Default
-    List<String> bestPractices = Collections.emptyList();
-
-    /**
-     * Contraintes à respecter.
-     */
-    @Builder.Default
-    List<String> constraints = Collections.emptyList();
-
-    /**
      * Historique de conversation.
      */
     @Builder.Default
@@ -85,42 +67,6 @@ public class AiContext {
     }
 
     /**
-     * Ajoute la documentation API au contexte.
-     * 
-     * @param documentation map type -> doc
-     * @return nouveau contexte avec la documentation
-     */
-    public AiContext addExamples(List<String> newExamples) {
-        List<String> combined = new ArrayList<>(this.examples);
-        combined.addAll(newExamples);
-        return this.withExamples(Collections.unmodifiableList(combined));
-    }
-
-    /**
-     * Ajoute des exemples de code.
-     * 
-     * @param newExamples exemples à ajouter
-     * @return nouveau contexte avec les exemples
-     */
-    public AiContext addBestPractices(List<String> practices) {
-        List<String> combined = new ArrayList<>(this.bestPractices);
-        combined.addAll(practices);
-        return this.withBestPractices(Collections.unmodifiableList(combined));
-    }
-
-    /**
-     * Ajoute les best practices.
-     * 
-     * @param practices best practices à ajouter
-     * @return nouveau contexte
-     */
-    public AiContext addConstraints(List<String> newConstraints) {
-        List<String> combined = new ArrayList<>(this.constraints);
-        combined.addAll(newConstraints);
-        return this.withConstraints(Collections.unmodifiableList(combined));
-    }
-
-    /**
      * Ajoute les contraintes.
      * 
      * @param newConstraints contraintes à ajouter
@@ -132,61 +78,16 @@ public class AiContext {
         );
     }
 
-    /**
-     * Vérifie si le contexte requiert des exemples.
-     * 
-     * @return true si des exemples seraient utiles
-     */
-    public boolean requiresExamples() {
-        String taskLower = task.toLowerCase();
-        return taskLower.contains("create") 
-            || taskLower.contains("make") 
-            || taskLower.contains("build")
-            || taskLower.contains("draw");
-    }
 
     /**
-     * Construit le prompt complet en combinant tous les éléments.
+     * Construit le prompt utilisateur.
      * 
      * @return le prompt formaté
      */
-    public String buildFullPrompt() {
+    public String buildUserPrompt() {
         StringBuilder prompt = new StringBuilder();
-
-        // Tâche principale
-        prompt.append("Task: ").append(task).append("\n\n");
-
-        // Contexte utilisateur
-        if (!userContext.isBlank()) {
-            prompt.append("Context: ").append(userContext).append("\n\n");
-        }
-
-        // Exemples
-        if (!examples.isEmpty()) {
-            prompt.append("Examples:\n");
-            examples.forEach(example -> {
-                prompt.append(example).append("\n\n");
-            });
-        }
-
-        // Best Practices
-        if (!bestPractices.isEmpty()) {
-            prompt.append("Best Practices:\n");
-            bestPractices.forEach(practice -> {
-                prompt.append("- ").append(practice).append("\n");
-            });
-            prompt.append("\n");
-        }
-
-        // Contraintes
-        if (!constraints.isEmpty()) {
-            prompt.append("Constraints:\n");
-            constraints.forEach(constraint -> {
-                prompt.append("- ").append(constraint).append("\n");
-            });
-            prompt.append("\n");
-        }
-
+        prompt.append("Task: ").append(task);
+        if (!userContext.isBlank()) prompt.append("\n\nContext: ").append(userContext);
         return prompt.toString();
     }
 }

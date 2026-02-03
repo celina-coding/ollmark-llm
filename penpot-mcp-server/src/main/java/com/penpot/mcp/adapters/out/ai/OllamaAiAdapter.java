@@ -26,7 +26,6 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
  * <ul>
  *     <li>Chat conversationnel avec mémoire persistée (ChatMemory)</li>
  *     <li>Génération de code JavaScript pour Penpot</li>
- *     <li>Accès à la documentation API</li>
  *     <li>Intégration des tools RAG (recherche de templates marketing)</li>
  * </ul>
  *
@@ -131,159 +130,22 @@ public class OllamaAiAdapter implements AiServicePort {
 
     /**
      * Construit le prompt système pour le chat conversationnel.
+     * Délègue entièrement la configuration à prompts.yml.
      * 
-     * <h3>Contenu du prompt</h3>
-     * <ul>
-     *     <li>Instructions initiales (depuis PromptsConfigService)</li>
-     *     <li>Capacités de recherche de templates (tools RAG)</li>
-     *     <li>Workflow recommandé pour l'utilisation des templates</li>
-     *     <li>Contexte conversationnel (géré automatiquement par ChatMemory)</li>
-     * </ul>
-     *
-     * @return prompt système formaté pour le chat
+     * @return prompt système depuis prompts.yml
      */
     private String buildChatSystemPrompt() {
-        StringBuilder prompt = new StringBuilder();
-
-        prompt.append(promptsConfigService.getInitialInstructions());
-        prompt.append("\n\n");
-
-        prompt.append("""
-            # TU ES UN ASSISTANT POUR L'API PENPOT PLUGIN
-
-            Tu aides les utilisateurs à :
-            1. **Coder en JavaScript** pour Penpot
-            2. **Utiliser des templates marketing** (posts réseaux sociaux, emails, posters)
-
-            ## RÈGLE IMPORTANTE : ANALYSE L'INTENTION
-
-            Avant de répondre, identifie ce que l'utilisateur veut VRAIMENT :
-
-            ### Si l'utilisateur veut du CODE JAVASCRIPT SIMPLE :
-            - Exemples : "créer un rectangle", "ajouter du texte", "changer une couleur"
-            - → Génère directement du code JavaScript pour Penpot
-            - → N'utilise PAS les tools de templates
-
-            ### Si l'utilisateur veut du CONTENU MARKETING :
-            - Exemples : "post Instagram", "email newsletter", "affiche promotionnelle"
-            - → Utilise les tools de recherche de templates
-            - → Propose des templates prêts à l'emploi
-
-            # CAPACITÉS DE RECHERCHE DE TEMPLATES MARKETING
-
-            Tu as accès à des tools pour rechercher et générer des templates de design marketing :
-
-            ## Tools disponibles
-
-            1. **searchTemplates(query)** - Recherche sémantique de templates
-               - Exemples : "post sur les réseaux sociaux", "newsletter par email"
-               - Retourne : liste de templates pertinents avec ID, type, description, tags
-
-            2. **generateFromTemplate(templateId)** - Génère le code JavaScript depuis un template
-               - Utilise ceci après avoir trouvé un template pour créer le design
-               - Retourne : code JavaScript exécutable pour Penpot
-
-            3. **listTemplateTypes()** - Liste toutes les catégories de templates
-               - Exemples : social_media_post, email, poster_a3, flyer_a5
-
-            4. **getTemplatesByType(type)** - Récupère tous les templates d'une catégorie
-
-            ## Workflow recommandé pour les TEMPLATES
-
-            1. **Recherche** : Utilise `searchTemplates()` avec une requête décrivant le besoin
-            2. **Présentation** : Présente les options trouvées à l'utilisateur avec leurs descriptions
-            3. **Sélection** : Demande à l'utilisateur de choisir (ou choisis le plus pertinent)
-            4. **Génération** : Utilise `generateFromTemplate(templateId)` pour obtenir le code
-            5. **Personnalisation** : Explique comment personnaliser le résultat si nécessaire
-
-            ## Contexte conversationnel
-
-            - Tu as accès à tout l'historique de la conversation automatiquement
-            - Fais référence aux messages précédents AVEC PRÉCISION
-            - Cite EXACTEMENT ce que l'utilisateur a demandé
-            - Maintiens le contexte sur plusieurs tours de conversation
-            - Pose des questions de clarification si nécessaire
-
-            ## Principes importants
-
-            - Réponds DIRECTEMENT à la question posée
-            - Ne propose pas de templates si l'utilisateur veut juste du code simple
-            - Sois conversationnel et amical
-            - Adapte-toi au niveau technique de l'utilisateur
-            - Propose des améliorations et des suggestions créatives
-            """);
-
-        return prompt.toString();
+        return promptsConfigService.getInitialInstructions();
     }
 
     /**
      * Construit le prompt système pour la génération de code.
-     * Inclut les règles strictes, des exemples et contraintes.
      *
-     * @param context contexte enrichi avec documentation et exemples
-     * @return prompt système formaté pour la génération
+     * @param context contexte (utilisé uniquement pour le user prompt)
+     * @return prompt système depuis prompts.yml
      */
     private String buildCodeGenerationSystemPrompt(AiContext context) {
-        StringBuilder prompt = new StringBuilder();
-
-        prompt.append("""
-            # EXPERT PENPOT PLUGIN API - GÉNÉRATION DE CODE JAVASCRIPT
-
-            Tu es un expert de l'API Penpot Plugin. Ta tâche est de générer du code JavaScript
-            qui accomplit la tâche demandée en utilisant l'API Penpot.
-
-            ## RÈGLES CRITIQUES (ABSOLUES)
-
-            1. Retourne UNIQUEMENT du code JavaScript exécutable
-               - PAS de backticks markdown (```javascript ou ```)
-               - PAS d'explications avant ou après le code
-               - PAS de commentaires sauf si demandés explicitement
-
-            2. Le code sera exécuté directement dans le contexte du plugin Penpot
-               - Objets globaux disponibles : penpot, penpotUtils, storage, console
-               - N'utilise PAS require() ou import
-               - N'utilise PAS localStorage ou sessionStorage
-
-            3. Ne log PAS d'informations que tu retournes déjà
-               - Si tu retournes une valeur, n'utilise pas console.log() pour la même info
-
-            ## CAPACITÉ DE RECHERCHE DE TEMPLATES
-
-            Tu peux utiliser `searchTemplates()` pour trouver des templates marketing quand :
-            - L'utilisateur veut créer du contenu pour les réseaux sociaux
-            - L'utilisateur veut créer du matériel d'email marketing
-            - L'utilisateur veut créer du matériel imprimé (posters, flyers)
-
-            Ensuite utilise `generateFromTemplate(templateId)` pour obtenir du code prêt à l'emploi.
-        """);
-
-        // Exemples de code
-        if (!context.getExamples().isEmpty()) {
-            prompt.append("## EXEMPLES D'UTILISATION DE L'API PENPOT\n\n");
-            context.getExamples().forEach(example -> {
-                prompt.append(example).append("\n\n");
-            });
-        }
-
-        // Bonnes pratiques
-        if (!context.getBestPractices().isEmpty()) {
-            prompt.append("## BONNES PRATIQUES\n\n");
-            context.getBestPractices().forEach(practice -> {
-                prompt.append("- ").append(practice).append("\n");
-            });
-            prompt.append("\n");
-        }
-
-        // Contraintes
-        if (!context.getConstraints().isEmpty()) {
-            prompt.append("## CONTRAINTES TECHNIQUES\n\n");
-            context.getConstraints().forEach(constraint -> {
-                prompt.append("- ").append(constraint).append("\n");
-            });
-            prompt.append("\n");
-        }
-
-        return prompt.toString();
+        return promptsConfigService.getInitialInstructions();
     }
 
     /**
@@ -293,17 +155,7 @@ public class OllamaAiAdapter implements AiServicePort {
      * @return message utilisateur formaté
      */
     private String buildCodeGenerationUserPrompt(AiContext context) {
-        StringBuilder prompt = new StringBuilder();
-
-        prompt.append("Génère UNIQUEMENT du code JavaScript exécutable (pas de markdown, pas d'explications) pour : ");
-        prompt.append(context.getTask());
-
-        if (!context.getUserContext().isBlank()) {
-            prompt.append("\n\nContexte additionnel : ");
-            prompt.append(context.getUserContext());
-        }
-
-        return prompt.toString();
+        return context.buildUserPrompt();
     }
 
     /**
