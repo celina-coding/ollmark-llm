@@ -47,8 +47,7 @@ public class GenerateCodeUseCaseImpl implements GenerateCodeUseCase {
             ContextEnricher chain = chainFactory.createChain();
             AiContext enrichedContext = chain.enrich(initialContext);
 
-            log.debug("Context enriched with {} API docs, {} examples, {} best practices",
-                enrichedContext.getApiDocumentation().size(),
+            log.debug("Context enriched with {} examples, {} best practices",
                 enrichedContext.getExamples().size(),
                 enrichedContext.getBestPractices().size());
 

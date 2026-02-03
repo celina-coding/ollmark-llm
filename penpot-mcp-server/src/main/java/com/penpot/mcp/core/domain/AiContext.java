@@ -31,12 +31,6 @@ public class AiContext {
     boolean codeGeneration = false;
 
     /**
-     * Documentation API associée (type -> documentation).
-     */
-    @Builder.Default
-    Map<String, String> apiDocumentation = Collections.emptyMap();
-
-    /**
      * Exemples de code pertinents.
      */
     @Builder.Default
@@ -88,18 +82,6 @@ public class AiContext {
         return AiContext.builder()
             .userContext(context != null ? context : "")
             .build();
-    }
-
-    /**
-     * Ajoute la documentation API au contexte.
-     * 
-     * @param documentation map type -> doc
-     * @return nouveau contexte avec la documentation
-     */
-    public AiContext addApiDocumentation(Map<String, String> documentation) {
-        Map<String, String> newDocs = new HashMap<>(this.apiDocumentation);
-        newDocs.putAll(documentation);
-        return this.withApiDocumentation(Collections.unmodifiableMap(newDocs));
     }
 
     /**
@@ -177,15 +159,6 @@ public class AiContext {
         // Contexte utilisateur
         if (!userContext.isBlank()) {
             prompt.append("Context: ").append(userContext).append("\n\n");
-        }
-
-        // Documentation API
-        if (!apiDocumentation.isEmpty()) {
-            prompt.append("API Documentation:\n");
-            apiDocumentation.forEach((type, doc) -> {
-                prompt.append("- ").append(type).append(": ").append(doc).append("\n");
-            });
-            prompt.append("\n");
         }
 
         // Exemples

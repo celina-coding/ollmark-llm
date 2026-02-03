@@ -1,7 +1,7 @@
 package com.penpot.mcp.adapters.out.ai;
 
 import com.penpot.mcp.core.domain.AiContext;
-import com.penpot.mcp.core.ports.out.*;
+import com.penpot.mcp.core.ports.out.AiServicePort;
 import com.penpot.mcp.application.service.PromptsConfigService;
 import com.penpot.mcp.application.tools.TemplateSearchTools;
 import com.penpot.mcp.shared.exception.ToolExecutionException;
@@ -60,9 +60,6 @@ public class OllamaAiAdapter implements AiServicePort {
 
     /** Service centralisant les prompts système et la configuration IA. */
     private final PromptsConfigService promptsConfigService;
-
-    /** Port d'accès à la documentation de l'API Penpot. */
-    private final ApiDocumentationPort apiDocumentationPort;
 
     /** Tools IA pour la recherche de templates marketing (RAG). */
     private final TemplateSearchTools templateSearchTools;
@@ -130,19 +127,6 @@ public class OllamaAiAdapter implements AiServicePort {
                 e
             );
         }
-    }
-
-    @Override
-    public String getApiTypeInfo(String typeName, String memberName) {
-        log.debug("Getting API type info for: {} (member: {})", typeName, memberName);
-        return apiDocumentationPort.getTypeInfo(typeName, memberName)
-            .orElse("Type '" + typeName + "' not found in API documentation.");
-    }
-
-    @Override
-    public String getPenpotOverview() {
-        log.debug("Getting Penpot API overview");
-        return apiDocumentationPort.getOverview();
     }
 
     /**
@@ -234,7 +218,7 @@ public class OllamaAiAdapter implements AiServicePort {
 
     /**
      * Construit le prompt système pour la génération de code.
-     * Inclut les règles strictes, la documentation API, exemples et contraintes.
+     * Inclut les règles strictes, des exemples et contraintes.
      *
      * @param context contexte enrichi avec documentation et exemples
      * @return prompt système formaté pour la génération
@@ -271,16 +255,7 @@ public class OllamaAiAdapter implements AiServicePort {
             - L'utilisateur veut créer du matériel imprimé (posters, flyers)
 
             Ensuite utilise `generateFromTemplate(templateId)` pour obtenir du code prêt à l'emploi.
-            """);
-
-        // Documentation API pertinente
-        if (!context.getApiDocumentation().isEmpty()) {
-            prompt.append("\n## DOCUMENTATION API PERTINENTE\n\n");
-            context.getApiDocumentation().forEach((type, doc) -> {
-                prompt.append("### ").append(type).append("\n\n");
-                prompt.append(doc).append("\n\n");
-            });
-        }
+        """);
 
         // Exemples de code
         if (!context.getExamples().isEmpty()) {
@@ -290,7 +265,7 @@ public class OllamaAiAdapter implements AiServicePort {
             });
         }
 
-        // Best practices
+        // Bonnes pratiques
         if (!context.getBestPractices().isEmpty()) {
             prompt.append("## BONNES PRATIQUES\n\n");
             context.getBestPractices().forEach(practice -> {

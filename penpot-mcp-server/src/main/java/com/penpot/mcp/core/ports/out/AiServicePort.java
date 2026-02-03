@@ -5,15 +5,10 @@ import com.penpot.mcp.core.domain.AiContext;
 /**
  * Port de sortie pour les services d'intelligence artificielle.
  * 
- * Ce port abstrait les services IA et permet de découpler le domaine
- * de l'implémentation concrète (Ollama, OpenAI, Claude, etc.).
- * 
  * <h2>Responsabilités</h2>
  * <ul>
  *     <li>Chat conversationnel avec mémoire persistée</li>
  *     <li>Génération de code JavaScript pour Penpot</li>
- *     <li>Accès à la documentation API Penpot</li>
- *     <li>Intégration de tools (function calling) pour RAG</li>
  * </ul>
  * 
  * <h2>Implémentation</h2>
@@ -98,32 +93,4 @@ public interface AiServicePort {
      * @throws RuntimeException si la génération échoue
      */
     String generateCode(AiContext context);
-
-    /**
-     * Obtient la documentation d'un type ou membre API Penpot spécifique.
-     * 
-     * <h3>Utilisation</h3>
-     * Permet à l'IA d'accéder à la documentation de l'API Penpot
-     * pour générer du code plus précis.
-     * 
-     * @param typeName   nom du type API (ex: "Shape", "Board", "Text")
-     * @param memberName nom du membre optionnel (propriété ou méthode, peut être null)
-     * @return documentation formatée en texte/markdown
-     */
-    String getApiTypeInfo(String typeName, String memberName);
-
-    /**
-     * Obtient une vue d'ensemble de l'API Penpot.
-     * 
-     * <h3>Contenu</h3>
-     * Vue générale incluant :
-     * <ul>
-     *     <li>Liste des types disponibles</li>
-     *     <li>Descriptions courtes de chaque type</li>
-     *     <li>Organisation de l'API</li>
-     * </ul>
-     * 
-     * @return documentation générale de l'API
-     */
-    String getPenpotOverview();
 }
