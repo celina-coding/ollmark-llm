@@ -69,10 +69,6 @@ public interface AiServicePort {
      * Le contexte fourni contient :
      * <ul>
      *     <li>La tâche à accomplir (description textuelle)</li>
-     *     <li>Documentation API pertinente (types, méthodes)</li>
-     *     <li>Exemples de code similaires</li>
-     *     <li>Best practices à suivre</li>
-     *     <li>Contraintes techniques</li>
      * </ul>
      * 
      * <h3>Code généré</h3>

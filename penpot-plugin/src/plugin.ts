@@ -21,12 +21,18 @@ penpot.ui.open("Penpot MCP Plugin", `?theme=${penpot.theme}&multiUser=${isMultiU
 // Handle messages from UI
 penpot.ui.onMessage<string | { id: string; task: string; params: any }>((message) => {
     console.log("[Plugin] Received message from UI:", message);
-    
+
+    console.log("[Plugin] Message type:", typeof message);
+    console.log("[Plugin] Message content:", JSON.stringify(message, null, 2));
+
     // Handle plugin task requests
     if (typeof message === "object" && message.task && message.id) {
+        console.log("[Plugin] ✅ Recognized as task request, executing...");
         handlePluginTaskRequest(message).catch((error) => {
-            console.error("[Plugin] Error in handlePluginTaskRequest:", error);
+            console.error("[Plugin] ❌ Error in handlePluginTaskRequest:", error);
         });
+    } else {
+        console.warn("[Plugin] ⚠️ Message not recognized as task request");
     }
 });
 
@@ -37,31 +43,31 @@ penpot.ui.onMessage<string | { id: string; task: string; params: any }>((message
  */
 async function handlePluginTaskRequest(request: { id: string; task: string; params: any }): Promise<void> {
     console.log("[Plugin] Executing plugin task:", request.task, "with params:", request.params);
+
     const task = new Task(request.id, request.task, request.params);
 
     // Find the appropriate handler
     const handler = taskHandlers.find((h) => h.isApplicableTo(task));
-    
+
     if (handler) {
         try {
             console.log("[Plugin] Processing task with handler:", handler.taskType);
             await handler.handle(task);
-            
+
             // check whether a response was sent and send a generic success if not
             if (!task.isResponseSent) {
                 console.warn("[Plugin] Handler did not send a response, sending generic success.");
                 task.sendSuccess("Task completed without a specific response.");
             }
+
             console.log("[Plugin] Task handled successfully:", task.requestId);
         } catch (error) {
             console.error("[Plugin] Error handling task:", error);
             const errorMessage = error instanceof Error ? error.message : "Unknown error";
-            // FIXED: Proper function call syntax
             task.sendError(`Error handling task: ${errorMessage}`);
         }
     } else {
         console.error("[Plugin] Unknown plugin task:", request.task);
-        // FIXED: Proper function call syntax
         task.sendError(`Unknown task type: ${request.task}`);
     }
 }

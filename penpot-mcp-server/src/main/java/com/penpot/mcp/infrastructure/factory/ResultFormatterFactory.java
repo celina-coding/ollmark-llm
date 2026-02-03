@@ -27,15 +27,15 @@ public class ResultFormatterFactory {
         this.formatters = formatters.stream()
             .sorted(Comparator.comparingInt(ResultFormatter::priority).reversed())
             .toList();
-            
+
         // Le dernier (priorité la plus basse) devient le formatter par défaut
         this.defaultFormatter = this.formatters.isEmpty() 
             ? createFallbackFormatter() 
             : this.formatters.get(this.formatters.size() - 1);
-            
+
         log.info("Initialized ResultFormatterFactory with {} formatters", formatters.size());
     }
-    
+
     /**
      * Obtient le formatter le plus approprié pour le type donné.
      * 
@@ -46,7 +46,7 @@ public class ResultFormatterFactory {
         if (resultType == null) return defaultFormatter;
         return formatters.stream()
             .filter(formatter -> formatter.supports(resultType))
-            .findFirst() // Déjà trié par priorité
+            .findFirst()
             .orElseGet(() -> {
                 log.warn("No specific formatter found for type {}, using default", 
                     resultType.getSimpleName());

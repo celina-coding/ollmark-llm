@@ -8,7 +8,6 @@ import java.util.*;
 /**
  * Factory pour créer des objets Task du domaine.
  * Encapsule la logique de création et applique des validations.
- * Suit le Factory Pattern pour centraliser la création d'objets complexes.
  */
 @Slf4j
 @Component

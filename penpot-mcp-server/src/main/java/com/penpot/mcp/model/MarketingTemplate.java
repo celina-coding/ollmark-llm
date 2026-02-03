@@ -28,27 +28,27 @@ import java.util.*;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MarketingTemplate {
-    
+
     /**
      * Identifiant unique du template (ex: "insta_story_bakery_morning_deal")
      */
     private String id;
-    
+
     /**
      * Type de template (ex: "social_media_story", "poster_a3", "email")
      */
     private String type;
-    
+
     /**
      * Tags pour faciliter la recherche sémantique
      */
     private List<String> tags;
-    
+
     /**
      * Description détaillée du template
      */
     private String description;
-    
+
     /**
      * Recette de design : structure déclarative qui sera interprétée
      * pour générer le code JavaScript Penpot correspondant.
@@ -63,7 +63,7 @@ public class MarketingTemplate {
      */
     @JsonProperty("design_recipe")
     private Map<String, Object> designRecipe;
-    
+
     /**
      * Métadonnées additionnelles (optionnel)
      */

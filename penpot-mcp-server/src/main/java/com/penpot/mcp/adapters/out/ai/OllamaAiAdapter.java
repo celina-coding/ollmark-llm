@@ -3,8 +3,9 @@ package com.penpot.mcp.adapters.out.ai;
 import com.penpot.mcp.core.domain.AiContext;
 import com.penpot.mcp.core.ports.out.AiServicePort;
 import com.penpot.mcp.application.service.PromptsConfigService;
-import com.penpot.mcp.application.tools.TemplateSearchTools;
+import com.penpot.mcp.application.tools.*;
 import com.penpot.mcp.shared.exception.ToolExecutionException;
+import com.penpot.mcp.shared.util.CodeCleanupUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -63,6 +64,18 @@ public class OllamaAiAdapter implements AiServicePort {
     /** Tools IA pour la recherche de templates marketing (RAG). */
     private final TemplateSearchTools templateSearchTools;
 
+    /** Tools Penpot pour la création de formes. */
+    private final PenpotShapeTools penpotShapeTools;
+
+    /** Tools Penpot pour les transformations géométriques. */
+    private final PenpotTransformTools penpotTransformTools;
+
+    /** Tools Penpot pour l'alignement et la distribution. */
+    private final PenpotLayoutTools penpotLayoutTools;
+
+    /** Tools Penpot pour la gestion des assets et styles. */
+    private final PenpotAssetTools penpotAssetTools;
+
     @Override
     public String chat(String conversationId, String userMessage) {
         try {
@@ -77,11 +90,18 @@ public class OllamaAiAdapter implements AiServicePort {
                 .system(systemPrompt)
                 .user(userMessage)
                 .advisors(advisor -> advisor.param(CONVERSATION_ID, conversationId))
-                .tools(templateSearchTools)
+                .tools(
+                    templateSearchTools,
+                    penpotShapeTools,
+                    penpotTransformTools,
+                    penpotLayoutTools,
+                    penpotAssetTools
+                )
                 .call()
                 .content();
 
             log.info("Chat response generated (length: {} chars)", response.length());
+
             return response;
         } catch (Exception e) {
             log.error("Error during AI chat for conversation: {}", conversationId, e);
@@ -107,12 +127,26 @@ public class OllamaAiAdapter implements AiServicePort {
 
             Prompt prompt = new Prompt(messages);
             ChatResponse response = chatClient.prompt(prompt)
-                    .tools(templateSearchTools)
+                    .tools(
+                        templateSearchTools,
+                        penpotShapeTools,
+                        penpotTransformTools,
+                        penpotLayoutTools,
+                        penpotAssetTools
+                    )
                     .call()
                     .chatResponse();
 
             String code = response.getResult().getOutput().getText();
-            code = cleanGeneratedCode(code);
+
+            if (CodeCleanupUtils.containsFrenchNumbers(code)) {
+                log.error("CRITICAL: Code still contains French numbers after cleanup!");
+                log.error("Problematic code: {}", code);
+                throw new ToolExecutionException(
+                    "Generated code contains invalid number format (French locale).",
+                    null
+                );
+            }
 
             log.info("Code generated successfully (length: {} chars)", code.length());
             log.debug("Generated code preview: {}", 
@@ -156,25 +190,5 @@ public class OllamaAiAdapter implements AiServicePort {
      */
     private String buildCodeGenerationUserPrompt(AiContext context) {
         return context.buildUserPrompt();
-    }
-
-    /**
-     * Nettoie le code généré par l'IA.
-     * Supprime les artefacts markdown, commentaires inutiles et espaces superflus.
-     *
-     * @param code code brut généré par l'IA
-     * @return code nettoyé prêt à l'exécution
-     */
-    private String cleanGeneratedCode(String code) {
-        if (code == null || code.isBlank()) return "";
-
-        code = code.replaceAll("^```(?:javascript|js)?\\s*", "");
-        code = code.replaceAll("```\\s*$", "");
-        code = code.replaceAll("//[^\n]*", "");
-        code = code.replaceAll("/\\*.*?\\*/", "");
-        code = code.replaceAll("\\n\\s*\\n", "\n");
-        code = code.trim();
-
-        return code;
     }
 }

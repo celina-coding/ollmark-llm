@@ -49,7 +49,7 @@ function connectToMcpServer(): void {
 
     try {
         let wsUrl = PENPOT_MCP_WEBSOCKET_URL;
-        
+
         if (isMultiUserMode) {
             // TODO obtain proper userToken from penpot
             const userToken = "dummyToken";
@@ -67,15 +67,14 @@ function connectToMcpServer(): void {
 
         ws.onmessage = (event) => {
             console.log("[UI] 📩 Received from MCP server:", event.data);
-            
+
             try {
                 const request = JSON.parse(event.data);
                 console.log("[UI] 📤 Forwarding task request to plugin:", request);
-                
+
                 // Forward the task request to the plugin for execution
                 parent.postMessage(request, "*");
                 console.log("[UI] ✅ Task request forwarded to plugin");
-                
             } catch (error) {
                 console.error("[UI] ❌ Failed to parse WebSocket message:", error);
             }
@@ -86,13 +85,18 @@ function connectToMcpServer(): void {
             const message = event.reason || `Code ${event.code}`;
             updateConnectionStatus("Disconnected", false, message);
             ws = null;
+
+            // Reconnect after 3 seconds
+            setTimeout(() => {
+                console.log("[UI] Attempting to reconnect...");
+                connectToMcpServer();
+            }, 3000);
         };
 
         ws.onerror = (error) => {
             console.error("[UI] ❌ WebSocket error:", error);
             updateConnectionStatus("Connection error", false);
         };
-        
     } catch (error) {
         console.error("[UI] ❌ Failed to connect to MCP server:", error);
         const message = error instanceof Error ? error.message : undefined;
@@ -113,15 +117,13 @@ document.querySelector("[data-handler='connect-mcp']")?.addEventListener("click"
 // Listen to messages from plugin.ts
 window.addEventListener("message", (event) => {
     console.log("[UI] 📨 Received message from plugin:", event.data);
-    
+
     if (event.data.source === "penpot") {
-        // Theme change from plugin
         document.body.dataset.theme = event.data.theme;
         console.log("[UI] Theme updated to:", event.data.theme);
-        
+
     } else if (event.data.type === "task-response") {
-        // Task response from plugin - forward to MCP server
         console.log("[UI] 📨 Task response from plugin, forwarding to server:", event.data);
-        sendTaskResponse(event.data);  // ← Envoyer le message COMPLET avec type
+        sendTaskResponse(event.data);
     }
 });

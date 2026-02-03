@@ -78,7 +78,6 @@ public class AiContext {
         );
     }
 
-
     /**
      * Construit le prompt utilisateur.
      * 

@@ -13,65 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public class JsonUtils {
 
-    /**
-     * ObjectMapper thread-safe partagé.
-     * Réutilisé pour toutes les opérations JSON.
-     */
     private static final ObjectMapper MAPPER = new ObjectMapper();
-
-    /**
-     * Sérialise un objet en JSON.
-     * 
-     * @param object l'objet à sérialiser
-     * @return la chaîne JSON ou null en cas d'erreur
-     */
-    public static String toJson(Object object) {
-        if (object == null) return "null";
-
-        try {
-            return MAPPER.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize object to JSON", e);
-            return null;
-        }
-    }
-
-    /**
-     * Sérialise un objet en JSON avec formatage pretty.
-     * 
-     * @param object l'objet à sérialiser
-     * @return la chaîne JSON formatée ou null en cas d'erreur
-     */
-    public static String toPrettyJson(Object object) {
-        if (object == null) return "null";
-
-        try {
-            return MAPPER.writerWithDefaultPrettyPrinter()
-                .writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize object to pretty JSON", e);
-            return null;
-        }
-    }
-
-    /**
-     * Désérialise une chaîne JSON en objet.
-     * 
-     * @param json la chaîne JSON
-     * @param clazz la classe cible
-     * @param <T> le type de retour
-     * @return l'objet désérialisé ou null en cas d'erreur
-     */
-    public static <T> T fromJson(String json, Class<T> clazz) {
-        if (json == null || json.isBlank()) return null;
-
-        try {
-            return MAPPER.readValue(json, clazz);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to deserialize JSON to {}", clazz.getSimpleName(), e);
-            return null;
-        }
-    }
 
     /**
      * Échappe une chaîne pour inclusion dans un JSON.

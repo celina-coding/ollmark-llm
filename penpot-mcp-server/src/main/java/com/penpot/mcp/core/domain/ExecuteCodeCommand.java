@@ -16,7 +16,7 @@ public class ExecuteCodeCommand {
      * Le code JavaScript à exécuter.
      */
     String code;
-    
+
     /**
      * Token utilisateur optionnel pour le mode multi-utilisateur.
      */

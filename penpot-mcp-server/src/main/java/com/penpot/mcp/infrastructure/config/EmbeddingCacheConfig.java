@@ -25,17 +25,17 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @EnableCaching
 public class EmbeddingCacheConfig {
-    
+
     /**
      * Nom du cache pour les embeddings de requêtes.
      */
     public static final String QUERY_EMBEDDINGS_CACHE = "query-embeddings";
-    
+
     /**
      * Nom du cache pour les embeddings de documents.
      */
     public static final String DOCUMENT_EMBEDDINGS_CACHE = "document-embeddings";
-    
+
     /**
      * Configure le CacheManager avec Caffeine.
      * 
@@ -52,15 +52,15 @@ public class EmbeddingCacheConfig {
             QUERY_EMBEDDINGS_CACHE,
             DOCUMENT_EMBEDDINGS_CACHE
         );
-        
+
         cacheManager.setCaffeine(caffeineCacheBuilder());
-        
+
         log.info("Embedding Cache Manager configured with Caffeine");
         log.info("Cache names: {}", cacheManager.getCacheNames());
-        
+
         return cacheManager;
     }
-    
+
     /**
      * Configure le builder Caffeine pour le cache d'embeddings.
      * 
@@ -72,26 +72,14 @@ public class EmbeddingCacheConfig {
      */
     private Caffeine<Object, Object> caffeineCacheBuilder() {
         return Caffeine.newBuilder()
-            // Taille max : 10,000 requêtes uniques
-            // Typiquement suffisant pour une application
             .maximumSize(10_000)
-            
-            // PAS D'EXPIRATION - Cache ABSOLU
-            // Commenté volontairement pour montrer qu'on ne l'utilise pas
-            // .expireAfterWrite(1, TimeUnit.HOURS)
-            
-            // Recording stats pour monitoring
             .recordStats()
-            
-            // Weak keys : permet au GC de nettoyer si vraiment nécessaire
             .weakKeys()
-            
-            // Log des évictions (si la taille max est atteinte)
             .evictionListener((key, value, cause) -> {
                 log.debug("Cache eviction: key={}, cause={}", key, cause);
             });
     }
-    
+
     /**
      * Bean pour exposer les statistiques du cache.
      * Utile pour monitoring et debugging.
@@ -103,17 +91,17 @@ public class EmbeddingCacheConfig {
     public EmbeddingCacheStats embeddingCacheStats(CacheManager cacheManager) {
         return new EmbeddingCacheStats(cacheManager);
     }
-    
+
     /**
      * Classe utilitaire pour obtenir les statistiques du cache.
      */
     public static class EmbeddingCacheStats {
         private final CacheManager cacheManager;
-        
+
         public EmbeddingCacheStats(CacheManager cacheManager) {
             this.cacheManager = cacheManager;
         }
-        
+
         /**
          * Obtient les statistiques du cache des embeddings de requêtes.
          * 
@@ -128,7 +116,7 @@ public class EmbeddingCacheConfig {
             }
             return null;
         }
-        
+
         /**
          * Log les statistiques du cache.
          */

@@ -110,7 +110,7 @@ public class TemplateSearchTools {
         - Text elements with styling
         - Shapes and layouts
         - Complete design structure
-        
+
         Returns executable JavaScript code for Penpot plugin.
         """)
     public String generateFromTemplate(
