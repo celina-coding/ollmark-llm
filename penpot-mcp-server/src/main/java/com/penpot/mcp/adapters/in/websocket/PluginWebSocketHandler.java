@@ -1,7 +1,6 @@
 package com.penpot.mcp.adapters.in.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.penpot.mcp.application.service.TaskOrchestrator;
 import com.penpot.mcp.infrastructure.session.SessionManager;
 import com.penpot.mcp.model.PluginTaskResponse;
 import com.penpot.mcp.shared.util.JsonUtils;
@@ -23,7 +22,6 @@ public class PluginWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
     private final SessionManager sessionManager;
-    private final TaskOrchestrator responseOrchestrator;
 
     /**
      * Appelé lorsqu'une nouvelle connexion WebSocket est établie.
@@ -37,37 +35,6 @@ public class PluginWebSocketHandler extends TextWebSocketHandler {
         log.info("WebSocket connection established: {} (active connections: {})", 
             session.getId(), 
             sessionManager.getActiveSessionCount());
-    }
-
-    /**
-     * Traite les messages texte reçus du plugin.
-     * Reconnaît deux formats :
-     * - Format enveloppe: {type: "task-response", response: {...}}
-     * - Format direct: {id: "...", success: true, ...}
-     */
-    @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
-        try {
-            String payload = message.getPayload();
-            log.debug("Received WebSocket message from session {}: {}", 
-                session.getId(), 
-                truncateForLog(payload));
-
-            PluginTaskResponse<?> response = parseTaskResponse(payload);
-
-            if (response != null) {
-                boolean handled = responseOrchestrator.notifyResponse(response);
-                if (!handled) {
-                    log.warn("Response for task {} was not handled (no pending task)", 
-                        response.getId());
-                }
-            } else {
-                log.debug("Received non-task-response message, ignoring");
-            }
-        } catch (Exception e) {
-            log.error("Failed to process WebSocket message from session {}", 
-                session.getId(), e);
-        }
     }
 
     /**
@@ -156,17 +123,5 @@ public class PluginWebSocketHandler extends TextWebSocketHandler {
             }
         }
         return null;
-    }
-
-    /**
-     * Tronque un message pour les logs.
-     * 
-     * @param message le message à tronquer
-     * @return le message tronqué si nécessaire
-     */
-    private String truncateForLog(String message) {
-        if (message == null) return "null";
-        if (message.length() <= 200) return message;
-        return message.substring(0, 200) + "... (truncated)";
     }
 }

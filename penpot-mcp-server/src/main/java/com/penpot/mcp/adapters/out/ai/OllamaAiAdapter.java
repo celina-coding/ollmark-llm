@@ -6,7 +6,6 @@ import com.penpot.mcp.application.service.PromptsConfigService;
 import com.penpot.mcp.application.tools.*;
 
 import com.penpot.mcp.shared.exception.ToolExecutionException;
-import com.penpot.mcp.shared.util.CodeCleanupUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -112,57 +111,6 @@ public class OllamaAiAdapter implements AiServicePort {
             log.error("Error during AI chat for conversation: {}", conversationId, e);
             throw new ToolExecutionException(
                 "AI chat service error for conversation " + conversationId + ": " + e.getMessage(), 
-                e
-            );
-        }
-    }
-
-    @Override
-    public String generateCode(AiContext context) {
-        try {
-            log.info("Generating code for task: {}", context.getTask());
-
-            String systemPrompt = buildCodeGenerationSystemPrompt(context);
-            String userPrompt = buildCodeGenerationUserPrompt(context);
-
-            List<Message> messages = List.of(
-                new SystemMessage(systemPrompt),
-                new UserMessage(userPrompt)
-            );
-
-            Prompt prompt = new Prompt(messages);
-            ChatResponse response = chatClient.prompt(prompt)
-                    .tools(
-                        templateSearchTools,
-                        penpotShapeTools,
-                        penpotTransformTools,
-                        penpotLayoutTools,
-                        penpotAssetTools,
-                        penpotContentTools
-                    )
-                    .call()
-                    .chatResponse();
-
-            String code = response.getResult().getOutput().getText();
-
-            if (CodeCleanupUtils.containsFrenchNumbers(code)) {
-                log.error("CRITICAL: Code still contains French numbers after cleanup!");
-                log.error("Problematic code: {}", code);
-                throw new ToolExecutionException(
-                    "Generated code contains invalid number format (French locale).",
-                    null
-                );
-            }
-
-            log.info("Code generated successfully (length: {} chars)", code.length());
-            log.debug("Generated code preview: {}", 
-                code.length() > 100 ? code.substring(0, 100) + "..." : code);
-
-            return code;
-        } catch (Exception e) {
-            log.error("Error during code generation for task: {}", context.getTask(), e);
-            throw new ToolExecutionException(
-                "Code generation failed: " + e.getMessage(), 
                 e
             );
         }

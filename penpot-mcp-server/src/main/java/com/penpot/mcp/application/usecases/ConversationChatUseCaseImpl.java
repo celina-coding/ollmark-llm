@@ -2,11 +2,11 @@ package com.penpot.mcp.application.usecases;
 
 import com.penpot.mcp.core.ports.in.ConversationChatUseCase;
 import com.penpot.mcp.core.ports.out.AiServicePort;
-import com.penpot.mcp.shared.exception.*;
+import com.penpot.mcp.shared.exception.ToolExecutionException;
+import com.penpot.mcp.shared.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.UUID;
 
 /**
@@ -60,20 +60,17 @@ public class ConversationChatUseCaseImpl implements ConversationChatUseCase {
 
     @Override
     public String chat(String conversationId, String message) {
-        validateInput(conversationId, message);
+        validateChatInput(conversationId, message);
+
         log.info("Processing chat request for conversation: {} (message length: {} chars)", 
             conversationId, message.length());
 
         try {
             String response = aiService.chat(conversationId, message);
-
-            log.info("Chat completed successfully (response length: {} chars)", 
-                response.length());
-
+            log.info("Chat completed successfully (response length: {} chars)", response.length());
             return response;
         } catch (Exception e) {
             log.error("Chat failed for conversation: {}", conversationId, e);
-
             if (e instanceof ToolExecutionException) throw e;
             throw new ToolExecutionException(
                 "Failed to process chat for conversation " + conversationId + ": " + e.getMessage(), 
@@ -85,17 +82,15 @@ public class ConversationChatUseCaseImpl implements ConversationChatUseCase {
     @Override
     public String startNewConversation(String userId) {
         String conversationId = generateConversationId(userId);
-
         log.info("Started new conversation: {} (userId: {})", 
             conversationId, 
             userId != null ? userId : "anonymous");
-
         return conversationId;
     }
 
     @Override
     public void clearConversation(String conversationId) {
-        validateConversationId(conversationId);
+        ValidationUtils.requireNonBlank(conversationId, "Conversation ID");
         log.info("Clearing conversation history: {}", conversationId);
 
         try {
@@ -131,47 +126,14 @@ public class ConversationChatUseCaseImpl implements ConversationChatUseCase {
      */
     private String generateConversationId(String userId) {
         String uuid8 = UUID.randomUUID().toString().substring(0, 8);
-
         if (userId != null && !userId.isBlank()) {
             return String.format("user-%s-%s", userId, uuid8);
         }
-
         return String.format("anonymous-%s", uuid8);
     }
 
-    /**
-     * Valide les paramètres d'entrée pour le chat.
-     */
-    private void validateInput(String conversationId, String message) {
-        validateConversationId(conversationId);
-        validateMessage(message);
-    }
-
-    /**
-     * Valide l'ID de conversation.
-     * 
-     * @throws IllegalArgumentException si l'ID est null ou vide
-     */
-    private void validateConversationId(String conversationId) {
-        if (conversationId == null || conversationId.isBlank()) {
-            throw new ValidationException("Conversation ID cannot be null or empty");
-        }
-    }
-
-    /**
-     * Valide le message utilisateur.
-     * 
-     * @throws IllegalArgumentException si le message est null, vide ou trop long
-     */
-    private void validateMessage(String message) {
-        if (message == null || message.isBlank()) {
-            throw new ValidationException("Message cannot be null or empty");
-        }
-
-        if (message.length() > 10000) {
-            throw new ValidationException(
-                "Message too long: " + message.length() + " characters (max 10000)"
-            );
-        }
+    private void validateChatInput(String conversationId, String message) {
+        ValidationUtils.requireNonBlank(conversationId, "Conversation ID");
+        ValidationUtils.validateString(message, "Message", 10000);
     }
 }

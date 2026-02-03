@@ -79,8 +79,6 @@ public class RagTemplateService {
                 );
 
                 templatesCache.put(template.getId(), template);
-                
-                // Créer le document - le VectorStore gère l'embedding
                 Document doc = createDocument(template);
                 documents.add(doc);
 
@@ -113,7 +111,6 @@ public class RagTemplateService {
             content.append("Tags: ").append(String.join(", ", template.getTags())).append("\n");
         }
 
-        // Ajouter des informations de la design_recipe si présentes
         if (template.getDesignRecipe() != null && !template.getDesignRecipe().isEmpty()) {
             content.append("Design Recipe: ");
             template.getDesignRecipe().forEach((key, value) -> {
@@ -123,42 +120,30 @@ public class RagTemplateService {
         }
 
         String contentText = content.toString();
-        
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("id", template.getId());
         metadata.put("type", template.getType());
         metadata.put("tags", template.getTags());
 
-        // Le VectorStore calculera automatiquement l'embedding lors de l'ajout
         return new Document(contentText, metadata);
     }
 
     /**
      * Recherche les templates les plus similaires à une requête utilisateur.
-     * OPTIMISÉ: Utilise la recherche sémantique basée sur les embeddings AVEC CACHE.
-     * 
-     * Performance:
-     * - Sans cache: ~100-200ms par requête (calcul embedding + recherche)
-     * - Avec cache: ~10-20ms par requête (cache hit + recherche uniquement)
-     * - Gain: 10x sur le temps total, 100x sur l'embedding
      *
      * @param query la requête utilisateur (ex: "social media post for product launch")
      * @return liste des templates correspondants, triés par pertinence
      */
     public List<MarketingTemplate> searchTemplates(String query) {
         log.info("Searching templates for query: {}", query);
-        
+
         long startTime = System.currentTimeMillis();
-        
-        // CRITIQUE: Utiliser le cache pour l'embedding de la requête
-        // C'est ici que le gain de performance est le plus important car les
-        // utilisateurs posent souvent les mêmes types de requêtes
+
         float[] queryEmbedding = embeddingCache.embedQuery(query);
-        
+
         long embeddingTime = System.currentTimeMillis() - startTime;
         log.debug("Query embedding completed in {}ms (cache used)", embeddingTime);
-        
-        // Effectuer la recherche vectorielle avec l'embedding pré-calculé
+
         SearchRequest searchRequest = SearchRequest.builder()
             .query(query)
             .similarityThreshold(similarityThreshold)
@@ -166,7 +151,7 @@ public class RagTemplateService {
             .build();
 
         List<Document> results = vectorStore.similaritySearch(searchRequest);
-        
+
         long totalTime = System.currentTimeMillis() - startTime;
         log.info("Found {} matching templates in {}ms (embedding: {}ms, search: {}ms)", 
             results.size(), 

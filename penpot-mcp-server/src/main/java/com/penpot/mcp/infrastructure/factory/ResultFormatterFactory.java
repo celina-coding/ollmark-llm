@@ -37,12 +37,23 @@ public class ResultFormatterFactory {
     }
 
     /**
+     * Obtient le formatter pour un objet (utilise getClass()).
+     * 
+     * @param result l'objet à formater
+     * @return le formatter approprié
+     */
+    public ResultFormatter getFormatterForObject(Object result) {
+        if (result == null) return defaultFormatter;
+        return getFormatter(result.getClass());
+    }
+
+    /**
      * Obtient le formatter le plus approprié pour le type donné.
      * 
      * @param resultType le type de résultat à formater
      * @return le formatter avec la plus haute priorité qui supporte ce type
      */
-    public ResultFormatter getFormatter(Class<?> resultType) {
+    private ResultFormatter getFormatter(Class<?> resultType) {
         if (resultType == null) return defaultFormatter;
         return formatters.stream()
             .filter(formatter -> formatter.supports(resultType))
@@ -52,17 +63,6 @@ public class ResultFormatterFactory {
                     resultType.getSimpleName());
                 return defaultFormatter;
             });
-    }
-
-    /**
-     * Obtient le formatter pour un objet (utilise getClass()).
-     * 
-     * @param result l'objet à formater
-     * @return le formatter approprié
-     */
-    public ResultFormatter getFormatterForObject(Object result) {
-        if (result == null) return defaultFormatter;
-        return getFormatter(result.getClass());
     }
 
     /**

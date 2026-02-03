@@ -24,19 +24,4 @@ public class PluginTaskRequest {
 
     /** Paramètres spécifiques à la tâche */
     private Object params;
-
-    /**
-     * Crée une nouvelle requête de tâche avec un ID généré automatiquement.
-     *
-     * @param task le type de tâche à exécuter
-     * @param params les paramètres de la tâche
-     * @return une nouvelle requête de tâche
-     */
-    public static PluginTaskRequest create(String task, Object params) {
-        return PluginTaskRequest.builder()
-            .id(UUID.randomUUID().toString())
-            .task(task)
-            .params(params)
-            .build();
-    }
 }

@@ -144,13 +144,12 @@ public class TaskOrchestrator {
 
     /**
      * Nettoie les tâches expirées ou complétées.
-     * Méthode de maintenance à appeler périodiquement.
      * 
      * @return le nombre de tâches nettoyées
      */
     public int cleanupCompletedTasks() {
         int cleaned = 0;
-        
+
         for (Map.Entry<String, CompletableFuture<PluginTaskResponse<?>>> entry : 
              pendingTasks.entrySet()) {
 

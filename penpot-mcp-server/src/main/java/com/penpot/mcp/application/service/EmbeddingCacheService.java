@@ -29,9 +29,9 @@ import static com.penpot.mcp.infrastructure.config.EmbeddingCacheConfig.QUERY_EM
 @Service
 @RequiredArgsConstructor
 public class EmbeddingCacheService {
-    
+
     private final EmbeddingModel embeddingModel;
-    
+
     /**
      * Génère l'embedding d'une requête avec cache ABSOLU.
      * 
@@ -50,29 +50,24 @@ public class EmbeddingCacheService {
     @Cacheable(value = QUERY_EMBEDDINGS_CACHE, key = "#query")
     public float[] embedQuery(String query) {
         log.debug("Computing embedding for query: {} (CACHE MISS)", truncate(query, 50));
-        
         long startTime = System.currentTimeMillis();
-        
-        // Appel au modèle Ollama pour générer l'embedding
+
         EmbeddingResponse response = embeddingModel.embedForResponse(java.util.List.of(query));
         float[] embedding = response.getResult().getOutput();
-        
+
         long duration = System.currentTimeMillis() - startTime;
-        
+
         log.info("Embedding computed in {}ms (dimensions: {}) - CACHED for query: {}", 
             duration, 
             embedding.length, 
             truncate(query, 50));
-        
+
         return embedding;
     }
-    
+
     /**
      * Génère l'embedding d'un document avec cache.
      * Utilisé pour les templates lors de l'indexation.
-     * 
-     * Note : Les documents sont généralement uniques, donc le cache
-     * est moins utile ici que pour les requêtes.
      * 
      * @param content le contenu du document
      * @return le vecteur d'embedding
@@ -80,15 +75,12 @@ public class EmbeddingCacheService {
     @Cacheable(value = QUERY_EMBEDDINGS_CACHE, key = "#content.hashCode()")
     public float[] embedDocument(String content) {
         log.debug("Computing embedding for document (length: {} chars)", content.length());
-        
         EmbeddingResponse response = embeddingModel.embedForResponse(java.util.List.of(content));
         float[] embedding = response.getResult().getOutput();
-        
         log.debug("Document embedding computed (dimensions: {})", embedding.length);
-        
         return embedding;
     }
-    
+
     /**
      * Tronque une string pour les logs.
      */

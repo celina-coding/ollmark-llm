@@ -61,32 +61,4 @@ public interface AiServicePort {
      * @throws RuntimeException si l'appel IA échoue
      */
     String chat(String conversationId, String userMessage);
-
-    /**
-     * Génère du code JavaScript exécutable pour accomplir une tâche dans Penpot.
-     * 
-     * <h3>Contexte enrichi</h3>
-     * Le contexte fourni contient :
-     * <ul>
-     *     <li>La tâche à accomplir (description textuelle)</li>
-     * </ul>
-     * 
-     * <h3>Code généré</h3>
-     * Le code retourné doit être :
-     * <ul>
-     *     <li>Exécutable directement (pas de markdown)</li>
-     *     <li>Sans require() ou import</li>
-     *     <li>Utilisant uniquement les objets globaux (penpot, penpotUtils, storage)</li>
-     *     <li>Nettoyé des commentaires superflus</li>
-     * </ul>
-     * 
-     * <h3>Tools RAG disponibles</h3>
-     * L'IA peut invoquer des tools pour rechercher des templates
-     * si la tâche correspond à un cas d'usage marketing.
-     * 
-     * @param context contexte enrichi avec documentation, exemples, etc.
-     * @return code JavaScript prêt à être exécuté dans Penpot
-     * @throws RuntimeException si la génération échoue
-     */
-    String generateCode(AiContext context);
 }

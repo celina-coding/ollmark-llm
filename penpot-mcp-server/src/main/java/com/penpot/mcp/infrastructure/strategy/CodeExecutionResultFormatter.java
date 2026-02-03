@@ -2,6 +2,7 @@ package com.penpot.mcp.infrastructure.strategy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.penpot.mcp.shared.util.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class CodeExecutionResultFormatter implements ResultFormatter {
+
     private final ObjectMapper objectMapper;
 
     @Override
@@ -34,7 +36,7 @@ public class CodeExecutionResultFormatter implements ResultFormatter {
 
         if (data.containsKey("log") && data.get("log") != null) {
             formatted.append("  \"log\": ");
-            formatted.append(escapeJson(data.get("log").toString()));
+            formatted.append(JsonUtils.escapeJson(data.get("log").toString()));
             formatted.append("\n");
         } else {
             int lastComma = formatted.lastIndexOf(",");
@@ -50,38 +52,26 @@ public class CodeExecutionResultFormatter implements ResultFormatter {
 
     @Override
     public boolean supports(Class<?> resultType) {
-        // Supporte les Map contenant "result" et/ou "log"
-        if (!Map.class.isAssignableFrom(resultType)) return false;
-        return true; // Vérifié dynamiquement dans format()
+        return Map.class.isAssignableFrom(resultType);
     }
 
     @Override
     public int priority() {
-        return 15; // Très haute priorité pour ce cas spécifique
+        return 15;
     }
 
     private String formatValue(Object value) {
         if (value == null) return "null";
-        if (value instanceof String) return escapeJson((String) value);
+        if (value instanceof String) return JsonUtils.escapeJson((String) value);
         if (value instanceof Number || value instanceof Boolean) {
             return value.toString();
         }
+
         try {
             return objectMapper.writeValueAsString(value);
         } catch (JsonProcessingException e) {
             log.warn("Failed to serialize value", e);
-            return "\"" + value.toString() + "\"";
+            return JsonUtils.escapeJson(value.toString());
         }
-    }
-
-    private String escapeJson(String str) {
-        if (str == null) return "null";
-        return "\"" + str
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-            + "\"";
     }
 }

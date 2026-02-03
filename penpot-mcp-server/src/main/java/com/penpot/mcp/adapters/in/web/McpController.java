@@ -2,7 +2,6 @@ package com.penpot.mcp.adapters.in.web;
 
 import com.penpot.mcp.core.domain.*;
 import com.penpot.mcp.core.ports.in.*;
-import com.penpot.mcp.model.MarketingTemplate;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +16,6 @@ import java.util.*;
  *     <li>d’exécuter du code JavaScript dans le contexte du plugin Penpot</li>
  *     <li>d’interagir avec un assistant IA conversationnel</li>
  *     <li>de gérer des conversations persistées via ChatMemory</li>
- *     <li>de générer du code JavaScript via IA</li>
- *     <li>de rechercher et consulter des templates marketing</li>
  * </ul>
  *
  * <h2>Architecture</h2>
@@ -38,14 +35,13 @@ public class McpController {
     /** Use case gérant les conversations IA et la mémoire de chat. */
     private final ConversationChatUseCase conversationChatUseCase;
 
-    /** Use case responsable de la génération de code JavaScript via IA. */
-    private final GenerateCodeUseCase generateCodeUseCase;
-
-    /** Use case de recherche et récupération de templates marketing. */
-    private final SearchTemplatesUseCase searchTemplatesUseCase;
-
     /**
+     * <p>
      * Exécute du code JavaScript dans le contexte du plugin Penpot.
+     * </p>
+     * <p><b>
+     * Ne servira que lors de la phase de LEAN.
+     * </b></p>
      * <p>
      * Le code est validé puis transmis au moteur d’exécution.
      * Un token utilisateur optionnel permet de gérer un contexte multi-utilisateur.
@@ -194,146 +190,6 @@ public class McpController {
     }
 
     /**
-     * Génère du code JavaScript via IA et peut l’exécuter immédiatement.
-     *
-     * @param request   requête contenant la tâche et le contexte
-     * @param userToken token optionnel utilisateur
-     * @return code généré et résultat d’exécution éventuel
-     */
-    @PostMapping("/generate")
-    public ResponseEntity<Map<String, Object>> generate(
-        @RequestBody GenerateCodeRequest request,
-        @RequestHeader(value = "X-User-Token", required = false) String userToken
-    ) {
-        try {
-            log.info("POST /mcp/generate (task: {}, execute: {})", 
-                request.getTask(),
-                request.isExecuteImmediately());
-
-            GenerateCodeResult result = generateCodeUseCase.generate(
-                request.getTask(),
-                request.getContext(),
-                userToken,
-                request.isExecuteImmediately()
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("code", result.getGeneratedCode());
-
-            result.getExecutionResult()
-                    .ifPresent(exec -> response.put("execution", buildTaskResultResponse(exec)));
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid generate request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(buildErrorResponse(e.getMessage()));
-        } catch (Exception e) {
-            log.error("Generate and execute failed", e);
-            return ResponseEntity.status(500).body(buildErrorResponse(e.getMessage()));
-        }
-    }
-
-    /**
-     * Recherche des templates marketing par requête textuelle.
-     *
-     * @param request critères de recherche
-     * @return liste des templates correspondants
-     */
-    @PostMapping("/templates/search")
-    public ResponseEntity<Map<String, Object>> searchTemplates(
-        @RequestBody TemplateSearchRequest request
-    ) {
-        try {
-            log.info("POST /mcp/templates/search (query: {})", request.getQuery());
-            List<MarketingTemplate> templates =
-                    searchTemplatesUseCase.searchByQuery(request.getQuery());
-
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "count", templates.size(),
-                "templates", templates
-            ));
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid search request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(buildErrorResponse(e.getMessage()));
-        } catch (Exception e) {
-            log.error("Template search failed", e);
-            return ResponseEntity.status(500).body(buildErrorResponse(e.getMessage()));
-        }
-    }
-
-    /**
-     * Récupère l’ensemble des templates disponibles.
-     *
-     * @return liste complète des templates marketing
-     */
-    @GetMapping("/templates")
-    public ResponseEntity<Map<String, Object>> getAllTemplates() {
-        try {
-            log.info("GET /mcp/templates");
-            List<MarketingTemplate> templates = searchTemplatesUseCase.getAllTemplates();
-
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "count", templates.size(),
-                "templates", templates
-            ));
-        } catch (Exception e) {
-            log.error("Failed to retrieve templates", e);
-            return ResponseEntity.status(500).body(buildErrorResponse(e.getMessage()));
-        }
-    }
-
-    /**
-     * Récupère les templates d’un type donné.
-     *
-     * @param type type de template (ex: instagram, email, banner)
-     * @return templates correspondant au type
-     */
-    @GetMapping("/templates/type/{type}")
-    public ResponseEntity<Map<String, Object>> getTemplatesByType(@PathVariable String type) {
-        try {
-            log.info("GET /mcp/templates/type/{}", type);
-            List<MarketingTemplate> templates = searchTemplatesUseCase.searchByType(type);
-
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "type", type,
-                "count", templates.size(),
-                "templates", templates
-            ));
-        } catch (Exception e) {
-            log.error("Failed to retrieve templates by type", e);
-            return ResponseEntity.status(500).body(buildErrorResponse(e.getMessage()));
-        }
-    }
-
-    /**
-     * Récupère les templates associés à un tag.
-     *
-     * @param tag tag fonctionnel ou marketing
-     * @return templates associés au tag
-     */
-    @GetMapping("/templates/tag/{tag}")
-    public ResponseEntity<Map<String, Object>> getTemplatesByTag(@PathVariable String tag) {
-        try {
-            log.info("GET /mcp/templates/tag/{}", tag);
-            List<MarketingTemplate> templates = searchTemplatesUseCase.searchByTag(tag);
-
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "tag", tag,
-                "count", templates.size(),
-                "templates", templates
-            ));
-        } catch (Exception e) {
-            log.error("Failed to retrieve templates by tag", e);
-            return ResponseEntity.status(500).body(buildErrorResponse(e.getMessage()));
-        }
-    }
-
-    /**
      * Construit une réponse HTTP normalisée à partir d’un {@link TaskResult}.
      *
      * @param result résultat métier d’une tâche
@@ -404,33 +260,4 @@ class NewConversationRequest {
      * Peut être {@code null} pour une conversation anonyme.
      */
     private String userId;
-}
-
-/**
- * DTO représentant une requête de génération de code via IA.
- */
-@Data
-class GenerateCodeRequest {
-
-    /** Description de la tâche à réaliser. */
-    private String task;
-
-    /** Contexte optionnel influençant la génération. */
-    private String context;
-
-    /**
-     * Indique si le code généré doit être exécuté immédiatement.
-     * Valeur par défaut : {@code true}.
-     */
-    private boolean executeImmediately = true;
-}
-
-/**
- * DTO représentant une requête de recherche de templates marketing.
- */
-@Data
-class TemplateSearchRequest {
-
-    /** Texte de recherche libre. */
-    private String query;
 }
