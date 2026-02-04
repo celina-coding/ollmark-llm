@@ -3,8 +3,8 @@ package com.example.aiPoc.services.ai;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.openai.*;
 import org.springframework.stereotype.Service;
+import org.springframework.ai.ollama.OllamaChatModel;
 
 /**
  * Implémentation concrète de l’interface {@link AIService} basée sur l’API OpenAI,
@@ -54,10 +54,10 @@ public class OpenAIService implements AIService {
      * @param chatModel le modèle de chat OpenAI ou compatible Groq utilisé pour
      *                  générer les réponses IA
      */
-    public OpenAIService(OpenAiChatModel chatModel) {
+    public OpenAIService(OllamaChatModel chatModel) {
         this.chatClient = ChatClient.builder(chatModel).build();
-        logger.info("OpenAIService initialisé avec succès");
     }
+
 
     /**
      * {@inheritDoc}
@@ -92,16 +92,12 @@ public class OpenAIService implements AIService {
         try {
             long startTime = System.currentTimeMillis();
 
-            OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .maxTokens(maxTokens)
-                .temperature(temperature)
-                .build();
+
 
             String response = chatClient
-                .prompt(prompt)
-                .options(options)
-                .call()
-                .content();
+                    .prompt(prompt)
+                    .call()
+                    .content();
 
             long duration = System.currentTimeMillis() - startTime;
             logger.debug("Réponse IA reçue en {}ms: {} caractères", duration, response.length());

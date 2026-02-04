@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * </p>
  */
 @Configuration
-@ConfigurationProperties(prefix = "spring.ai.openai")
+@ConfigurationProperties(prefix = "spring.ai.ollama")
 public class AIProviderConfig {
 
     private String apiKey;

@@ -57,4 +57,6 @@ public interface AIService {
     default String chat(String prompt, int maxTokens, double temperature) {
         return chat(prompt);
     }
+
+
 }
