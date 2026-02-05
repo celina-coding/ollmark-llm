@@ -9,6 +9,7 @@ import com.penpot.mcp.model.*;
 import com.penpot.mcp.shared.exception.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import java.util.*;
@@ -16,6 +17,18 @@ import java.util.concurrent.*;
 
 /**
  * Adapter pour la communication avec le plugin Penpot via WebSocket.
+ * 
+ * Architecture:
+ * 1. Vérifie qu'une session WebSocket est disponible
+ * 2. Enregistre la tâche auprès du TaskOrchestrator
+ * 3. Envoie la requête via WebSocket
+ * 4. Attend la réponse via CompletableFuture
+ * 5. Gère les timeouts et erreurs
+ * 
+ * Thread Safety:
+ * - Les opérations WebSocket sont thread-safe
+ * - TaskOrchestrator utilise ConcurrentHashMap
+ * - Les futures sont thread-safe
  */
 @Slf4j
 @Component
@@ -28,8 +41,8 @@ public class PluginBridgeAdapter implements PluginCommunicationPort {
 
     @Override
     public <T> PluginTaskResponse<T> sendTask(Task task) {
-        log.info("Sending task {} to plugin)", 
-            task.getId());
+        log.info("Sending task {} to plugin (type: {})", 
+            task.getId(), task.getType());
 
         SessionCriteria criteria = buildCriteria(task);
         WebSocketSession session = sessionManager.findSession(criteria)
@@ -42,30 +55,52 @@ public class PluginBridgeAdapter implements PluginCommunicationPort {
             responseOrchestrator.registerTask(task.getId());
 
         try {
-            String jsonRequest = objectMapper.writeValueAsString(request);
-            session.sendMessage(new TextMessage(jsonRequest));
-            log.debug("Task {} sent successfully", task.getId());
+            sendWebSocketMessage(session, request);
+            log.debug("Task {} sent successfully, waiting for response...", task.getId());
 
             PluginTaskResponse<?> response = future.get(
-                1000000,
+                10000,
                 TimeUnit.SECONDS
             );
 
-            log.info("Received response for task {}: success={}", 
-                task.getId(), response.getSuccess());
+            log.info("Received response for task {}: success={}, hasData={}", 
+                task.getId(), 
+                response.getSuccess(),
+                response.getData() != null);
 
             return (PluginTaskResponse<T>) response;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new TaskExecutionException("Task interrupted", e);
-        } catch (ExecutionException e) {
+        } catch (TimeoutException e) {
+            future.cancel(true);
+
             throw new TaskExecutionException(
-                "Task execution failed: " + e.getCause().getMessage(),
-                e.getCause()
+                String.format("Task %s timed out after %d seconds", 
+                    task.getId(), 100000),
+                e
+            );
+        } catch (InterruptedException e) {
+            log.error("Task {} was interrupted", task.getId());
+            Thread.currentThread().interrupt();
+
+            throw new TaskExecutionException(
+                "Task " + task.getId() + " was interrupted", 
+                e
+            );
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            log.error("Task {} execution failed: {}", 
+                task.getId(), 
+                cause != null ? cause.getMessage() : "Unknown error");
+
+            throw new TaskExecutionException(
+                "Task " + task.getId() + " execution failed: " + 
+                    (cause != null ? cause.getMessage() : "Unknown error"),
+                cause != null ? cause : e
             );
         } catch (Exception e) {
+            log.error("Unexpected error sending task {}", task.getId(), e);
+
             throw new TaskExecutionException(
-                "Failed to send task: " + e.getMessage(),
+                "Failed to send task " + task.getId() + ": " + e.getMessage(),
                 e
             );
         } finally {
@@ -73,9 +108,39 @@ public class PluginBridgeAdapter implements PluginCommunicationPort {
         }
     }
 
+    /**
+     * Envoie un message WebSocket de manière sécurisée.
+     * 
+     * @param session la session WebSocket
+     * @param request la requête à envoyer
+     * @throws TaskExecutionException si l'envoi échoue
+     */
+    private void sendWebSocketMessage(WebSocketSession session, PluginTaskRequest request) {
+        try {
+            if (!session.isOpen()) {
+                throw new PluginConnectionException(
+                    "WebSocket session " + session.getId() + " is not open"
+                );
+            }
+
+            String jsonRequest = objectMapper.writeValueAsString(request);
+            log.debug("Sending WebSocket message: {}", jsonRequest);
+
+            session.sendMessage(new TextMessage(jsonRequest));
+        } catch (Exception e) {
+            log.error("Failed to send WebSocket message for task {}", request.getId(), e);
+            throw new TaskExecutionException(
+                "Failed to send WebSocket message: " + e.getMessage(),
+                e
+            );
+        }
+    }
+
     @Override
     public boolean hasActiveConnection() {
-        return sessionManager.hasActiveSessions();
+        boolean hasActive = sessionManager.hasActiveSessions();
+        log.debug("Has active connection: {}", hasActive);
+        return hasActive;
     }
 
     @Override

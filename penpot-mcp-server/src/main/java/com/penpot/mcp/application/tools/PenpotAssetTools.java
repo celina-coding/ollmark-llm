@@ -17,9 +17,6 @@ import org.springframework.stereotype.Component;
  * - Création de gradients
  * - Gestion des couleurs et remplissages
  * - Application de styles
- * 
- * <h2>Design Pattern: Factory</h2>
- * Crée différents types d'assets selon le besoin.
  */
 @Slf4j
 @Component
@@ -116,7 +113,6 @@ public class PenpotAssetTools {
             shapeId, startColor, endColor, angle);
 
         float finalAngle = (angle != null) ? angle : 0.0f;
-
         String code = buildGradientCode(shapeId, startColor, endColor, finalAngle);
 
         try {
@@ -252,13 +248,25 @@ public class PenpotAssetTools {
 
     private String buildFillColorCode(String shapeId, String fillColor, float opacity) {
         return String.format("""
-            const shape = penpot.getShape('%s');
-            if (!shape) throw new Error('Shape not found: %s');
+            let shape = null;
+            try {
+                shape = penpot.currentPage.getShapeById('%s');
+            } catch (e) {
+                console.log('[Fill] Invalid ID, using first selected shape');
+                if (penpot.selection.length > 0) {
+                    shape = penpot.selection[0];
+                }
+            }
+
+            if (!shape) {
+                throw new Error('Shape not found. ID: %s. Please select a shape.');
+            }
+
             shape.fills = [{
               fillColor: '%s',
-              fillOpacity: %d
+              fillOpacity: %.2f
             }];
-            return { id: shape.id, fill: '%s', opacity: %d };
+            return { id: shape.id, fill: '%s', opacity: %.2f };
             """,
             shapeId, shapeId, fillColor, opacity, fillColor, opacity
         );
@@ -275,22 +283,34 @@ public class PenpotAssetTools {
         float endY = (float) Math.sin(radians);
 
         return String.format("""
-            const shape = penpot.getShape('%s');
-            if (!shape) throw new Error('Shape not found: %s');
+            let shape = null;
+            try {
+                shape = penpot.currentPage.getShapeById('%s');
+            } catch (e) {
+                console.log('[Gradient] Invalid ID, using first selected shape');
+                if (penpot.selection.length > 0) {
+                    shape = penpot.selection[0];
+                }
+            }
+
+            if (!shape) {
+                throw new Error('Shape not found. ID: %s');
+            }
+
             shape.fills = [{
               fillColorGradient: {
                 type: 'linear',
                 startX: 0,
                 startY: 0,
-                endX: %d,
-                endY: %d,
+                endX: %.2f,
+                endY: %.2f,
                 stops: [
                   { color: '%s', offset: 0 },
                   { color: '%s', offset: 1 }
                 ]
               }
             }];
-            return { id: shape.id, gradient: 'linear', angle: %d };
+            return { id: shape.id, gradient: 'linear', angle: %.0f };
             """,
             shapeId, shapeId, endX, endY, startColor, endColor, angle
         );
@@ -298,33 +318,62 @@ public class PenpotAssetTools {
 
     private String buildStrokeCode(String shapeId, String strokeColor, float strokeWidth) {
         return String.format("""
-            const shape = penpot.getShape('%s');
-            if (!shape) throw new Error('Shape not found: %s');
+            let shape = null;
+            try {
+                shape = penpot.currentPage.getShapeById('%s');
+            } catch (e) {
+                console.log('[Stroke] Invalid ID, using first selected shape');
+                if (penpot.selection.length > 0) {
+                    shape = penpot.selection[0];
+                }
+            }
+
+            if (!shape) {
+                throw new Error('Shape not found. ID: %s');
+            }
+
             shape.strokes = [{
               strokeColor: '%s',
-              strokeWidth: %d,
+              strokeWidth: %.1f,
               strokeAlignment: 'center'
             }];
-            return { id: shape.id, stroke: '%s', width: %d };
+            return { id: shape.id, stroke: '%s', width: %.1f };
             """,
             shapeId, shapeId, strokeColor, strokeWidth, strokeColor, strokeWidth
         );
     }
 
-    private String buildShadowCode(String shapeId, float offsetX, float offsetY, 
-                                   float blur, String shadowColor) {
+    private String buildShadowCode(
+        String shapeId,
+        float offsetX,
+        float offsetY, 
+        float blur,
+        String shadowColor
+    ) {
         return String.format("""
-            const shape = penpot.getShape('%s');
-            if (!shape) throw new Error('Shape not found: %s');
+            let shape = null;
+            try {
+                shape = penpot.currentPage.getShapeById('%s');
+            } catch (e) {
+                console.log('[Shadow] Invalid ID, using first selected shape');
+                if (penpot.selection.length > 0) {
+                    shape = penpot.selection[0];
+                }
+            }
+
+            if (!shape) {
+                throw new Error('Shape not found. ID: %s');
+            }
+
             shape.shadows = [{
-              offsetX: %d,
-              offsetY: %d,
-              blur: %d,
+              offsetX: %.1f,
+              offsetY: %.1f,
+              blur: %.1f,
               spread: 0,
               hidden: false,
               color: '%s'
             }];
-            return { id: shape.id, shadow: { offsetX: %d, offsetY: %d, blur: %d } };
+            return { id: shape.id, shadow: { offsetX: %.1f, offsetY: %.1f, blur: %.1f } };
             """,
             shapeId, shapeId, offsetX, offsetY, blur, shadowColor, 
             offsetX, offsetY, blur

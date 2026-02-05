@@ -63,6 +63,7 @@ spring:
           temperature: ${OLLAMA_TEMPERATURE:0.7}
           # Nombre maximum de tokens dans la réponse
           max-tokens: ${OLLAMA_MAX_TOKENS:4096}
+          function-calling: auto
 
       # Configuration des embeddings (pour la recherche sémantique)
       embedding:

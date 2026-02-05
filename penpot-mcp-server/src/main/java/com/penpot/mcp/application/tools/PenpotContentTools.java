@@ -86,7 +86,7 @@ public class PenpotContentTools {
         int h = (height != null) ? height : 200;
 
         StringBuilder code = new StringBuilder();
-        // Upload asynchrone et création directe
+
         code.append(String.format("const imageData = await penpot.uploadMediaUrl('IA-Upload', '%s');\n", url));
         code.append("const rect = penpot.createRectangle();\n");
         code.append(String.format("rect.resize(%d, %d);\n", w, h));

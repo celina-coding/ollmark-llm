@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.*;
 import org.springframework.stereotype.Component;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Tools pour l'alignement et la distribution de formes dans Penpot.
@@ -17,12 +18,6 @@ import java.util.List;
  * - Alignement (horizontal, vertical, centre)
  * - Distribution (espacement égal)
  * - Groupement
- * 
- * <h2>Pattern Strategy</h2>
- * Différentes stratégies d'alignement :
- * - AlignLeft, AlignCenter, AlignRight
- * - AlignTop, AlignMiddle, AlignBottom
- * - DistributeHorizontally, DistributeVertically
  */
 @Slf4j
 @Component
@@ -41,43 +36,35 @@ public class PenpotLayoutTools {
     @Tool(description = """
         Align multiple shapes along a specified axis.
 
-        Horizontal alignments:
-        - left: Align left edges
-        - center: Align horizontal centers
-        - right: Align right edges
+        IMPORTANT: This tool can work in two ways:
+        1. With explicit shape IDs (provide comma-separated UUIDs)
+        2. With current selection (if IDs are invalid, uses penpot.selection automatically)
 
-        Vertical alignments:
-        - top: Align top edges
-        - middle: Align vertical centers
-        - bottom: Align bottom edges
+        Horizontal alignments: left, center, right
+        Vertical alignments: top, middle, bottom
 
         Examples:
         - "Align all rectangles to the left"
-        - "Center the text elements horizontally"
-        - "Align top edges of the shapes"
+        - "Center the selected shapes horizontally"
+        - "Align top edges"
 
-        Requires at least 2 shapes.
+        TIP: If you just created shapes, the user can select them in Penpot before aligning.
         """)
     public String alignShapes(
-        @ToolParam(description = "List of shape IDs to align (comma-separated)") String shapeIds,
-        @ToolParam(description = "Alignment type: left, center, right, top, middle, bottom") 
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection' to use current selection") 
+        String shapeIds,
+        @ToolParam(description = "Alignment: left, center, right, top, middle, bottom") 
         String alignment
     ) {
         log.info("Tool called: alignShapes (ids='{}', alignment='{}')", 
             shapeIds, alignment);
 
-        List<String> ids = parseShapeIds(shapeIds);
+        if (!isValidAlignment(alignment)) return formatError("Invalid alignment: " + alignment);
 
-        if (ids.size() < 2) {
-            return formatError("At least 2 shapes required for alignment");
-        }
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
 
-        if (!isValidAlignment(alignment)) {
-            return formatError("Invalid alignment: " + alignment + 
-                ". Valid: left, center, right, top, middle, bottom");
-        }
-
-        String code = buildAlignCode(ids, alignment);
+        String code = buildAlignCodeWithFallback(ids, alignment, useSelection);
 
         try {
             TaskResult result = executeCodeUseCase.execute(
@@ -88,56 +75,38 @@ public class PenpotLayoutTools {
                 return formatError(result.getError().orElse("Unknown error"));
             }
 
-            return formatSuccess("aligned", ids.size(), 
-                String.format("Aligned %d shapes to %s", ids.size(), alignment));
+            return extractAndFormatResult(result, "aligned");
         } catch (Exception e) {
             log.error("Failed to align shapes", e);
             return formatError(e.getMessage());
         }
     }
 
-    /**
-     * Distribue uniformément les formes le long d'un axe.
-     * 
-     * @param shapeIds Liste des IDs de formes
-     * @param axis Axe de distribution (horizontal ou vertical)
-     * @return JSON avec confirmation
-     */
     @Tool(description = """
-        Distribute shapes evenly along an axis with equal spacing.
+        Distribute shapes evenly along an axis.
 
-        Distribution modes:
-        - horizontal: Distribute with equal horizontal spacing
-        - vertical: Distribute with equal vertical spacing
+        Works with explicit IDs or current selection.
 
-        Examples:
-        - "Distribute the buttons horizontally"
-        - "Space the images evenly vertically"
-        - "Distribute shapes with equal gaps"
-
+        Modes: horizontal, vertical
         Requires at least 3 shapes.
-        The first and last shapes define the distribution bounds.
         """)
     public String distributeShapes(
-        @ToolParam(description = "List of shape IDs to distribute (comma-separated)") 
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection'") 
         String shapeIds,
-        @ToolParam(description = "Distribution axis: horizontal or vertical") 
+        @ToolParam(description = "Axis: horizontal or vertical") 
         String axis
     ) {
         log.info("Tool called: distributeShapes (ids='{}', axis='{}')", 
             shapeIds, axis);
 
-        List<String> ids = parseShapeIds(shapeIds);
-
-        if (ids.size() < 3) {
-            return formatError("At least 3 shapes required for distribution");
-        }
-
         if (!axis.equalsIgnoreCase("horizontal") && !axis.equalsIgnoreCase("vertical")) {
-            return formatError("Invalid axis: " + axis + ". Valid: horizontal, vertical");
+            return formatError("Invalid axis: " + axis);
         }
 
-        String code = buildDistributeCode(ids, axis);
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
+
+        String code = buildDistributeCodeWithFallback(ids, axis, useSelection);
 
         try {
             TaskResult result = executeCodeUseCase.execute(
@@ -148,52 +117,32 @@ public class PenpotLayoutTools {
                 return formatError(result.getError().orElse("Unknown error"));
             }
 
-            return formatSuccess("distributed", ids.size(),
-                String.format("Distributed %d shapes %s", ids.size(), axis));
+            return extractAndFormatResult(result, "distributed");
         } catch (Exception e) {
             log.error("Failed to distribute shapes", e);
             return formatError(e.getMessage());
         }
     }
 
-    /**
-     * Groupe plusieurs formes ensemble.
-     * 
-     * @param shapeIds Liste des IDs de formes à grouper
-     * @param groupName Nom du groupe créé
-     * @return JSON avec l'ID du groupe créé
-     */
     @Tool(description = """
-        Group multiple shapes together into a single container.
+        Group shapes together.
 
-        Grouped shapes:
-        - Move together as a unit
-        - Can be transformed as a group
-        - Can be ungrouped later
-
-        Examples:
-        - "Group the logo elements together"
-        - "Create a group with the header items"
-        - "Combine shapes into a group"
-
-        Requires at least 2 shapes.
+        Works with explicit IDs or current selection.
+        Returns the ID of the created group.
         """)
     public String groupShapes(
-        @ToolParam(description = "List of shape IDs to group (comma-separated)") 
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection'") 
         String shapeIds,
-        @ToolParam(description = "Name for the group", required = false) 
+        @ToolParam(description = "Group name", required = false) 
         String groupName
     ) {
         log.info("Tool called: groupShapes (ids='{}', name='{}')", 
             shapeIds, groupName);
 
-        List<String> ids = parseShapeIds(shapeIds);
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
 
-        if (ids.size() < 2) {
-            return formatError("At least 2 shapes required for grouping");
-        }
-
-        String code = buildGroupCode(ids, groupName);
+        String code = buildGroupCodeWithFallback(ids, groupName, useSelection);
 
         try {
             TaskResult result = executeCodeUseCase.execute(
@@ -204,28 +153,61 @@ public class PenpotLayoutTools {
                 return formatError(result.getError().orElse("Unknown error"));
             }
 
-            return formatSuccess("grouped", ids.size(),
-                String.format("Created group with %d shapes", ids.size()));
+            String groupId = result.getData()
+                .map(obj -> {
+                    if (obj instanceof java.util.Map) {
+                        return ((java.util.Map<?, ?>) obj).get("groupId");
+                    }
+                    return obj;
+                })
+                .map(Object::toString)
+                .orElse("unknown");
+
+            return formatGroupSuccess(groupId);
         } catch (Exception e) {
             log.error("Failed to group shapes", e);
             return formatError(e.getMessage());
         }
     }
 
-    // ==================== CODE GENERATION METHODS ====================
+    // ==================== CODE GENERATION WITH FALLBACK ====================
 
-    private String buildAlignCode(List<String> shapeIds, String alignment) {
+    private String buildAlignCodeWithFallback(
+        List<String> shapeIds,
+        String alignment, 
+        boolean forceSelection
+    ) {
         StringBuilder code = new StringBuilder();
 
-        code.append("const shapes = [\n");
-        for (int i = 0; i < shapeIds.size(); i++) {
-            code.append(String.format("  penpot.getShape('%s')", shapeIds.get(i)));
-            if (i < shapeIds.size() - 1) code.append(",");
-            code.append("\n");
-        }
-        code.append("].filter(s => s !== null);\n\n");
+        if (forceSelection || shapeIds.isEmpty()) {
+            code.append("const shapes = penpot.selection;\n");
+            code.append("console.log('[Align] Using current selection:', shapes.length, 'shapes');\n");
+        } else {
+            code.append("const shapes = [];\n");
 
-        code.append("if (shapes.length < 2) throw new Error('Not enough shapes found');\n\n");
+            for (String id : shapeIds) {
+                code.append(String.format("""
+                    try {
+                        const shape = penpot.currentPage.getShapeById('%s');
+                        if (shape) shapes.push(shape);
+                    } catch (e) {
+                        console.log('[Align] Invalid ID or shape not found: %s');
+                    }
+                    """, id, id));
+            }
+
+            code.append("\n");
+            code.append("""
+                if (shapes.length === 0) {
+                    console.log('[Align] No valid IDs, using current selection');
+                    shapes.push(...penpot.selection);
+                }
+                """);
+        }
+
+        code.append("\nif (shapes.length < 2) {\n");
+        code.append("    throw new Error('Need at least 2 shapes to align. Current: ' + shapes.length + '. Please select shapes in Penpot.');\n");
+        code.append("}\n\n");
 
         switch (alignment.toLowerCase()) {
             case "left":
@@ -253,23 +235,46 @@ public class PenpotLayoutTools {
                 code.append("shapes.forEach(s => s.y = maxY - s.height);\n");
                 break;
         }
+
         code.append("\nreturn { aligned: shapes.length, ids: shapes.map(s => s.id) };\n");
 
         return code.toString();
     }
 
-    private String buildDistributeCode(List<String> shapeIds, String axis) {
+    private String buildDistributeCodeWithFallback(
+        List<String> shapeIds,
+        String axis, 
+        boolean forceSelection
+    ) {
         StringBuilder code = new StringBuilder();
 
-        code.append("const shapes = [\n");
-        for (int i = 0; i < shapeIds.size(); i++) {
-            code.append(String.format("  penpot.getShape('%s')", shapeIds.get(i)));
-            if (i < shapeIds.size() - 1) code.append(",");
-            code.append("\n");
-        }
-        code.append("].filter(s => s !== null);\n\n");
+        if (forceSelection || shapeIds.isEmpty()) {
+            code.append("const shapes = penpot.selection;\n");
+        } else {
+            code.append("const shapes = [];\n");
 
-        code.append("if (shapes.length < 3) throw new Error('At least 3 shapes required');\n\n");
+            for (String id : shapeIds) {
+                code.append(String.format("""
+                    try {
+                        const shape = penpot.currentPage.getShapeById('%s');
+                        if (shape) shapes.push(shape);
+                    } catch (e) {
+                        console.log('[Distribute] Invalid ID: %s');
+                    }
+                    """, id, id));
+            }
+
+            code.append("""
+                if (shapes.length === 0) {
+                    console.log('[Distribute] Using selection');
+                    shapes.push(...penpot.selection);
+                }
+                """);
+        }
+
+        code.append("\nif (shapes.length < 3) {\n");
+        code.append("    throw new Error('Need at least 3 shapes to distribute. Current: ' + shapes.length);\n");
+        code.append("}\n\n");
 
         if (axis.equalsIgnoreCase("horizontal")) {
             code.append("""
@@ -282,8 +287,8 @@ public class PenpotLayoutTools {
 
                 let currentX = first.x;
                 shapes.forEach(s => {
-                  s.x = currentX;
-                  currentX += s.width + gap;
+                    s.x = currentX;
+                    currentX += s.width + gap;
                 });
                 """);
         } else {
@@ -297,33 +302,59 @@ public class PenpotLayoutTools {
 
                 let currentY = first.y;
                 shapes.forEach(s => {
-                  s.y = currentY;
-                  currentY += s.height + gap;
+                    s.y = currentY;
+                    currentY += s.height + gap;
                 });
                 """);
         }
+
         code.append("\nreturn { distributed: shapes.length, ids: shapes.map(s => s.id) };\n");
 
         return code.toString();
     }
 
-    private String buildGroupCode(List<String> shapeIds, String groupName) {
+    private String buildGroupCodeWithFallback(
+        List<String> shapeIds,
+        String groupName, 
+        boolean forceSelection
+    ) {
         StringBuilder code = new StringBuilder();
 
-        code.append("const shapes = [\n");
-        for (int i = 0; i < shapeIds.size(); i++) {
-            code.append(String.format("  penpot.getShape('%s')", shapeIds.get(i)));
-            if (i < shapeIds.size() - 1) code.append(",");
-            code.append("\n");
+        if (forceSelection || shapeIds.isEmpty()) {
+            code.append("const shapes = penpot.selection;\n");
+        } else {
+            code.append("const shapes = [];\n");
+
+            for (String id : shapeIds) {
+                code.append(String.format("""
+                    try {
+                        const shape = penpot.currentPage.getShapeById('%s');
+                        if (shape) shapes.push(shape);
+                    } catch (e) {
+                        console.log('[Group] Invalid ID: %s');
+                    }
+                    """, id, id));
+            }
+
+            code.append("""
+                if (shapes.length === 0) {
+                    console.log('[Group] Using selection');
+                    shapes.push(...penpot.selection);
+                }
+                """);
         }
-        code.append("].filter(s => s !== null);\n\n");
-        code.append("if (shapes.length < 2) throw new Error('At least 2 shapes required');\n\n");
+
+        code.append("\nif (shapes.length < 2) {\n");
+        code.append("    throw new Error('Need at least 2 shapes to group. Current: ' + shapes.length);\n");
+        code.append("}\n\n");
+
         code.append("const group = penpot.group(shapes);\n");
 
         if (groupName != null && !groupName.isBlank()) {
             code.append(String.format("group.name = '%s';\n", 
                 groupName.replace("'", "\\'")));
         }
+
         code.append("\nreturn { groupId: group.id, shapeCount: shapes.length };\n");
 
         return code.toString();
@@ -334,7 +365,7 @@ public class PenpotLayoutTools {
     private List<String> parseShapeIds(String shapeIdsStr) {
         return java.util.Arrays.stream(shapeIdsStr.split(","))
             .map(String::trim)
-            .filter(s -> !s.isEmpty())
+            .filter(s -> !s.isEmpty() && !s.equalsIgnoreCase("selection"))
             .toList();
     }
 
@@ -343,19 +374,46 @@ public class PenpotLayoutTools {
             .contains(alignment.toLowerCase());
     }
 
-    private String formatSuccess(String operation, int count, String details) {
+    private String extractAndFormatResult(TaskResult result, String operation) {
+        Object data = result.getData().orElse(null);
+
+        if (data instanceof java.util.Map) {
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> resultMap = (java.util.Map<String, Object>) data;
+
+            Object idsObj = resultMap.get("ids");
+            if (idsObj instanceof java.util.List) {
+                @SuppressWarnings("unchecked")
+                java.util.List<String> ids = (java.util.List<String>) idsObj;
+
+                log.info("Successfully {} {} shapes: {}", operation, ids.size(), ids);
+
+                return String.format(
+                    "Successfully %s %d shapes.\n\nShape IDs:\n%s\n\n" +
+                    "TIP: These shapes are now aligned. You can continue working with them.",
+                    operation,
+                    ids.size(),
+                    ids.stream()
+                        .map(id -> "  - " + id)
+                        .collect(Collectors.joining("\n"))
+                );
+            }
+        }
+
+        return String.format("Successfully %s shapes.", operation);
+    }
+
+    // ==================== RESPONSE FORMATTING ====================
+
+    private String formatGroupSuccess(String groupId) {
         return String.format(
-            "{\"success\": true, \"operation\": %s, \"shapeCount\": %d, \"details\": %s}",
-            JsonUtils.escapeJson(operation),
-            count,
-            JsonUtils.escapeJson(details)
+            "Successfully created group.\n\nGroup ID: %s\n\n" +
+            "TIP: You can now work with the entire group as a single shape.",
+            groupId
         );
     }
 
     private String formatError(String errorMessage) {
-        return String.format(
-            "{\"success\": false, \"error\": %s}",
-            JsonUtils.escapeJson(errorMessage)
-        );
+        return String.format("Operation failed: %s", errorMessage);
     }
 }

@@ -44,13 +44,17 @@ public class PenpotShapeTools {
      */
     @Tool(description = """
         Create a rectangle shape in Penpot.
+
+        CRITICAL: This tool returns a UUID that you MUST use in subsequent operations.
+        Save this ID immediately after receiving it!
+
         Use this when the user wants to create a rectangular element.
 
         Examples:
         - "Create a red rectangle 100x50"
         - "Add a blue box at position (10, 20)"
 
-        Returns the ID of the created shape.
+        Returns the UUID of the created shape that you must save for later use.
         """)
     public String createRectangle(
         @ToolParam(description = "X position in pixels") Integer x,
@@ -79,7 +83,7 @@ public class PenpotShapeTools {
                 .map(Object::toString)
                 .orElse("unknown");
 
-            return formatSuccess("rectangle", shapeId);
+            return formatSuccessWithId("rectangle", shapeId);
         } catch (Exception e) {
             log.error("Failed to create rectangle", e);
             return formatError(e.getMessage());
@@ -99,6 +103,9 @@ public class PenpotShapeTools {
      */
     @Tool(description = """
         Create an ellipse (circle or oval) shape in Penpot.
+
+        CRITICAL: Returns a UUID that you MUST save for later operations!
+
         Use this for circular or oval elements.
 
         Examples:
@@ -134,7 +141,7 @@ public class PenpotShapeTools {
                 .map(Object::toString)
                 .orElse("unknown");
 
-            return formatSuccess("ellipse", shapeId);
+            return formatSuccessWithId("ellipse", shapeId);
         } catch (Exception e) {
             log.error("Failed to create ellipse", e);
             return formatError(e.getMessage());
@@ -155,6 +162,9 @@ public class PenpotShapeTools {
      */
     @Tool(description = """
         Create a text element in Penpot.
+
+        CRITICAL: Returns a UUID that you MUST save!
+
         Use this when the user wants to add text content.
 
         Examples:
@@ -192,7 +202,7 @@ public class PenpotShapeTools {
                 .map(Object::toString)
                 .orElse("unknown");
 
-            return formatSuccess("text", shapeId);
+            return formatSuccessWithId("text", shapeId);
         } catch (Exception e) {
             log.error("Failed to create text", e);
             return formatError(e.getMessage());
@@ -211,6 +221,8 @@ public class PenpotShapeTools {
     @Tool(description = """
         Create a board (artboard/canvas) in Penpot.
         Use this as a container for design elements.
+
+        CRITICAL: Returns a UUID that you MUST save!
 
         Common sizes:
         - Social media post: 1080x1080
@@ -242,7 +254,12 @@ public class PenpotShapeTools {
                 return formatError(result.getError().orElse("Unknown error"));
             }
 
-            return formatSuccess("board", result.getData().orElse(null));
+            log.debug(code);
+            String shapeId = result.getData()
+                .map(Object::toString)
+                .orElse("unknown");
+
+            return formatSuccessWithId("board", shapeId);
         } catch (Exception e) {
             log.error("Failed to create board", e);
             return formatError(e.getMessage());
@@ -252,8 +269,12 @@ public class PenpotShapeTools {
     // ==================== CODE GENERATION METHODS ====================
 
     private String buildRectangleCode(
-        Integer x, Integer y, Integer width, Integer height, 
-        String fillColor, String name
+        Integer x,
+        Integer y,
+        Integer width,
+        Integer height, 
+        String fillColor,
+        String name
     ) {
         StringBuilder code = new StringBuilder();
         code.append("const rect = penpot.createRectangle();\n");
@@ -275,8 +296,12 @@ public class PenpotShapeTools {
     }
 
     private String buildEllipseCode(
-        Integer x, Integer y, Integer width, Integer height,
-        String fillColor, String name
+        Integer x,
+        Integer y,
+        Integer width,
+        Integer height,
+        String fillColor,
+        String name
     ) {
         StringBuilder code = new StringBuilder();
         code.append("const ellipse = penpot.createEllipse();\n");
@@ -304,7 +329,7 @@ public class PenpotShapeTools {
         StringBuilder code = new StringBuilder();
 
         String escapedContent = content.replace("'", "\\'")
-                                      .replace("\n", "\\n");
+                                       .replace("\n", "\\n");
 
         code.append(String.format("const text = penpot.createText('%s');\n", escapedContent));
         code.append(String.format("text.x = %d;\n", x));
@@ -352,7 +377,29 @@ public class PenpotShapeTools {
         return code.toString();
     }
 
-    // ==================== RESPONSE FORMATTING ====================
+    /**
+     * Format de réponse OPTIMISÉ pour extraction d'ID par l'IA.
+     * 
+     * Le format est conçu pour que l'IA puisse facilement extraire l'UUID :
+     * - ID clairement marqué avec "SHAPE_ID:"
+     * - UUID sur une ligne séparée
+     * - Instructions explicites pour l'utilisation
+     */
+    private String formatSuccessWithId(String shapeType, String shapeId) {
+        return String.format(
+            "%s created successfully!\n\n" +
+            "SHAPE_ID: %s\n\n" +
+            "SAVE THIS ID! Use it in subsequent operations like:\n" +
+            "- alignShapes(shapeIds=\"%s,...\", alignment=\"top\")\n" +
+            "- rotateShape(shapeId=\"%s\", angle=45)\n" +
+            "- moveShape(shapeId=\"%s\", newX=200, newY=300)",
+            shapeType,
+            shapeId,
+            shapeId,
+            shapeId,
+            shapeId
+        );
+    }
 
     private String formatSuccess(String shapeType, Object data) {
         return String.format(
