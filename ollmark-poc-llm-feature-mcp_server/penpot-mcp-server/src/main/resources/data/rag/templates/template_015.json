@@ -1,0 +1,61 @@
+{
+  "id": "sm_story_fishmonger_arrival",
+  "type": "social_media_post",
+  "tags": [
+    "poissonnerie",
+    "poisson",
+    "fruits_de_mer",
+    "crustacés",
+    "coquillages",
+    "marée",
+    "pêche",
+    "océan",
+    "mer",
+    "frais",
+    "fraîcheur",
+    "naturel",
+    "brut",
+    "sauvage",
+    "healthy",
+    "gastronomie",
+    "arrivage",
+    "nouveauté",
+    "actu",
+    "jour",
+    "quotidien",
+    "matin",
+    "direct",
+    "live",
+    "qualité",
+    "garantie",
+    "authentique",
+    "badge",
+    "macaron",
+    "label",
+    "instagram",
+    "facebook",
+    "social_media",
+    "vertical",
+    "9:16",
+    "mobile_first",
+    "plein_écran",
+    "immersif",
+    "visuel",
+    "photo",
+    "minimaliste",
+    "épuré",
+    "impact"
+  ],
+  "description": "Post mettant en avant l'arrivage du jour en poissonnerie avec message très court et badge fraîcheur.",
+  "design_recipe": {
+    "background_mode": "full_image",
+    "main_text": {
+      "position": "bottom_left",
+      "font_size": "large"
+    },
+    "badge": {
+      "type": "freshness",
+      "position": "top_right"
+    }
+  }
+}

@@ -1,10 +1,301 @@
-@import "@penpot/plugin-styles/styles.css";
+:root{
+  color-scheme: light;
 
-body {
-    line-height: 1.5;
-    padding: 10px;
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --panel-2: #f8fafc;
+
+  --border: #e6e8ee;
+  --text: #111827;
+  --muted: #6b7280;
+
+  --blue: #2563eb;
+  --blue-2: #eaf2ff;
+
+  --shadow: 0 10px 26px rgba(16,24,40,.08);
+  --radius: 14px;
 }
 
-p {
-    margin-block-end: 0.75rem;
+*{ box-sizing:border-box; }
+html, body{ height:100%; }
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
 }
+
+.app{
+  padding: 12px;
+}
+
+/* La barre du top */
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.meta{
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.2;
+}
+.meta-line{ white-space: nowrap; }
+.meta .k{ color: #374151; font-weight: 600; margin-right: 4px; }
+
+.spacer{ flex:1; }
+
+.select{
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Les panels */
+.panel{
+  margin-top: 12px;
+}
+
+.card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px;
+}
+
+.card-title{
+  font-weight: 700;
+  font-size: 14px;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap: wrap;
+}
+
+/* Les buttons */
+.btn{
+  appearance:none;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-weight: 700;
+}
+
+.btn:hover{ filter: brightness(0.98); }
+.btn:active{ transform: translateY(1px); }
+
+.btn.primary{
+  background: var(--blue);
+  border-color: rgba(37,99,235,.35);
+  color: #fff;
+}
+
+.btn.ghost{
+  background: var(--panel-2);
+}
+
+.btn.danger{
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+/* La partie JS */
+.code{
+  width:100%;
+  border: 1px solid var(--border);
+  background: #0b1220;
+  color: #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  outline:none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  line-height: 1.4;
+}
+
+/* Le layout du el chat */
+.chat-wrap{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* Message area */
+.chat-box{
+  height: 320px;
+  overflow:auto;
+  padding: 12px;
+  background: #f7f7f9;
+}
+
+/* Bulles pour les messages tu vois */
+/* Message area */
+.chat-box{
+  height: 320px;
+  overflow:auto;
+  padding: 12px;
+  background: #f7f7f9;
+
+  /* IMPORTANT: permet align-self à droite/gauche */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Bulles */
+.bubble{
+  max-width: 82%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  margin: 0;
+}
+
+.bubble.ai{
+  align-self: flex-start;
+  background: #ffffff;
+}
+
+.bubble.me{
+  align-self: flex-end;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+
+/* Header */
+.bubble-head{
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+
+.bubble-body{
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.35;
+  color: #111827;
+}
+
+/* Input doit rester fixe */
+.chat-input{
+  display:flex;
+  gap:10px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.chat-text{
+  flex:1;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 12px;
+  outline:none;
+  background: #fff;
+}
+
+.chat-text::placeholder{ color: #9ca3af; }
+
+.send-btn{
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 0;
+  background: #111827;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.send-btn:hover{ filter: brightness(1.05); }
+.send-btn:active{ transform: translateY(1px); }
+
+/* Logs */
+.logs{
+  height: 170px;
+  overflow:auto;
+  padding: 10px;
+  background: #0b1220;
+  border: 1px solid #111827;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  color: #e5e7eb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.mini-row{
+  display:flex;
+  gap:10px;
+  margin-top: 10px;
+}
+
+.hidden-tools{
+  position: absolute;
+  left: -99999px;
+  top: -99999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.send-ico{
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: currentColor;
+}
+
+/* Statut connexion MCP */
+.conn-status{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444; /* rouge par défaut */
+  box-shadow: 0 0 0 2px rgba(239,68,68,.15);
+}
+
+.status-dot.connected{
+  background: #22c55e; /* vert */
+  box-shadow: 0 0 0 2px rgba(34,197,94,.2);
+}
+
+.status-dot.disconnected{
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239,68,68,.2);
+}
+
+
+

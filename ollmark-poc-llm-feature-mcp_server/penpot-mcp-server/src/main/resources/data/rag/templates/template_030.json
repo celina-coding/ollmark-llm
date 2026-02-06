@@ -1,0 +1,82 @@
+{
+  "id": "sm_carousel_grocery_product_story",
+  "type": "social_media_post",
+  "tags": [
+    "épicerie",
+    "alimentaire",
+    "food",
+    "produit",
+    "storytelling",
+    "histoire",
+    "récit",
+    "narration",
+    "parcours",
+    "voyage",
+    "de_la_terre_à_l_assiette",
+    "coulisses",
+    "making-of",
+    "découverte",
+    "origine",
+    "source",
+    "provenance",
+    "terroir",
+    "racines",
+    "traçabilité",
+    "transparence",
+    "producteur",
+    "humain",
+    "portrait",
+    "savoir-faire",
+    "artisan",
+    "agriculture",
+    "usage",
+    "recette",
+    "cuisine",
+    "préparation",
+    "conseil",
+    "astuce",
+    "mode_d_emploi",
+    "dégustation",
+    "inspiration",
+    "pédagogie",
+    "éducation",
+    "culture",
+    "sensibilisation",
+    "carousel",
+    "instagram",
+    "linkedin",
+    "feed",
+    "post",
+    "social_media",
+    "swipe",
+    "glisser",
+    "diaporama",
+    "galerie",
+    "slide",
+    "multi_pages",
+    "pas-à-pas",
+    "étape",
+    "achat",
+    "commande",
+    "cta",
+    "conversion",
+    "carré"
+  ],
+  "description": "Carousel racontant l'histoire d'un produit alimentaire en plusieurs étapes.",
+  "design_recipe": {
+    "slides": [
+      {
+        "type": "origin"
+      },
+      {
+        "type": "producer"
+      },
+      {
+        "type": "usage"
+      },
+      {
+        "type": "call_to_action"
+      }
+    ]
+  }
+}

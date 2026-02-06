@@ -1,0 +1,62 @@
+{
+  "id": "email_butcher_special_offers",
+  "type": "email",
+  "tags": [
+    "boucherie",
+    "viande",
+    "charcuterie",
+    "volailles",
+    "traiteur",
+    "rotisserie",
+    "barbecue",
+    "grillade",
+    "gastronomie",
+    "repas",
+    "artisan",
+    "commerce",
+    "food",
+    "promo",
+    "promotion",
+    "offres",
+    "réduction",
+    "rabais",
+    "économie",
+    "bon_plan",
+    "prix",
+    "vente_flash",
+    "limité",
+    "exclusif",
+    "urgence",
+    "newsletter",
+    "email",
+    "mailing",
+    "e-mailing",
+    "marketing_direct",
+    "campagne",
+    "digital",
+    "responsive",
+    "mobile_friendly",
+    "vertical",
+    "catalogue",
+    "liste",
+    "listing",
+    "vitrine",
+    "sélection",
+    "commande",
+    "shopping",
+    "courses"
+  ],
+  "description": "Newsletter promotionnelle pour boucherie avec offres limitées.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "sections": [
+      {
+        "type": "promo_banner"
+      },
+      {
+        "type": "offer_list",
+        "rows": 4
+      }
+    ]
+  }
+}

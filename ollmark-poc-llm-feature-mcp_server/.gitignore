@@ -1,0 +1,8 @@
+**target/
+.vscode
+**/logs
+**mvnw*
+**.mvn
+**node_modules
+**dist*
+/penpot-mcp-server/data/*

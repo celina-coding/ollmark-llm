@@ -1,0 +1,89 @@
+{
+  "id": "flyer_food_rustic_dark",
+  "type": "flyer_a5",
+  "tags": [
+    "flyer",
+    "a5",
+    "prospectus",
+    "tract",
+    "imprimé",
+    "print",
+    "papier",
+    "publicité",
+    "marketing_local",
+    "food",
+    "gastronomie",
+    "boucherie",
+    "charcuterie",
+    "traiteur",
+    "viande",
+    "bœuf",
+    "grillade",
+    "barbecue",
+    "steakhouse",
+    "burger",
+    "restaurant",
+    "bistrot",
+    "artisan",
+    "dark_mode",
+    "sombre",
+    "noir",
+    "ardoise",
+    "slate",
+    "tableau_noir",
+    "rustique",
+    "traditionnel",
+    "authenticité",
+    "élégant",
+    "premium",
+    "chic",
+    "contraste",
+    "impact",
+    "audacieux",
+    "lisible",
+    "photo_culinaire",
+    "flatlay",
+    "vue_zénithale",
+    "visuel",
+    "gourmand",
+    "prix",
+    "promo",
+    "promotion",
+    "offre",
+    "réduction",
+    "vente",
+    "commande",
+    "réservation",
+    "commercial",
+    "pastille",
+    "badge"
+  ],
+  "description": "Flyer gastronomique sur fond sombre (noir/ardoise). Photo culinaire vue de dessus occupant 60% de l'espace. Titre blanc gras. Pastille de prix circulaire bien visible. Idéal pour boucherie ou traiteur.",
+  "design_recipe": {
+    "layout_mode": "split_horizontal_60_40",
+    "background": {
+      "color": "#1A1A1A",
+      "texture": "slate"
+    },
+    "hero_image": {
+      "position": "top",
+      "style": "full_bleed"
+    },
+    "typography": {
+      "headline": {
+        "font": "Sans-Serif Bold",
+        "color": "#FFFFFF",
+        "case": "uppercase"
+      },
+      "price_badge": {
+        "shape": "circle",
+        "color": "#E07A5F",
+        "text_color": "#FFFFFF"
+      }
+    },
+    "footer": {
+      "type": "reservation_info",
+      "alignment": "center"
+    }
+  }
+}

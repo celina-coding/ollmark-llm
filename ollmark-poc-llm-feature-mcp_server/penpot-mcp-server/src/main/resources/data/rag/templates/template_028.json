@@ -1,0 +1,72 @@
+{
+  "id": "sm_story_cheese_origin",
+  "type": "social_media_post",
+  "tags": [
+    "fromagerie",
+    "fromage",
+    "crèmerie",
+    "laitier",
+    "affineur",
+    "terroir",
+    "origine",
+    "provenance",
+    "source",
+    "géographie",
+    "région",
+    "pays",
+    "local",
+    "AOP",
+    "AOC",
+    "IGP",
+    "fermier",
+    "tradition",
+    "racines",
+    "traçabilité",
+    "transparence",
+    "carte",
+    "map",
+    "plan",
+    "localisation",
+    "pin",
+    "marker",
+    "situation",
+    "éducation",
+    "pédagogie",
+    "culture",
+    "savoir-faire",
+    "découverte",
+    "guide",
+    "histoire",
+    "storytelling",
+    "explication",
+    "tourisme",
+    "voyage",
+    "post",
+    "instagram",
+    "facebook",
+    "social_media",
+    "vertical",
+    "9:16",
+    "mobile_first",
+    "plein_écran",
+    "immersif",
+    "overlay",
+    "superposition",
+    "infographie"
+  ],
+  "description": "Post éducative mettant en avant l'origine géographique d'un fromage.",
+  "design_recipe": {
+    "background_mode": "image_with_map_overlay",
+    "map_marker": true,
+    "text_blocks": [
+      {
+        "type": "headline",
+        "position": "top"
+      },
+      {
+        "type": "caption",
+        "position": "bottom"
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "id": "email_restaurant_menu",
+  "type": "email",
+  "tags": [
+    "restaurant",
+    "gastronomie",
+    "cuisine",
+    "brasserie",
+    "bistro",
+    "traiteur",
+    "repas",
+    "dîner",
+    "déjeuner",
+    "menu",
+    "carte",
+    "formule",
+    "suggestion",
+    "entrée",
+    "plat",
+    "dessert",
+    "gourmand",
+    "newsletter",
+    "email",
+    "mailing",
+    "e-mailing",
+    "digital",
+    "invitation",
+    "réservation",
+    "découverte",
+    "information",
+    "actu",
+    "responsive",
+    "mobile_friendly",
+    "vertical",
+    "structuré",
+    "organisé",
+    "clair",
+    "lisible",
+    "épuré",
+    "liste",
+    "hiérarchie",
+    "typographie",
+    "sections"
+  ],
+  "description": "Newsletter présentant le menu du restaurant avec sections claires.",
+  "design_recipe": {
+    "layout_direction": "vertical_stack",
+    "sections": [
+      {
+        "type": "menu_section",
+        "category": "entrées"
+      },
+      {
+        "type": "menu_section",
+        "category": "plats"
+      },
+      {
+        "type": "menu_section",
+        "category": "desserts"
+      }
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "id": "email_restaurant_special_event",
+  "type": "email",
+  "tags": [
+    "restaurant",
+    "gastronomie",
+    "restauration",
+    "événement",
+    "soirée",
+    "dîner",
+    "thématique",
+    "dégustation",
+    "concert",
+    "live_music",
+    "animation",
+    "fête",
+    "célébration",
+    "anniversaire",
+    "privatisation",
+    "saint_valentin",
+    "réveillon",
+    "nouvel_an",
+    "fête_des_mères",
+    "exclusif",
+    "spécial",
+    "unique",
+    "premium",
+    "vip",
+    "inédit",
+    "invitation",
+    "save_the_date",
+    "agenda",
+    "calendrier",
+    "rendez-vous",
+    "réservation",
+    "booking",
+    "table",
+    "place",
+    "billetterie",
+    "inscription",
+    "limité",
+    "date",
+    "horaire",
+    "urgence",
+    "newsletter",
+    "email",
+    "mailing",
+    "e-mailing",
+    "digital",
+    "communication",
+    "campagne",
+    "annonce",
+    "affiche",
+    "header",
+    "bannière",
+    "visuel",
+    "responsive",
+    "mobile_friendly",
+    "vertical",
+    "cta",
+    "action"
+  ],
+  "description": "Newsletter annonçant un événement spécial au restaurant.",
+  "design_recipe": {
+    "sections": [
+      {
+        "type": "event_header"
+      },
+      {
+        "type": "event_details"
+      },
+      {
+        "type": "reservation_cta"
+      }
+    ]
+  }
+}

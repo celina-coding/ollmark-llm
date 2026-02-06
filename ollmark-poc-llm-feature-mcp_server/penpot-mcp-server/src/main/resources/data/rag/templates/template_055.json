@@ -1,0 +1,109 @@
+{
+  "id": "poster_corporate_trust",
+  "type": "poster_a4",
+  "tags": [
+    "poster",
+    "affiche",
+    "a4",
+    "print",
+    "impression",
+    "vertical",
+    "portrait",
+    "corporate",
+    "institutionnel",
+    "entreprise",
+    "b2b",
+    "communication_interne",
+    "bureau",
+    "salle_d_attente",
+    "accueil",
+    "trust",
+    "confiance",
+    "crédibilité",
+    "fiabilité",
+    "sérieux",
+    "rassurance",
+    "sécurité",
+    "honnêteté",
+    "transparence",
+    "engagement",
+    "clean",
+    "épuré",
+    "blanc",
+    "white",
+    "gris",
+    "lumineux",
+    "sobre",
+    "net",
+    "minimaliste",
+    "dégradé",
+    "sérénité",
+    "pureté",
+    "fraîcheur",
+    "douceur",
+    "health",
+    "santé",
+    "clinique",
+    "médical",
+    "pharmaceutique",
+    "laboratoire",
+    "hygiène",
+    "soin",
+    "cosmétique",
+    "bien-être",
+    "science",
+    "packshot",
+    "produit",
+    "mise_en_situation",
+    "réalisme",
+    "3d",
+    "ombre_douce",
+    "volume",
+    "présentation",
+    "qualité",
+    "certification",
+    "label",
+    "sceau",
+    "tampon",
+    "garantie",
+    "norme",
+    "conforme",
+    "validé",
+    "approuvé",
+    "testé",
+    "officiel",
+    "expert",
+    "marque",
+    "branding",
+    "logo"
+  ],
+  "description": "Affiche institutionnelle rassurante. Fond très clair dégradé. Packshot produit réaliste posé. Titre affirmatif sur la qualité. Bandeau de couleur solide en bas avec logo.",
+  "design_recipe": {
+    "layout_mode": "top_down_stack",
+    "background": {
+      "gradient": [
+        "#FFFFFF",
+        "#EFEFEF"
+      ]
+    },
+    "typography": {
+      "title": "Clean Sans-Serif",
+      "color": "Dark_Grey",
+      "align": "center"
+    },
+    "elements": [
+      {
+        "type": "product_shot",
+        "shadow": "realistic_soft"
+      },
+      {
+        "type": "quality_seal_stamp",
+        "position": "overlay"
+      },
+      {
+        "type": "footer_strip",
+        "content": "logo_and_slogan"
+      }
+    ]
+  }
+}

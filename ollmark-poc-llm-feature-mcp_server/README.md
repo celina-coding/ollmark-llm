@@ -99,19 +99,56 @@ Le système utilise **ChatMemory** avec stockage H2 pour maintenir le contexte :
 
 ### Gestion des Conversations
 
-Le plugin est le point d’entrée principal pour l’utilisateur.
+**Démarrer une nouvelle conversation**
+```bash
+curl -X POST http://localhost:4401/mcp/chat/new \
+  -H "Content-Type: application/json" \
+  -d '{"userId": "alice"}'
+```
 
-### Ce que fait le plugin
-Il expose **deux modes complémentaires** :
-1. **Mode conversationnel chat**
-2. **Mode exécution JavaScript**
+Réponse :
+```json
+{
+  "success": true,
+  "conversationId": "conv_abc123",
+  "userId": "alice",
+  "info": "New conversation started. Use this conversationId for subsequent messages."
+}
+```
 
-- Fournit une interface conversationnelle dans Penpot
-- Transmet les messages utilisateur au serveur MCP
-- Reçoit les instructions générées par l’IA
-- Exécute ces instructions directement dans Penpot
-- Fournit une interface permettant d'écrire et d'éxecuter du code JavaScript directement dans Penpot
+**Envoyer un message (avec historique automatique)**
+```bash
+curl -X POST http://localhost:4401/mcp/chat \
+  -H "Content-Type: application/json" \
+  -d $'{
+    "conversationId": "conv_abc123",
+    "message": "Comment créer un rectangle rouge ?"
+  }'
+```
 
+Réponse :
+```json
+{
+  "success": true,
+  "conversationId": "conv_abc123",
+  "response": "Voici comment créer un rectangle rouge...",
+  "info": "Conversation history managed automatically by ChatMemory"
+}
+```
+
+**Effacer une conversation**
+```bash
+curl -X DELETE http://localhost:4401/mcp/chat/conv_abc123
+```
+
+### Exécution de Code
+
+**Exécuter du code JavaScript dans Penpot**
+```bash
+curl -X POST http://localhost:4401/mcp/execute-code \
+  -H "Content-Type: application/json" \
+  -d '{"code": "return penpot.currentFile?.name || \"No file\";"}'
+```
 
 ## WebSocket
 
@@ -209,39 +246,33 @@ Les logs sont écrits dans :
 
 ## Exemples d'Utilisation
 
-### Workflow utilisateur mode chat
-#### Déroulement :
-1. L’utilisateur écrit un message dans le **chat du plugin**
-2. Le plugin transmet le message au **serveur MCP** via WebSocket
-3. Le serveur :
-   - maintient le contexte de la conversation (ChatMemory)
-   - interroge le LLM (Ollama via Spring AI)
-   - sélectionne éventuellement un template marketing (RAG)
-   - génère du **code JavaScript compatible Penpot**
-4. Le code est renvoyé au plugin
-5. Le plugin **exécute le code dans Penpot**
-6. Le design est créé ou modifié
+### Workflow complet avec conversation
 
-### Workflow utilisateur mode JavaScript
-**Principe :**
-- L’utilisateur écrit directement du **JavaScript Penpot**
-- Le code est exécuté dans le contexte du fichier Penpot courant
+```bash
+# 1. Démarrer une conversation
+CONV_ID=$(curl -s -X POST http://localhost:4401/mcp/chat/new \
+  -H "Content-Type: application/json" \
+  -d '{"userId": "designer1"}' | jq -r '.conversationId')
 
-**Cas d’usage :**
-- scripts utilitaires
-- tests rapides
-- accès précis à l’API Penpot
+# 2. Demander la création d'un design
+curl -X POST http://localhost:4401/mcp/chat \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"conversationId\": \"$CONV_ID\",
+    \"message\": \"Crée un post Instagram pour promouvoir notre nouveau croissant au chocolat\"
+  }"
 
-#### Déroulement :
-1. L’utilisateur écrit du JavaScript et l'éxecute dans le plugin
-2. Le plugin envoie le code au serveur MCP
-3. Le serveur :
-   - valide
-   - exécute le code
-4. Le résultat est renvoyé au plugin
-5. Le plugin applique le résultat dans Penpot
+# 3. Affiner le design (l'IA se souviendra du contexte)
+curl -X POST http://localhost:4401/mcp/chat \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"conversationId\": \"$CONV_ID\",
+    \"message\": \"Rends le texte plus grand et ajoute un emoji\"
+  }"
 
-
+# 4. Nettoyer
+curl -X DELETE http://localhost:4401/mcp/chat/$CONV_ID
+```
 
 ### Utilisation des templates directement
 
