@@ -198,7 +198,12 @@ window.addEventListener("message", (event) => {
 
 async function runJs() {
   const codeEl = $("jsCode") as HTMLTextAreaElement | null;
-  const code = codeEl?.value ?? "";
+  let code = codeEl?.value ?? "";
+
+  code = code.replace(/\\r\\n|\\n|\\r/g, "");
+  
+  code = code.replace(/\r?\n/g, "");
+
   log(`Calling POST ${API_BASE}/mcp/execute-code (len=${code.length})`);
 
   try {
@@ -211,6 +216,8 @@ async function runJs() {
     log(`ERROR execute-code: ${e?.message || String(e)}`);
   }
 }
+
+
 
 async function newConversation() {
 

@@ -14,8 +14,8 @@ console.log("[Plugin] Starting Penpot MCP Plugin, multi-user mode:", isMultiUser
 
 // Open the plugin UI (main.ts)
 penpot.ui.open("Penpot MCP Plugin", `?theme=${penpot.theme}&multiUser=${isMultiUserMode}`, { 
-    width: 158, 
-    height: 200 
+    width: 460, 
+    height: 800 
 });
 
 // Handle messages from UI
