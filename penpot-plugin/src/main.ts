@@ -95,22 +95,6 @@ async function postJson<T = any>(url: string, body?: Json): Promise<T> {
   return data as T;
 }
 
-// j'ai plus besoin de toi déjà personne ne t'aime deleteReq
-
-/*async function deleteReq(url: string): Promise<any> {
-  const res = await fetch(url, { method: "DELETE" });
-
-  const text = await res.text();
-  let data: any = {};
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {}
-
-  if (!res.ok) throw new Error(data?.error || `${res.status} ${res.statusText}`);
-  return data;
-} 
-  */
-
 /**
  * Init automatique:
  * - reset chat

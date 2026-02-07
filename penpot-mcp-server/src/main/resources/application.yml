@@ -51,7 +51,10 @@ spring:
     ollama:
       # URL de base d'Ollama sur la VM distante
       # Interface graphique Open WebUI : http://10.130.163.62:3000/
-      base-url: ${OLLAMA_BASE_URL:http://192.168.41.3:11434}
+      # VM
+      base-url: ${OLLAMA_BASE_URL:http://10.130.163.62:11434}
+      # PC FAC
+      #base-url: ${OLLAMA_BASE_URL:http://192.168.41.3:11434}
 
       # Configuration du chat (génération de texte)
       chat:
