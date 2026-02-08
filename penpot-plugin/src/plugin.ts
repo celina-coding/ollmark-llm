@@ -2,37 +2,200 @@ import { PluginOrchestrator } from './orchestration/PluginOrchestrator';
 import { ExecuteCodeTaskHandler } from './handlers/code/ExecuteCodeTaskHandler';
 import { PluginTaskRequest } from './common/types';
 
-// Determine multi-user mode from build configuration
+/**
+ * **Point d'entrée principal du runtime du plugin Penpot.**
+ * 
+ * Ce module s'exécute dans le contexte sandbox du plugin Penpot
+ * et gère le cycle de vie du plugin côté runtime.
+ * 
+ * **Responsabilités** :
+ * - Configuration du mode multi-utilisateur
+ * - Initialisation de l'orchestrateur de tâches
+ * - Enregistrement des handlers de tâches
+ * - Ouverture de l'interface utilisateur
+ * - Gestion des messages UI ↔ Runtime
+ * - Gestion des événements Penpot (theme change)
+ * 
+ * **Architecture** :
+ * ```
+ * plugin.ts
+ *    ↓
+ * PluginOrchestrator
+ *    ↓
+ * ├── TaskHandlerRegistry
+ * ├── TaskExecutor
+ * ├── PenpotUIResponseSender
+ * └── Task Handlers
+ *     └── ExecuteCodeTaskHandler
+ * ```
+ * 
+ * **Communication** :
+ * ```
+ * UI (iframe) ←→ penpot.ui.onMessage ←→ Plugin Runtime
+ * ```
+ * 
+ * @module plugin
+ */
+
+// ============================================================================
+// Configuration
+// ============================================================================
+
+/**
+ * Variable de build-time pour le mode multi-utilisateur.
+ * Injectée par le bundler lors de la compilation.
+ * 
+ * @constant {boolean}
+ */
 declare const IS_MULTI_USER_MODE: boolean;
+
+/**
+ * Indicateur du mode multi-utilisateur.
+ * 
+ * **Modes** :
+ * - `true` : Mode multi-utilisateur (collaboration)
+ * - `false` : Mode mono-utilisateur (usage personnel)
+ * 
+ * **Sources** :
+ * - Build-time : Variable `IS_MULTI_USER_MODE`
+ * - Fallback : `false` (mono-utilisateur par défaut)
+ * 
+ * **Impact** :
+ * - Affecte le comportement de l'UI
+ * - Peut influencer la gestion des sessions
+ * - Transmis à l'UI via query parameter
+ * 
+ * @constant {boolean}
+ */
 const isMultiUserMode = typeof IS_MULTI_USER_MODE !== "undefined" ? IS_MULTI_USER_MODE : false;
 
-console.log("[Plugin] Starting Penpot Plugin");
+// Logging de démarrage
+console.log("[Plugin] Starting Penpot AI Plugin");
 console.log("[Plugin] Multi-user mode:", isMultiUserMode);
 
-// Create and initialize orchestrator
+// ============================================================================
+// Initialisation de l'Orchestrateur
+// ============================================================================
+
+/**
+ * Instance de l'orchestrateur principal du plugin.
+ * 
+ * Coordonne :
+ * - Registry des handlers
+ * - Executor de tâches
+ * - Response sender
+ * 
+ * @type {PluginOrchestrator}
+ */
 const orchestrator = new PluginOrchestrator();
 
-// Register all handlers
+// ============================================================================
+// Enregistrement des Handlers
+// ============================================================================
+
+/**
+ * Enregistre tous les handlers de tâches disponibles.
+ * 
+ * **Handlers actuels** :
+ * - `ExecuteCodeTaskHandler` : Exécution de code JavaScript
+ * 
+ * **Extension future** :
+ * ```typescript
+ * orchestrator.initialize([
+ *   new ExecuteCodeTaskHandler(),
+ *   new GenerateImageTaskHandler(),
+ *   new AnalyzeShapeTaskHandler(),
+ *   new ExportDataTaskHandler(),
+ * ]);
+ * ```
+ */
 orchestrator.initialize([
     new ExecuteCodeTaskHandler(),
 ]);
 
 console.log("[Plugin] Registered handlers:", orchestrator.getRegisteredHandlers());
 
-// Open UI
+// ============================================================================
+// Ouverture de l'Interface Utilisateur
+// ============================================================================
+
+/**
+ * Ouvre l'interface utilisateur du plugin dans une iframe.
+ * 
+ * **Paramètres UI** :
+ * - `theme` : Thème Penpot courant (dark/light)
+ * - `multiUser` : Mode multi-utilisateur
+ * 
+ * **Dimensions** :
+ * - Largeur : 500px
+ * - Hauteur : 800px
+ * 
+ * **URL générée** :
+ * `?theme=dark&multiUser=false`
+ * 
+ * @see https://doc.plugins.penpot.app/ Documentation API Penpot
+ */
 penpot.ui.open(
     "Penpot AI Plugin",
     `?theme=${penpot.theme}&multiUser=${isMultiUserMode}`,
     { width: 500, height: 800 }
 );
 
-// Handle messages from UI
+// ============================================================================
+// Gestion des Messages de l'UI
+// ============================================================================
+
+/**
+ * Gestionnaire de messages provenant de l'UI.
+ * 
+ * **Flux de traitement** :
+ * ```
+ * UI → penpot.ui.sendMessage() → onMessage → Type Guard → handleTaskRequest
+ * ```
+ * 
+ * **Types de messages** :
+ * - `PluginTaskRequest` : Requête de tâche à exécuter
+ * - Autres : Messages non reconnus (loggés)
+ * 
+ * **Gestion d'erreurs** :
+ * - Erreurs capturées et loggées
+ * - N'empêchent pas le traitement des messages suivants
+ * 
+ * @param {PluginTaskRequest | any} message - Message de l'UI
+ * 
+ * @example
+ * ```typescript
+ * // Message valide
+ * {
+ *   id: 'req-123',
+ *   task: 'executeCode',
+ *   params: { code: 'return 42;' }
+ * }
+ * 
+ * // Logs:
+ * // [Plugin] Received message: { id: 'req-123', ... }
+ * // [Plugin] Processing task request
+ * // [PluginOrchestrator] Received task request: executeCode
+ * // ...
+ * 
+ * // Message invalide
+ * {
+ *   type: 'unknown',
+ *   data: 'something'
+ * }
+ * 
+ * // Logs:
+ * // [Plugin] Received message: { type: 'unknown', ... }
+ * // [Plugin] Unknown message type
+ * ```
+ */
 penpot.ui.onMessage<PluginTaskRequest | any>((message) => {
     console.log("[Plugin] Received message:", message);
 
-    // Type guard for task requests
+    // Type guard : Vérifie si c'est une requête de tâche
     if (isTaskRequest(message)) {
         console.log("[Plugin] Processing task request");
+
         orchestrator.handleTaskRequest(message).catch((error) => {
             console.error("[Plugin] Unhandled error:", error);
         });
@@ -41,7 +204,39 @@ penpot.ui.onMessage<PluginTaskRequest | any>((message) => {
     }
 });
 
-// Handle theme changes
+// ============================================================================
+// Gestion des Événements Penpot
+// ============================================================================
+
+/**
+ * Gestionnaire de changement de thème Penpot.
+ * 
+ * **Propagation** :
+ * Transmet le changement de thème à l'UI pour mise à jour visuelle.
+ * 
+ * **Thèmes** :
+ * - `"dark"` : Thème sombre
+ * - `"light"` : Thème clair
+ * 
+ * **Message envoyé** :
+ * ```json
+ * {
+ *   "source": "penpot",
+ *   "type": "themechange",
+ *   "theme": "dark"
+ * }
+ * ```
+ * 
+ * @param {string} theme - Nouveau thème ('dark' ou 'light')
+ * 
+ * @example
+ * ```typescript
+ * // Utilisateur change le thème dans Penpot
+ * // → Event 'themechange' déclenché
+ * // → Message envoyé à l'UI
+ * // → UI met à jour ses styles
+ * ```
+ */
 penpot.on("themechange", (theme) => {
     penpot.ui.sendMessage({
         source: "penpot",
@@ -50,8 +245,44 @@ penpot.on("themechange", (theme) => {
     });
 });
 
+// ============================================================================
+// Type Guards
+// ============================================================================
+
 /**
- * Type guard for task requests
+ * **Type Guard** : Vérifie si un message est une requête de tâche valide.
+ * 
+ * **Critères de validation** :
+ * - Type objet non-null
+ * - Propriété `id` de type string
+ * - Propriété `task` de type string
+ * - Propriété `params` présente
+ * 
+ * **Usage** :
+ * Permet à TypeScript de typer correctement le message
+ * après validation.
+ * 
+ * @param message - Message à valider
+ * @returns `true` si le message est une PluginTaskRequest valide
+ * 
+ * @example
+ * ```typescript
+ * const message: any = { id: '123', task: 'test', params: {} };
+ * 
+ * if (isTaskRequest(message)) {
+ *   // TypeScript sait que message est PluginTaskRequest
+ *   console.log(message.task); // OK
+ *   orchestrator.handleTaskRequest(message); // OK
+ * }
+ * 
+ * // Tests de validation
+ * isTaskRequest({ id: '1', task: 'test', params: {} })   // true
+ * isTaskRequest({ id: '1', task: 'test' })               // false (pas de params)
+ * isTaskRequest({ id: 1, task: 'test', params: {} })     // false (id not string)
+ * isTaskRequest({ task: 'test', params: {} })            // false (pas d'id)
+ * isTaskRequest(null)                                    // false
+ * isTaskRequest('string')                                // false
+ * ```
  */
 function isTaskRequest(message: any): message is PluginTaskRequest {
     return (
