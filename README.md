@@ -2,6 +2,12 @@
 
 Serveur pour Penpot utilisant Spring Boot, Spring AI et des LLMs via Ollama avec interface graphique Open WebUI.
 
+<h3>
+  Pour plus d'informations voir le dépôt Drive,
+  <a href="https://drive.google.com/drive/folders/1VALAJD85jiV62pRaVgI-QgIPzLclRzu8?usp=drive_link"
+  target="_blank">ici</a>
+</h3>
+
 <h4>⚠️ Je n'ai testé qu'avec Penpot distant ⚠️</h4>
 
 ## Prérequis
