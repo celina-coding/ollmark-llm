@@ -1,78 +1,47 @@
-import { ExecuteCodeTaskHandler } from "./task-handlers/ExecuteCodeTaskHandler";
-import { Task, TaskHandler } from "./TaskHandler";
+import { PluginOrchestrator } from './orchestration/PluginOrchestrator';
+import { ExecuteCodeTaskHandler } from './handlers/code/ExecuteCodeTaskHandler';
+import { PluginTaskRequest } from './common/types';
 
-/**
- * Registry of all available task handlers.
- */
-const taskHandlers: TaskHandler[] = [new ExecuteCodeTaskHandler()];
-
-// Determine whether multi-user mode is enabled based on build-time configuration
+// Determine multi-user mode from build configuration
 declare const IS_MULTI_USER_MODE: boolean;
 const isMultiUserMode = typeof IS_MULTI_USER_MODE !== "undefined" ? IS_MULTI_USER_MODE : false;
 
-console.log("[Plugin] Starting Penpot MCP Plugin, multi-user mode:", isMultiUserMode);
+console.log("[Plugin] Starting Penpot Plugin");
+console.log("[Plugin] Multi-user mode:", isMultiUserMode);
 
-// Open the plugin UI (main.ts)
-penpot.ui.open("Penpot MCP Plugin", `?theme=${penpot.theme}&multiUser=${isMultiUserMode}`, { 
-    width: 459, 
-    height: 800 
-});
+// Create and initialize orchestrator
+const orchestrator = new PluginOrchestrator();
+
+// Register all handlers
+orchestrator.initialize([
+    new ExecuteCodeTaskHandler(),
+]);
+
+console.log("[Plugin] Registered handlers:", orchestrator.getRegisteredHandlers());
+
+// Open UI
+penpot.ui.open(
+    "Penpot AI Plugin",
+    `?theme=${penpot.theme}&multiUser=${isMultiUserMode}`,
+    { width: 500, height: 800 }
+);
 
 // Handle messages from UI
-penpot.ui.onMessage<string | { id: string; task: string; params: any }>((message) => {
-    console.log("[Plugin] Received message from UI:", message);
+penpot.ui.onMessage<PluginTaskRequest | any>((message) => {
+    console.log("[Plugin] Received message:", message);
 
-    console.log("[Plugin] Message type:", typeof message);
-    console.log("[Plugin] Message content:", JSON.stringify(message, null, 2));
-
-    // Handle plugin task requests
-    if (typeof message === "object" && message.task && message.id) {
-        console.log("[Plugin] ✅ Recognized as task request, executing...");
-        handlePluginTaskRequest(message).catch((error) => {
-            console.error("[Plugin] ❌ Error in handlePluginTaskRequest:", error);
+    // Type guard for task requests
+    if (isTaskRequest(message)) {
+        console.log("[Plugin] Processing task request");
+        orchestrator.handleTaskRequest(message).catch((error) => {
+            console.error("[Plugin] Unhandled error:", error);
         });
     } else {
-        console.warn("[Plugin] ⚠️ Message not recognized as task request");
+        console.warn("[Plugin] Unknown message type");
     }
 });
 
-/**
- * Handles plugin task requests received from the MCP server via WebSocket.
- *
- * @param request - The task request containing ID, task type and parameters
- */
-async function handlePluginTaskRequest(request: { id: string; task: string; params: any }): Promise<void> {
-    console.log("[Plugin] Executing plugin task:", request.task, "with params:", request.params);
-
-    const task = new Task(request.id, request.task, request.params);
-
-    // Find the appropriate handler
-    const handler = taskHandlers.find((h) => h.isApplicableTo(task));
-
-    if (handler) {
-        try {
-            console.log("[Plugin] Processing task with handler:", handler.taskType);
-            await handler.handle(task);
-
-            // check whether a response was sent and send a generic success if not
-            if (!task.isResponseSent) {
-                console.warn("[Plugin] Handler did not send a response, sending generic success.");
-                task.sendSuccess("Task completed without a specific response.");
-            }
-
-            console.log("[Plugin] Task handled successfully:", task.requestId);
-        } catch (error) {
-            console.error("[Plugin] Error handling task:", error);
-            const errorMessage = error instanceof Error ? error.message : "Unknown error";
-            task.sendError(`Error handling task: ${errorMessage}`);
-        }
-    } else {
-        console.error("[Plugin] Unknown plugin task:", request.task);
-        task.sendError(`Unknown task type: ${request.task}`);
-    }
-}
-
-// Handle theme change in the iframe
+// Handle theme changes
 penpot.on("themechange", (theme) => {
     penpot.ui.sendMessage({
         source: "penpot",
@@ -80,3 +49,16 @@ penpot.on("themechange", (theme) => {
         theme,
     });
 });
+
+/**
+ * Type guard for task requests
+ */
+function isTaskRequest(message: any): message is PluginTaskRequest {
+    return (
+        typeof message === "object" &&
+        message !== null &&
+        typeof message.id === "string" &&
+        typeof message.task === "string" &&
+        "params" in message
+    );
+}

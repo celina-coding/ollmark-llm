@@ -1,6 +1,14 @@
 {
-    "name": "Penpot MCP Plugin",
-    "code": "plugin.js",
-    "description": "This plugin enables interaction with the Penpot MCP server",
-    "permissions": ["content:read", "content:write", "library:read", "library:write", "comment:read", "comment:write"]
+  "name": "Penpot AI Plugin",
+  "description": "AI-powered design assistant that connects Penpot to a server for intelligent automation and code execution",
+  "code": "/plugin.js",
+  "icon": "/icon.png",
+  "permissions": [
+    "content:read",
+    "content:write",
+    "library:read",
+    "library:write",
+    "comment:read",
+    "comment:write"
+  ]
 }

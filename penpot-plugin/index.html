@@ -1,40 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Penpot AI Plugin</title>
+</head>
 <body>
   <div id="app" class="app">
+    
     <header class="topbar">
-  <div class="conn-status">
-    <span id="wsStatusDot" class="status-dot disconnected"></span>
+      <div class="conn-status">
+        <span id="wsStatusDot" class="status-dot disconnected" aria-label="Statut déconnecté"></span>
+        <button id="connectBtn" class="btn primary" type="button">
+          Se connecter au serveur
+        </button>
+      </div>
+      <div class="spacer"></div>
+      <div class="mode">
+        <select id="modeSelect" class="select" aria-label="Choisir le mode">
+          <option value="chat" selected>Chat</option>
+          <option value="js">Exécuter JavaScript</option>
+        </select>
+      </div>
+    </header>
 
-    <button id="connectBtn" class="btn primary">
-      Se connecter au serveur MCP
-    </button>
-  </div>
-
-  <div class="spacer"></div>
-
-  <div class="mode">
-    <select id="modeSelect" class="select">
-      <option value="chat" selected>Chat</option>
-      <option value="js">Executer JavaScript</option>
-    </select>
-  </div>
-</header>
-
-
-    <!-- LA PANEL DU CHAAAAAAAAAAAT -->
     <section id="chatPanel" class="panel">
       <div class="chat-wrap">
         <div id="chatBox" class="chat-box"></div>
-
-        <div class="chat-input">
-          <input id="chatMsg" class="chat-text" placeholder="Que voulez vous generer?" />
-          <button id="sendChatBtn" class="send-btn" type="button" title="Send" aria-label="Send">
+        <form class="chat-input" onsubmit="event.preventDefault();">
+          <input 
+            id="chatMsg" 
+            class="chat-text" 
+            placeholder="Que voulez-vous générer ?" 
+            autocomplete="off" 
+          />
+          <button id="sendChatBtn" class="send-btn" type="submit" aria-label="Envoyer">
             <svg viewBox="0 0 24 24" class="send-ico" aria-hidden="true">
               <path d="M12 5l6 6-1.4 1.4L13 8.8V20h-2V8.8L7.4 12.4 6 11l6-6z"></path>
             </svg>
           </button>
-
-
-        </div>
+        </form>
       </div>
 
       <div class="hidden-tools">
@@ -44,34 +50,47 @@
       </div>
 
       <div class="mini-row">
-        <button id="newConvBtn2" type="button" class="btn ghost">Nouvelle conversation</button>
-        <button id="deleteConvBtn2" type="button" class="btn ghost danger">Reinitialiser cette conversation</button>
+        <button id="newConvBtn2" type="button" class="btn ghost">
+          Nouvelle conversation
+        </button>
+        <button id="deleteConvBtn2" type="button" class="btn ghost danger">
+          Réinitialiser cette conversation
+        </button>
       </div>
     </section>
 
-    <!-- LA PANEL DU JAVASCRIIIIIIPTTTTTT -->
     <section id="jsPanel" class="panel" style="display:none;">
       <div class="card">
-        <div class="card-title">Code JavaScript a executer</div>
-        <textarea id="jsCode" class="code" rows="8">console.log("test");</textarea>
-        <div class="row">
-          <button id="runJsBtn" class="btn primary">Executer JS</button>
+        <div class="card-title">Code JavaScript à exécuter</div>
+        <textarea 
+          id="jsCode" 
+          class="code" 
+          rows="8" 
+          spellcheck="false"
+          placeholder="// Entrez votre code JavaScript ici&#10;console.log('Hello from Penpot!');">console.log("test");</textarea>
+        <div class="row" style="margin-top:10px;">
+          <button id="runJsBtn" class="btn primary" type="button">
+            Exécuter JS
+          </button>
         </div>
       </div>
     </section>
 
-    <!-- LOGS -->
     <section class="panel">
       <div class="card">
         <div class="row">
           <div class="card-title">Logs</div>
           <div class="spacer"></div>
-          <button id="clearLogsBtn2" class="btn ghost">Reinitialiser</button>
+          <button id="clearLogsBtn2" class="btn ghost" type="button">
+            Réinitialiser
+          </button>
         </div>
         <pre id="logs" class="logs"></pre>
       </div>
     </section>
+
   </div>
 
   <script type="module" src="/src/main.ts"></script>
 </body>
+</html>

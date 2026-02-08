@@ -1,6 +1,6 @@
-# Penpot MCP Server - Spring Boot Edition
+# Penpot Server - Spring Boot Edition
 
-Serveur MCP pour Penpot utilisant Spring Boot, Spring AI et des LLMs via Ollama avec interface graphique Open WebUI.
+Serveur pour Penpot utilisant Spring Boot, Spring AI et des LLMs via Ollama avec interface graphique Open WebUI.
 
 <h4>⚠️ Je n'ai testé qu'avec Penpot distant ⚠️</h4>
 
@@ -9,7 +9,7 @@ Serveur MCP pour Penpot utilisant Spring Boot, Spring AI et des LLMs via Ollama 
 - **Java 21** ou supérieur
 - **Maven 3.8+**
 - **Ollama** avec interface Open WebUI (configuré sur VM distante)
-- Plugin Penpot MCP connecté
+- Plugin Penpot connecté
 
 ## Configuration du LLM
 
@@ -20,14 +20,14 @@ Le serveur utilise une VM distante avec Ollama et Open WebUI déployés via Dock
 
 ### Modèles disponibles
 
-Vous pouvez gérer les modèles via l'interface Open WebUI. Le modèle par défaut configuré est `qwen3:1.7b` mais vous pouvez le changer via les variables d'environnement.
+Vous pouvez gérer les modèles via l'interface Open WebUI. Le modèle par défaut configuré est `qwen3:8b` mais vous pouvez le changer via les variables d'environnement.
 
 ## Installation
 
-### 1. Lancer le serveur MCP
+### 1. Lancer le serveur
 
 ```bash
-cd penpot-mcp-server
+cd penpot-ai-server
 mvn clean package spring-boot:run
 ```
 
@@ -37,7 +37,7 @@ Le serveur démarre sur `http://localhost:4401`
 
 ```bash
 cd penpot-plugin
-npm install && npm run build && npm run dev
+npm install && npm run dev
 ```
 
 ### 3. Connecter le plugin à Penpot
@@ -52,9 +52,9 @@ Puis cliquer sur le bouton de connexion dans le plugin.
 ## Architecture
 
 ```
-        Client MCP
+          Client
             ↓
-   REST API (McpController)
+   REST API (AiController)
             ↓
     ConversationChatUseCase
     (avec ChatMemory + H2)
@@ -107,7 +107,7 @@ Il expose **deux modes complémentaires** :
 2. **Mode exécution JavaScript**
 
 - Fournit une interface conversationnelle dans Penpot
-- Transmet les messages utilisateur au serveur MCP
+- Transmet les messages utilisateur au serveur
 - Reçoit les instructions générées par l’IA
 - Exécute ces instructions directement dans Penpot
 - Fournit une interface permettant d'écrire et d'éxecuter du code JavaScript directement dans Penpot
@@ -131,8 +131,8 @@ ws://localhost:4401/plugin?userToken=user123
 
 ```bash
 # Serveur
-PENPOT_MCP_SERVER_ADDRESS=localhost
-PENPOT_MCP_SERVER_LISTEN_ADDRESS=localhost
+PENPOT_SERVER_ADDRESS=localhost
+PENPOT_SERVER_LISTEN_ADDRESS=localhost
 
 # Ollama (VM distante)
 OLLAMA_BASE_URL=http://10.130.163.62:11434
@@ -142,15 +142,15 @@ OLLAMA_TEMPERATURE=0.7
 OLLAMA_MAX_TOKENS=4096
 
 # Chat Memory
-PENPOT_MCP_CHAT_MEMORY_MAX_MESSAGES=20
+PENPOT_CHAT_MEMORY_MAX_MESSAGES=20
 
 # Mode
-PENPOT_MCP_REMOTE_MODE=false
-PENPOT_MCP_MULTI_USER=false
+PENPOT_REMOTE_MODE=false
+PENPOT_MULTI_USER=false
 
 # Logging
-PENPOT_MCP_LOG_LEVEL=debug
-PENPOT_MCP_LOG_DIR=logs
+PENPOT_LOG_LEVEL=debug
+PENPOT_LOG_DIR=logs
 ```
 
 ### Configuration des templates
@@ -159,7 +159,7 @@ Les templates marketing sont chargés depuis `src/main/resources/data/rag/templa
 
 Configuration RAG :
 ```yaml
-penpot.mcp.rag:
+penpot.rag:
   templates-path: classpath:data/rag/templates/*.json
   similarity-threshold: 0.6
   top-k: 3
@@ -169,9 +169,9 @@ penpot.mcp.rag:
 
 Le serveur utilise H2 en mode fichier pour stocker l'historique des conversations :
 
-- **Fichier** : `./data/penpot-mcp-chatmemory`
+- **Fichier** : `./data/penpot-chatmemory`
 - **Console** : http://localhost:4401/h2-console
-  - URL JDBC : `jdbc:h2:file:./data/penpot-mcp-chatmemory`
+  - URL JDBC : `jdbc:h2:file:./data/penpot-chatmemory`
   - User : `sa`
   - Password : (vide)
 
@@ -180,14 +180,14 @@ Le serveur utilise H2 en mode fichier pour stocker l'historique des conversation
 Pour activer le mode multi-utilisateur :
 
 ```bash
-export PENPOT_MCP_MULTI_USER=true
+export PENPOT_MULTI_USER=true
 mvn spring-boot:run
 ```
 
 Ensuite, ajoutez le header `X-User-Token` dans vos requêtes :
 
 ```bash
-curl -X POST http://localhost:4401/mcp/execute-code \
+curl -X POST http://localhost:4401/ai/execute-code \
   -H "Content-Type: application/json" \
   -H "X-User-Token: alice" \
   -d '{"code": "..."}'
@@ -198,21 +198,21 @@ curl -X POST http://localhost:4401/mcp/execute-code \
 Le timeout par défaut pour l'exécution des tâches est de **30 secondes**. Configurable via :
 
 ```bash
-export PENPOT_MCP_TASK_TIMEOUT_SECONDS=60
+export PENPOT_TASK_TIMEOUT_SECONDS=60
 ```
 
 ## Logs
 
 Les logs sont écrits dans :
 - **Console** : Sortie standard avec niveau configurable
-- **Fichier** : `logs/penpot-mcp.log` (chemin configurable)
+- **Fichier** : `logs/penpot.log` (chemin configurable)
 
 ## Exemples d'Utilisation
 
 ### Workflow utilisateur mode chat
 #### Déroulement :
 1. L’utilisateur écrit un message dans le **chat du plugin**
-2. Le plugin transmet le message au **serveur MCP** via WebSocket
+2. Le plugin transmet le message au **serveur** via WebSocket
 3. Le serveur :
    - maintient le contexte de la conversation (ChatMemory)
    - interroge le LLM (Ollama via Spring AI)
@@ -234,26 +234,12 @@ Les logs sont écrits dans :
 
 #### Déroulement :
 1. L’utilisateur écrit du JavaScript et l'éxecute dans le plugin
-2. Le plugin envoie le code au serveur MCP
+2. Le plugin envoie le code au serveur
 3. Le serveur :
    - valide
    - exécute le code
 4. Le résultat est renvoyé au plugin
 5. Le plugin applique le résultat dans Penpot
-
-
-
-### Utilisation des templates directement
-
-```bash
-# Chercher des templates pour une newsletter
-curl -X POST http://localhost:4401/mcp/templates/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "email newsletter promotion"}'
-
-# Obtenir tous les templates Instagram
-curl -X GET http://localhost:4401/mcp/templates/type/instagram_post
-```
 
 ## Troubleshooting
 
@@ -274,14 +260,14 @@ curl http://10.130.163.62:11434/api/tags
 
 1. Vérifiez que les fichiers JSON sont présents dans `src/main/resources/data/rag/templates/`
 2. Consultez les logs au démarrage pour voir si les templates sont chargés
-3. Vérifiez la configuration `penpot.mcp.rag.templates-path`
+3. Vérifiez la configuration `penpot.ai.rag.templates-path`
 
 ### La console H2 ne s'affiche pas
 
 La console H2 est disponible à : http://localhost:4401/h2-console
 
 Paramètres de connexion :
-- JDBC URL : `jdbc:h2:file:./data/penpot-mcp-chatmemory`
+- JDBC URL : `jdbc:h2:file:./data/penpot-chatmemory`
 - Username : `sa`
 - Password : (laisser vide)
 
@@ -290,7 +276,7 @@ Paramètres de connexion :
 ### Structure du projet
 
 ```
-src/main/java/com/penpot/mcp/
+src/main/java/com/penpot/ai/
 ├── adapters/
 │   ├── in/
 │   │   ├── web/          # REST controllers
@@ -325,4 +311,4 @@ src/main/java/com/penpot/mcp/
 
 ## Support
 
-Pour toute question ou problème, consultez les logs dans `logs/penpot-mcp.log`
+Pour toute question ou problème, consultez les logs dans `logs/penpot.log`

@@ -5,5 +5,5 @@
 **.mvn
 **node_modules
 **dist*
-/penpot-mcp-server/data/*
+/penpot-ai-server/data/*
 **/.env

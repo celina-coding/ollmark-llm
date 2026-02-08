@@ -3,7 +3,7 @@
  * 
  * Contains the outcome status of a task and any additional result data.
  * This interface is used for type-safe communication between the plugin
- * and the MCP server.
+ * and the server.
  * 
  * @template T - The type of data returned by the task
  * 
@@ -23,7 +23,7 @@ export interface PluginTaskResult<T> {
 }
 
 /**
- * Request message sent from MCP server to plugin via WebSocket.
+ * Request message sent from server to plugin via WebSocket.
  * 
  * Contains a unique identifier, task name, and parameters for execution.
  * This message is deserialized from JSON received through the WebSocket
@@ -62,7 +62,7 @@ export interface PluginTaskRequest {
 }
 
 /**
- * Response message sent from plugin back to MCP server via WebSocket.
+ * Response message sent from plugin back to server via WebSocket.
  * 
  * Contains the original request ID and the execution result, allowing
  * the server to correlate the response with the pending request.

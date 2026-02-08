@@ -1,0 +1,231 @@
+# ============================================
+# Configuration du serveur Penpot
+# ============================================
+
+server:
+  port: 4401
+  address: ${PENPOT_SERVER_LISTEN_ADDRESS:localhost}
+
+# ============================================
+# Configuration Penpot
+# ============================================
+penpot:
+  ai:
+    # Adresse du serveur pour les clients externes
+    server-address: ${PENPOT_SERVER_ADDRESS:localhost}
+    # Port WebSocket pour la communication avec le plugin
+    websocket-port: ${PENPOT_WEBSOCKET_PORT:4401}
+    # Port REPL (si activé)
+    repl-port: ${PENPOT_REPL_PORT:4403}
+    # Mode distant : true si le plugin est hébergé ailleurs
+    remote-mode: ${PENPOT_REMOTE_MODE:false}
+    # Mode multi-utilisateur : permet plusieurs connexions simultanées
+    multi-user: ${PENPOT_MULTI_USER:false}
+    # Niveau de log : trace, debug, info, warn, error
+    log-level: ${PENPOT_LOG_LEVEL:debug}
+    # Répertoire pour les fichiers de log
+    log-dir: ${PENPOT_LOG_DIR:logs}
+    # Accès au système de fichiers (pour les opérations futures)
+    file-system-access: true
+    # Configuration de la mémoire de conversation
+    chat:
+      memory:
+        # Nombre maximum de messages à conserver en mémoire par conversation
+        # Plus cette valeur est élevée, plus le contexte est maintenu, mais plus la consommation mémoire augmente
+        max-messages: ${PENPOT_CHAT_MEMORY_MAX_MESSAGES:20}
+    # Configuration RAG (Retrieval-Augmented Generation) pour les templates marketing
+    rag:
+      # Chemin vers les fichiers de templates (supporte les wildcards)
+      templates-path: ${PENPOT_RAG_TEMPLATES_PATH:classpath:data/rag/templates/*.json}
+      # Seuil de similarité pour la recherche sémantique (0.0 à 1.0)
+      # Plus élevé = correspondances plus strictes
+      similarity-threshold: ${PENPOT_RAG_SIMILARITY_THRESHOLD:0.6}
+      # Nombre de templates à retourner lors d'une recherche
+      top-k: ${PENPOT_RAG_TOP_K:3}
+
+# ============================================
+# Configuration Spring AI avec Ollama (VM distante)
+# ============================================
+spring:
+  ai:
+    ollama:
+      # URL de base d'Ollama sur la VM distante
+      # Interface graphique Open WebUI : http://10.130.163.62:3000/
+      # VM
+      base-url: ${OLLAMA_BASE_URL:http://10.130.163.62:11434}
+      # PC FAC
+      #base-url: ${OLLAMA_BASE_URL:http://192.168.41.3:11434}
+
+      # Configuration du chat (génération de texte)
+      chat:
+        options:
+          # Modèle à utiliser (configurable via Open WebUI)
+          # Exemples : qwen3:1.7b, qwen:8b, phi3:3.8b
+          model: ${OLLAMA_MODEL:qwen3:8b}
+          # Température (0.0 = déterministe, 1.0+ = créatif)
+          temperature: ${OLLAMA_TEMPERATURE:0.7}
+          # Nombre maximum de tokens dans la réponse
+          max-tokens: ${OLLAMA_MAX_TOKENS:4096}
+          function-calling: auto
+
+      # Configuration des embeddings (pour la recherche sémantique)
+      embedding:
+        options:
+          # Modèle d'embedding pour le RAG
+          model: ${OLLAMA_EMBEDDING_MODEL:hf.co/unsloth/embeddinggemma-300m-GGUF:Q8_0}
+
+    # ============================================
+    # CONFIGURATION CHAT MEMORY
+    # ============================================
+    chat:
+      memory:
+        repository:
+          jdbc:
+            # Options : always, never, embedded
+            # ALWAYS = Crée la table à chaque démarrage si elle n'existe pas
+            initialize-schema: always
+
+# ============================================
+# Configuration de la base de données H2
+# ============================================
+  datasource:
+    # Base de données H2 en mode fichier pour persister les conversations
+    url: jdbc:h2:file:./data/penpot-chatmemory;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+    # Pool de connexions HikariCP
+    hikari:
+      # Nombre maximum de connexions dans le pool
+      maximum-pool-size: 10
+      # Nombre minimum de connexions inactives
+      minimum-idle: 2
+      # Timeout de connexion (ms)
+      connection-timeout: 20000
+      # Durée de vie maximale d'une connexion (ms)
+      max-lifetime: 1800000
+
+  # Console H2 pour inspecter la base de données
+  h2:
+    console:
+      # Activer la console web : http://localhost:4401/h2-console
+      enabled: true
+      path: /h2-console
+      settings:
+        # Autoriser l'accès depuis n'importe quelle IP (attention en production)
+        web-allow-others: false
+        trace: false
+
+  # JPA pour auto-créer les tables
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+# ============================================
+# Configuration des logs
+# ============================================
+logging:
+  level:
+    # Niveau de log pour le package principal
+    com.penpot.ai: ${penpot.ai.log-level:DEBUG}
+
+    org.springframework.ai.chat.client: TRACE
+
+    # Logs pour Spring AI ChatMemory
+    org.springframework.ai.chat.memory: DEBUG
+
+    # Logs pour Spring AI JDBC Repository
+    org.springframework.ai.chat.memory.repository.jdbc: DEBUG
+
+    # Logs pour Spring AI Ollama client
+    org.springframework.ai.ollama: ${penpot.ai.log-level}
+
+    # Logs WebSocket
+    org.springframework.web.socket: INFO
+
+    # Logs HTTP client
+    org.springframework.web.client: INFO
+
+  # Configuration du fichier de log
+  file:
+    name: ${penpot.ai.log-dir}/penpot.log
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 100MB
+
+  # Format des logs
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ============================================
+# Configuration Spring Boot
+# ============================================
+  application:
+    name: penpot-ai-server
+
+  # Désactiver certaines auto-configurations si nécessaire
+  autoconfigure:
+    exclude:
+      # Exclure si vous n'utilisez pas certaines fonctionnalités
+      # - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+# ============================================
+# Configuration des endpoints Actuator (monitoring)
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        # Exposer certains endpoints pour le monitoring
+        include: health,info,metrics,loggers
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ============================================
+# Notes de configuration
+# ============================================
+# 
+# OLLAMA VM DISTANTE :
+# - Interface Open WebUI : http://10.130.163.62:3000/
+#   → Utilisez cette interface pour gérer les modèles, voir l'historique, etc.
+#   → Authentification requise (user/password)
+# 
+# - API Ollama directe : http://10.130.163.62:11434/
+#   → Pour les requêtes HTTP directes sans UI
+#   → Exemple : curl http://10.130.163.62:11434/api/tags
+# 
+# MODÈLES :
+# - Chat léger : qwen3:1.7b (rapide, bon pour le prototypage)
+# - Chat équilibré : qwen3:8b
+# - Embeddings : embeddinggemma-300m
+# 
+# BASE DE DONNÉES H2 :
+# - Console accessible : http://localhost:4401/h2-console
+# - JDBC URL : jdbc:h2:file:./data/penpot-chatmemory
+# - Username : sa
+# - Password : (vide)
+# 
+# VARIABLES D'ENVIRONNEMENT :
+# Toutes les valeurs peuvent être surchargées via des variables d'environnement.
+# Exemple : export OLLAMA_MODEL=llama3:8b
+# 
+# CHAT MEMORY :
+# - La table SPRING_AI_CHAT_MEMORY sera créée automatiquement au démarrage
+# - Stocke automatiquement l'historique des conversations
+# - Limite : 20 messages par défaut (configurable via penpot.ai.chat.memory.max-messages)
+# - Persiste dans H2 (survit aux redémarrages)
+# 
+# RAG TEMPLATES :
+# - Templates marketing pré-configurés
+# - Recherche sémantique via embeddings Ollama
+# - Extensible : ajoutez vos propres templates JSON
+# 
+# ============================================
