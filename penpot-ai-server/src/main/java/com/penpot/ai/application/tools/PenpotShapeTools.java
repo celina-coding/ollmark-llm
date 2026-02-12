@@ -266,6 +266,68 @@ public class PenpotShapeTools {
         }
     }
 
+    /**
+     * Crée une étoile dans Penpot via SVG.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     * @param width Largeur
+     * @param height Hauteur
+     * @param points Nombre de pointes (défaut 5)
+     * @param innerRadius Rayon interne en % (défaut 38)
+     * @param fillColor Couleur de remplissage
+     * @param name Nom optionnel
+     * @return JSON avec l'ID de la forme créée
+     */
+    @Tool(description = """
+        Create a star shape in Penpot.
+
+        CRITICAL: Returns a UUID that you MUST save!
+
+        Use this for star-shaped elements, ratings, or decorative stars.
+
+        Examples:
+        - "Create a 5-point star 100x100"
+        - "Add a gold star with 8 points"
+
+        Default is 5 points with 38% inner radius.
+        """)
+    public String createStar(
+        @ToolParam(description = "X position in pixels") Integer x,
+        @ToolParam(description = "Y position in pixels") Integer y,
+        @ToolParam(description = "Width in pixels") Integer width,
+        @ToolParam(description = "Height in pixels") Integer height,
+        @ToolParam(description = "Number of points (default: 5)", required = false) Integer points,
+        @ToolParam(description = "Inner radius percentage 0-100 (default: 38)", required = false) Integer innerRadius,
+        @ToolParam(description = "Fill color in hex format", required = false) String fillColor,
+        @ToolParam(description = "Optional name for the star", required = false) String name
+    ) {
+        log.info("Tool called: createStar (x={}, y={}, w={}, h={}, points={})", 
+            x, y, width, height, points);
+
+        String code = buildStarCode(x, y, width, height, points, innerRadius, fillColor, name);
+
+        try {
+            TaskResult result = executeCodeUseCase.execute(
+                ExecuteCodeCommand.of(code)
+            );
+
+            if (!result.isSuccess()) {
+                return formatError(result.getError().orElse("Unknown error"));
+            }
+
+            log.debug(code);
+            String shapeId = result.getData()
+                .map(Object::toString)
+                .orElse("unknown");
+
+            return formatSuccessWithId("star", shapeId);
+        } catch (Exception e) {
+            log.error("Failed to create star", e);
+            return formatError(e.getMessage());
+        }
+    }
+
     // ==================== CODE GENERATION METHODS ====================
 
     private String buildRectangleCode(
@@ -414,5 +476,63 @@ public class PenpotShapeTools {
             "{\"success\": false, \"error\": %s}",
             JsonUtils.escapeJson(errorMessage)
         );
+    }
+
+    private String buildStarCode(
+        Integer x, Integer y, Integer width, Integer height,
+        Integer points, Integer innerRadius, String fillColor, String name
+    ) {
+        int actualPoints = (points != null && points > 2) ? points : 5;
+        double ratio = (innerRadius != null && innerRadius > 0 && innerRadius < 100) 
+            ? innerRadius / 100.0 : 0.382;
+
+        String pathData = generateStarPath(width, height, actualPoints, ratio);
+        
+        String color = (fillColor != null && !fillColor.isBlank()) ? fillColor : "#CCCCCC";
+        String svg = String.format(
+            "<svg width='%d' height='%d' viewBox='0 0 %d %d' xmlns='http://www.w3.org/2000/svg'><path d='%s' fill='%s'/></svg>",
+            width, height, width, height, pathData, color
+        );
+        
+        StringBuilder code = new StringBuilder();
+        code.append(String.format("const svg = `%s`;\n", svg));
+        code.append("const group = penpot.createShapeFromSvg(svg);\n");
+        code.append("if (group) {\n");
+        code.append(String.format("  group.x = %d;\n", x));
+        code.append(String.format("  group.y = %d;\n", y));
+        
+        if (name != null && !name.isBlank()) {
+            code.append(String.format("  group.name = '%s';\n", name.replace("'", "\\'")));
+        }
+        code.append("  return group.id;\n");
+        code.append("} else {\n");
+        code.append("  throw new Error('Failed to create star from SVG');\n");
+        code.append("}\n");
+        
+        return code.toString();
+    }
+
+    private String generateStarPath(int width, int height, int points, double innerRadiusRatio) {
+        double cx = width / 2.0;
+        double cy = height / 2.0;
+        double rx = width / 2.0;
+        double ry = height / 2.0;
+        
+        StringBuilder sb = new StringBuilder();
+        double step = Math.PI / points;
+        double angle = -Math.PI / 2; // Start top
+        
+        for (int i = 0; i < 2 * points; i++) {
+            double r = (i % 2 == 0) ? 1.0 : innerRadiusRatio;
+            double currX = cx + Math.cos(angle) * rx * r;
+            double currY = cy + Math.sin(angle) * ry * r;
+            
+            if (i == 0) sb.append("M").append(currX).append(" ").append(currY);
+            else sb.append(" L").append(currX).append(" ").append(currY);
+            
+            angle += step;
+        }
+        sb.append(" Z");
+        return sb.toString();
     }
 }
