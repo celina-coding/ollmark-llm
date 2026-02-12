@@ -18,11 +18,8 @@ import java.nio.charset.StandardCharsets;
 @Configuration
 public class OllamaTokenLoggingConfig {
 
-    //TEST 
-    @Value("${spring.ai.ollama.chat.options.num_ctx:16000}")
+    @Value("${spring.ai.ollama.chat.options.num_ctx}")
     private int numCtx;
-
-
 
     private final ObjectMapper mapper = new ObjectMapper();
 
