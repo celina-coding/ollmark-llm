@@ -21,6 +21,8 @@ public class OllamaTokenLoggingConfig {
     @Value("${spring.ai.ollama.chat.options.num_ctx:16000}")
     private int numCtx;
 
+
+
     private final ObjectMapper mapper = new ObjectMapper();
 
     /**
