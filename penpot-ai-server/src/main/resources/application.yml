@@ -67,11 +67,7 @@ spring:
           # Nombre maximum de tokens dans la réponse
           max-tokens: ${OLLAMA_MAX_TOKENS:4096}
           function-calling: auto
-<<<<<<< HEAD
-          num_ctx: 32000
-=======
           num_ctx: 16000
->>>>>>> 97d7c2c (feature: augmentation de la fenetre de contexte à 16K tokens)
 
       # Configuration des embeddings (pour la recherche sémantique)
       embedding:
