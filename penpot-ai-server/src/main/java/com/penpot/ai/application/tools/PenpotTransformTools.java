@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.*;
 import org.springframework.stereotype.Component;
+import java.util.Locale;
 
 /**
  * Tools pour les transformations géométriques dans Penpot.
@@ -217,7 +218,7 @@ public class PenpotTransformTools {
     // ==================== CODE GENERATION METHODS ====================
 
     private String buildRotateCode(String shapeId, int angle) {
-        return String.format("""
+        return String.format(Locale.US,"""
             let shape = null;
             try {
                 shape = penpot.currentPage.getShapeById('%s');
@@ -240,7 +241,7 @@ public class PenpotTransformTools {
     }
 
     private String buildScaleCode(String shapeId, float scaleX, float scaleY) {
-        return String.format("""
+        return String.format(Locale.US,"""
             let shape = null;
             try {
                 shape = penpot.currentPage.getShapeById('%s');
@@ -266,7 +267,7 @@ public class PenpotTransformTools {
 
     private String buildMoveCode(String shapeId, float newX, float newY, boolean relative) {
         if (relative) {
-            return String.format("""
+            return String.format(Locale.US,"""
                 let shape = null;
                 try {
                     shape = penpot.currentPage.getShapeById('%s');
@@ -288,7 +289,7 @@ public class PenpotTransformTools {
                 shapeId, shapeId, newX, newY
             );
         } else {
-            return String.format("""
+            return String.format(Locale.US,"""
                 let shape = null;
                 try {
                     shape = penpot.currentPage.getShapeById('%s');
@@ -313,7 +314,7 @@ public class PenpotTransformTools {
     }
 
     private String buildResizeCode(String shapeId, float newWidth, float newHeight) {
-        return String.format("""
+        return String.format(Locale.US,"""
             let shape = null;
             try {
                 shape = penpot.currentPage.getShapeById('%s');
