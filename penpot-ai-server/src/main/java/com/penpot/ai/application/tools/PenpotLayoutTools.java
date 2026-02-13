@@ -170,7 +170,191 @@ public class PenpotLayoutTools {
         }
     }
 
-    // ==================== CODE GENERATION WITH FALLBACK ====================
+    
+
+    // ==================== HIERARCHI ====================
+
+    @Tool(description = """
+        Send shapes one step backward in the layer order (z-index).
+
+        Works with explicit IDs or current selection.
+        """)
+    public String sendShapeBackward(
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection'") String shapeIds
+    ) {
+        log.info("Tool called: sendShapeBackward (ids='{}')", shapeIds);
+
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
+
+        String code = buildZOrderCodeWithFallback(ids, "sendBackward", useSelection);
+
+        return executeAndFormatIds(code, "sent backward");
+    }
+
+    @Tool(description = """
+        Bring shapes one step forward in the layer order (z-index).
+
+        Works with explicit IDs or current selection.
+        """)
+    public String sendShapeFrontward(
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection'") String shapeIds
+    ) {
+        log.info("Tool called: sendShapeFrontward (ids='{}')", shapeIds);
+
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
+
+        String code = buildZOrderCodeWithFallback(ids, "bringForward", useSelection);
+
+        return executeAndFormatIds(code, "brought forward");
+    }
+
+    @Tool(description = """
+        Send shapes to the very back (bottom) of their siblings list.
+
+        Works with explicit IDs or current selection.
+        """)
+    public String sendShapeToTheBack(
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection'") String shapeIds
+    ) {
+        log.info("Tool called: sendShapeToTheBack (ids='{}')", shapeIds);
+
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
+
+        String code = buildZOrderCodeWithFallback(ids, "sendToBack", useSelection);
+
+        return executeAndFormatIds(code, "sent to back");
+    }
+
+    @Tool(description = """
+        Bring shapes to the very front (top) of their siblings list.
+
+        Works with explicit IDs or current selection.
+        """)
+    public String sendShapeToTheFront(
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection'") String shapeIds
+    ) {
+        log.info("Tool called: sendShapeToTheFront (ids='{}')", shapeIds);
+
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
+
+        String code = buildZOrderCodeWithFallback(ids, "bringToFront", useSelection);
+
+        return executeAndFormatIds(code, "brought to front");
+    }
+
+    @Tool(description = """
+        Move one or more shapes into a specific board.
+
+        Notes:
+        - The shapes will be re-parented to the target board.
+        - Their position is preserved using board coordinates.
+
+        Works with explicit shape IDs or current selection.
+        """)
+    public String addShapeToBoard(
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection'") String shapeIds,
+        @ToolParam(description = "Target board ID") String boardId
+    ) {
+        log.info("Tool called: addShapeToBoard (shapeIds='{}', boardId='{}')", shapeIds, boardId);
+
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
+
+        String code = buildMoveToBoardCodeWithFallback(ids, boardId, useSelection);
+
+        return executeAndFormatIds(code, "moved to board");
+    }
+
+    @Tool(description = """
+        Remove one or more shapes from their parent (delete from the document tree).
+
+        Works with explicit IDs or current selection.
+        """)
+    public String removeShapeFromParent(
+        @ToolParam(description = "Shape IDs (comma-separated) OR 'selection'") String shapeIds
+    ) {
+        log.info("Tool called: removeShapeFromParent (ids='{}')", shapeIds);
+
+        boolean useSelection = "selection".equalsIgnoreCase(shapeIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeIds);
+
+        String code = buildRemoveCodeWithFallback(ids, useSelection);
+
+        return executeAndFormatIds(code, "removed");
+    }
+
+    @Tool(description = """
+        Clone a shape (duplicate it). Returns the new cloned shape ID.
+
+        Works with explicit ID or current selection (uses the first selected shape).
+        You can optionally offset the clone position.
+        """)
+    public String cloneShape(
+        @ToolParam(description = "Shape ID OR 'selection'") String shapeId,
+        @ToolParam(description = "Offset X for the clone (default 20)", required = false) Integer offsetX,
+        @ToolParam(description = "Offset Y for the clone (default 20)", required = false) Integer offsetY
+    ) {
+        log.info("Tool called: cloneShape (id='{}', dx={}, dy={})", shapeId, offsetX, offsetY);
+
+        boolean useSelection = "selection".equalsIgnoreCase(shapeId.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(shapeId);
+        if (!useSelection && ids.isEmpty()) {
+            useSelection = true;
+            ids = List.of();
+        }
+
+        int dx = offsetX != null ? offsetX : 20;
+        int dy = offsetY != null ? offsetY : 20;
+
+        String code = buildCloneCodeWithFallback(ids, dx, dy, useSelection);
+
+        try {
+            TaskResult result = executeCodeUseCase.execute(ExecuteCodeCommand.of(code));
+            if (!result.isSuccess()) return formatError(result.getError().orElse("Unknown error"));
+
+            Object data = result.getData().orElse(null);
+            if (data instanceof java.util.Map) {
+                Object id = ((java.util.Map<?, ?>) data).get("cloneId");
+                if (id != null) {
+                    return String.format(
+                        "Successfully cloned shape.\n\nClone ID: %s\n\nTIP: Save this ID to manipulate the clone.",
+                        id.toString()
+                    );
+                }
+            }
+
+            return "Successfully cloned shape.";
+        } catch (Exception e) {
+            log.error("Failed to clone shape", e);
+            return formatError(e.getMessage());
+        }
+    }
+
+    @Tool(description = """
+        Ungroup one or more groups.
+
+        Works with explicit IDs or current selection.
+        Only groups will be ungrouped (other shapes are ignored).
+        """)
+    public String ungroupShapes(
+        @ToolParam(description = "Group IDs (comma-separated) OR 'selection'") String groupIds
+    ) {
+        log.info("Tool called: ungroupShapes (ids='{}')", groupIds);
+
+        boolean useSelection = "selection".equalsIgnoreCase(groupIds.trim());
+        List<String> ids = useSelection ? List.of() : parseShapeIds(groupIds);
+
+        String code = buildUngroupCodeWithFallback(ids, useSelection);
+
+        return executeAndFormatIds(code, "ungrouped");
+    }
+
+
+// ==================== CODE GENERATION WITH FALLBACK ====================
 
     private String buildAlignCodeWithFallback(
         List<String> shapeIds,
@@ -402,6 +586,281 @@ public class PenpotLayoutTools {
 
         return String.format("Successfully %s shapes.", operation);
     }
+
+    private String executeAndFormatIds(String code, String operationLabel) {
+        try {
+            TaskResult result = executeCodeUseCase.execute(ExecuteCodeCommand.of(code));
+
+            if (!result.isSuccess()) {
+                return formatError(result.getError().orElse("Unknown error"));
+            }
+
+            return extractAndFormatResult(result, operationLabel);
+        } catch (Exception e) {
+            log.error("Failed to {}", operationLabel, e);
+            return formatError(e.getMessage());
+        }
+    }
+
+    private String buildZOrderCodeWithFallback(
+        List<String> shapeIds,
+        String methodName,
+        boolean forceSelection
+    ) {
+        StringBuilder code = new StringBuilder();
+
+        if (forceSelection || shapeIds.isEmpty()) {
+            code.append("const shapes = penpot.selection;\n");
+            code.append("console.log('[ZOrder] Using selection:', shapes.length);\n");
+        } else {
+            code.append("const shapes = [];\n");
+            for (String id : shapeIds) {
+                code.append(String.format("""
+                    try {
+                        const shape = penpot.currentPage.getShapeById('%s');
+                        if (shape) shapes.push(shape);
+                    } catch (e) {
+                        console.log('[ZOrder] Invalid ID: %s');
+                    }
+                    """, id, id));
+            }
+            code.append("""
+                if (shapes.length === 0) {
+                    console.log('[ZOrder] No valid IDs, using selection');
+                    shapes.push(...penpot.selection);
+                }
+                """);
+        }
+
+        code.append("""
+            if (!shapes || shapes.length === 0) {
+                throw new Error('No shapes to reorder. Provide valid IDs or select shapes in Penpot.');
+            }
+            shapes.forEach(s => {
+                if (s && typeof s.%s === 'function') s.%s();
+            });
+            return { ids: shapes.map(s => s.id) };
+            """.formatted(methodName, methodName));
+
+        return code.toString();
+    }
+
+    private String buildMoveToBoardCodeWithFallback(
+        List<String> shapeIds,
+        String boardId,
+        boolean forceSelection
+    ) {
+        StringBuilder code = new StringBuilder();
+
+        code.append(String.format("""
+            const board = penpot.currentPage.getShapeById('%s');
+            if (!board) throw new Error('Board not found: %s');
+            """, boardId, boardId));
+
+        if (forceSelection || shapeIds.isEmpty()) {
+            code.append("const shapes = penpot.selection;\n");
+            code.append("console.log('[MoveToBoard] Using selection:', shapes.length);\n");
+        } else {
+            code.append("const shapes = [];\n");
+            for (String id : shapeIds) {
+                code.append(String.format("""
+                    try {
+                        const shape = penpot.currentPage.getShapeById('%s');
+                        if (shape) shapes.push(shape);
+                    } catch (e) {
+                        console.log('[MoveToBoard] Invalid ID: %s');
+                    }
+                    """, id, id));
+            }
+            code.append("""
+                if (shapes.length === 0) {
+                    console.log('[MoveToBoard] No valid IDs, using selection');
+                    shapes.push(...penpot.selection);
+                }
+                """);
+        }
+
+        code.append("""
+            if (!shapes || shapes.length === 0) {
+                throw new Error('No shapes to move. Provide valid IDs or select shapes in Penpot.');
+            }
+
+            shapes.forEach(s => {
+                // Preserve board position if available
+                const bx = (typeof s.boardX === 'number') ? s.boardX : s.x;
+                const by = (typeof s.boardY === 'number') ? s.boardY : s.y;
+
+                // Re-parent to board
+                if (typeof board.appendChild === 'function') {
+                    board.appendChild(s);
+                } else if (typeof s.setParent === 'function') {
+                    s.setParent(board);
+                }
+
+                // Restore position (best effort, depending on Penpot object model)
+                if (typeof s.boardX === 'number') {
+                    s.boardX = bx;
+                    s.boardY = by;
+                } else {
+                    s.x = bx;
+                    s.y = by;
+                }
+            });
+
+            return { ids: shapes.map(s => s.id), boardId: board.id };
+            """);
+
+        return code.toString();
+    }
+
+    private String buildRemoveCodeWithFallback(
+        List<String> shapeIds,
+        boolean forceSelection
+    ) {
+        StringBuilder code = new StringBuilder();
+
+        if (forceSelection || shapeIds.isEmpty()) {
+            code.append("const shapes = penpot.selection;\n");
+            code.append("console.log('[Remove] Using selection:', shapes.length);\n");
+        } else {
+            code.append("const shapes = [];\n");
+            for (String id : shapeIds) {
+                code.append(String.format("""
+                    try {
+                        const shape = penpot.currentPage.getShapeById('%s');
+                        if (shape) shapes.push(shape);
+                    } catch (e) {
+                        console.log('[Remove] Invalid ID: %s');
+                    }
+                    """, id, id));
+            }
+            code.append("""
+                if (shapes.length === 0) {
+                    console.log('[Remove] No valid IDs, using selection');
+                    shapes.push(...penpot.selection);
+                }
+                """);
+        }
+
+        code.append("""
+            if (!shapes || shapes.length === 0) {
+                throw new Error('No shapes to remove. Provide valid IDs or select shapes in Penpot.');
+            }
+
+            const ids = shapes.map(s => s.id);
+            shapes.forEach(s => {
+                if (s && typeof s.remove === 'function') s.remove();
+            });
+
+            return { ids };
+            """);
+
+        return code.toString();
+    }
+
+    private String buildCloneCodeWithFallback(
+        List<String> shapeIds,
+        int dx,
+        int dy,
+        boolean forceSelection
+    ) {
+        StringBuilder code = new StringBuilder();
+
+        if (forceSelection || shapeIds.isEmpty()) {
+            code.append("const shapes = penpot.selection;\n");
+            code.append("console.log('[Clone] Using selection:', shapes.length);\n");
+            code.append("const shape = shapes && shapes.length ? shapes[0] : null;\n");
+        } else {
+            String firstId = shapeIds.get(0);
+            code.append(String.format("""
+                let shape = null;
+                try { shape = penpot.currentPage.getShapeById('%s'); } catch (e) {}
+                if (!shape) {
+                    const sel = penpot.selection;
+                    shape = (sel && sel.length) ? sel[0] : null;
+                }
+                """, firstId));
+        }
+
+        code.append("""
+            if (!shape) throw new Error('No shape to clone. Provide a valid ID or select a shape in Penpot.');
+
+            if (typeof shape.clone !== 'function') {
+                throw new Error('Selected shape cannot be cloned (clone() missing).');
+            }
+
+            const clone = shape.clone();
+            if (!clone) throw new Error('Clone failed (clone returned null).');
+
+            // Offset position (best effort)
+            if (typeof clone.boardX === 'number' && typeof shape.boardX === 'number') {
+                clone.boardX = shape.boardX + %d;
+                clone.boardY = shape.boardY + %d;
+            } else {
+                clone.x = shape.x + %d;
+                clone.y = shape.y + %d;
+            }
+
+            return { cloneId: clone.id };
+            """.formatted(dx, dy, dx, dy));
+
+        return code.toString();
+    }
+
+    private String buildUngroupCodeWithFallback(
+        List<String> groupIds,
+        boolean forceSelection
+    ) {
+        StringBuilder code = new StringBuilder();
+
+        if (forceSelection || groupIds.isEmpty()) {
+            code.append("const shapes = penpot.selection;\n");
+            code.append("console.log('[Ungroup] Using selection:', shapes.length);\n");
+        } else {
+            code.append("const shapes = [];\n");
+            for (String id : groupIds) {
+                code.append(String.format("""
+                    try {
+                        const shape = penpot.currentPage.getShapeById('%s');
+                        if (shape) shapes.push(shape);
+                    } catch (e) {
+                        console.log('[Ungroup] Invalid ID: %s');
+                    }
+                    """, id, id));
+            }
+            code.append("""
+                if (shapes.length === 0) {
+                    console.log('[Ungroup] No valid IDs, using selection');
+                    shapes.push(...penpot.selection);
+                }
+                """);
+        }
+
+        code.append("""
+            if (!shapes || shapes.length === 0) {
+                throw new Error('No shapes provided to ungroup. Provide group IDs or select groups in Penpot.');
+            }
+
+            const groups = shapes.filter(s => {
+                const t = (s && s.type) ? String(s.type).toLowerCase() : '';
+                return t === 'group' || s.isGroup === true;
+            });
+
+            if (groups.length === 0) {
+                throw new Error('No groups found to ungroup (selection/IDs contain no groups).');
+            }
+
+            if (typeof penpot.ungroup !== 'function') {
+                throw new Error('penpot.ungroup() is not available in this Penpot API context.');
+            }
+
+            penpot.ungroup(groups);
+            return { ids: groups.map(g => g.id) };
+            """);
+
+        return code.toString();
+    }
+
 
     // ==================== RESPONSE FORMATTING ====================
 
