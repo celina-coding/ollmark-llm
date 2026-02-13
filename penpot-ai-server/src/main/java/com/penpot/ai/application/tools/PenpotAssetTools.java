@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.*;
 import org.springframework.stereotype.Component;
+import java.util.Locale;
 
 /**
  * Tools pour la gestion des assets et styles dans Penpot.
@@ -244,10 +245,161 @@ public class PenpotAssetTools {
         }
     }
 
+    /**
+     * Met à jour l'opacité globale d'une forme.
+     *
+     * @param shapeId ID de la forme
+     * @param opacity Nouvelle opacité (0.0 à 1.0)
+     * @return JSON avec confirmation
+     */
+    @Tool(description = """
+    Update the overall opacity of a shape.
+
+    Opacity range:
+    - 0.0 = fully transparent
+    - 1.0 = fully opaque
+
+    Examples:
+    - "Make the button semi transparent"
+    - "Set opacity to 0.5"
+    - "Make the rectangle 80% visible"
+    """)
+    public String updateOpacity(
+            @ToolParam(description = "ID of the shape") String shapeId,
+            @ToolParam(description = "Opacity value between 0.0 and 1.0") Float opacity
+    ) {
+        log.info("Tool called: updateOpacity (id={}, opacity={})", shapeId, opacity);
+
+        if (opacity == null || opacity < 0.0f || opacity > 1.0f) {
+            return formatError("Opacity must be between 0.0 and 1.0");
+        }
+
+        String code = buildOpacityCode(shapeId, opacity);
+
+        try {
+            TaskResult result = executeCodeUseCase.execute(
+                    ExecuteCodeCommand.of(code)
+            );
+
+            if (!result.isSuccess()) {
+                return formatError(result.getError().orElse("Unknown error"));
+            }
+
+            return formatSuccess("opacityUpdated", shapeId,
+                    String.format("Opacity set to %.2f", opacity));
+
+        } catch (Exception e) {
+            log.error("Failed to update opacity", e);
+            return formatError(e.getMessage());
+        }
+    }
+
+    /**
+     * Met à jour le border radius (coins arrondis) d'une forme.
+     *
+     * @param shapeId ID de la forme
+     * @param radius Rayon en pixels
+     * @return JSON avec confirmation
+     */
+    @Tool(description = """
+    Update the border radius (corner rounding) of a shape.
+
+    Radius is in pixels.
+
+    Examples:
+    - "Round the corners to 10px"
+    - "Set border radius to 20"
+    - "Make the rectangle slightly rounded"
+    """)
+    public String updateBorderRadius(
+            @ToolParam(description = "ID of the shape") String shapeId,
+            @ToolParam(description = "Border radius in pixels") Float radius
+    ) {
+        log.info("Tool called: updateBorderRadius (id={}, radius={})", shapeId, radius);
+
+        if (radius == null || radius < 0) {
+            return formatError("Border radius must be >= 0");
+        }
+
+        String code = buildBorderRadiusCode(shapeId, radius);
+
+        try {
+            TaskResult result = executeCodeUseCase.execute(
+                    ExecuteCodeCommand.of(code)
+            );
+
+            if (!result.isSuccess()) {
+                return formatError(result.getError().orElse("Unknown error"));
+            }
+
+            return formatSuccess("borderRadiusUpdated", shapeId,
+                    String.format(Locale.US, "Border radius set to %.1fpx", radius));
+
+        } catch (Exception e) {
+            log.error("Failed to update border radius", e);
+            return formatError(e.getMessage());
+        }
+    }
+
+    /**
+     * Remplace une couleur existante par une nouvelle couleur
+     * dans les fills et strokes d'une forme.
+     */
+    @Tool(description = """
+    Replace a specific color in a shape with another color.
+    
+    The new color can be:
+    - A hex color (#RRGGBB)
+    - A named color (red, blue, black)
+    - A special style like "rainbow" or "arc-en-ciel"
+    
+    Examples:
+    - "Replace red with blue"
+    - "Change #FF0000 to #00FF00"
+    - "Replace red with rainbow"
+    - "Replace black with arc-en-ciel"
+    """)
+    public String replaceColor(
+            @ToolParam(description = "ID of the shape") String shapeId,
+            @ToolParam(description = "Color to replace (hex or name)") String oldColor,
+            @ToolParam(description = "New color (hex, name, or special style)") String newColor
+    ) {
+        log.info("Tool called: replaceColor (id={}, old={}, new={})",
+                shapeId, oldColor, newColor);
+
+        if (oldColor == null || oldColor.isBlank()) {
+            return formatError("oldColor is required");
+        }
+
+        if (newColor == null || newColor.isBlank()) {
+            return formatError("newColor is required");
+        }
+
+        String code = buildReplaceColorCode(shapeId, oldColor, newColor);
+
+        try {
+            TaskResult result = executeCodeUseCase.execute(
+                    ExecuteCodeCommand.of(code)
+            );
+
+            if (!result.isSuccess()) {
+                return formatError(result.getError().orElse("Unknown error"));
+            }
+
+            return formatSuccess("colorReplaced", shapeId,
+                    String.format("Replaced %s with %s", oldColor, newColor));
+
+        } catch (Exception e) {
+            log.error("Failed to replace color", e);
+            return formatError(e.getMessage());
+        }
+    }
+
+
     // ==================== CODE GENERATION METHODS ====================
 
     private String buildFillColorCode(String shapeId, String fillColor, float opacity) {
-        return String.format("""
+        return String.format(Locale.US,"""
             let shape = null;
             try {
                 shape = penpot.currentPage.getShapeById('%s');
@@ -282,7 +434,7 @@ public class PenpotAssetTools {
         float endX = (float) Math.cos(radians);
         float endY = (float) Math.sin(radians);
 
-        return String.format("""
+        return String.format(Locale.US,"""
             let shape = null;
             try {
                 shape = penpot.currentPage.getShapeById('%s');
@@ -317,7 +469,7 @@ public class PenpotAssetTools {
     }
 
     private String buildStrokeCode(String shapeId, String strokeColor, float strokeWidth) {
-        return String.format("""
+        return String.format(Locale.US,"""
             let shape = null;
             try {
                 shape = penpot.currentPage.getShapeById('%s');
@@ -350,7 +502,7 @@ public class PenpotAssetTools {
         float blur,
         String shadowColor
     ) {
-        return String.format("""
+        return String.format(Locale.US,"""
             let shape = null;
             try {
                 shape = penpot.currentPage.getShapeById('%s');
@@ -380,10 +532,183 @@ public class PenpotAssetTools {
         );
     }
 
+    private String buildOpacityCode(String shapeId, float opacity) {
+        return String.format(Locale.US,"""
+        let shape = null;
+        try {
+            shape = penpot.currentPage.getShapeById('%s');
+        } catch (e) {
+            console.log('[Opacity] Invalid ID, using first selected shape');
+            if (penpot.selection.length > 0) {
+                shape = penpot.selection[0];
+            }
+        }
+
+        if (!shape) {
+            throw new Error('Shape not found. ID: %s');
+        }
+
+        shape.opacity = %.2f;
+
+        return { id: shape.id, opacity: %.2f };
+        """,
+                shapeId, shapeId, opacity, opacity
+        );
+    }
+
+    private String buildBorderRadiusCode(String shapeId, float radius) {
+        return String.format(Locale.US, """
+        let shape = null;
+        try {
+            shape = penpot.currentPage.getShapeById('%s');
+        } catch (e) {
+            console.log('[BorderRadius] Invalid ID, using first selected shape');
+            if (penpot.selection.length > 0) {
+                shape = penpot.selection[0];
+            }
+        }
+
+        if (!shape) {
+            throw new Error('Shape not found. ID: %s');
+        }
+
+        if (!('borderRadius' in shape)) {
+            throw new Error('This shape does not support border radius');
+        }
+
+        shape.borderRadius = %.2f;
+
+        return { id: shape.id, borderRadius: %.2f };
+        """,
+                shapeId, shapeId, radius, radius
+        );
+    }
+
+    private String buildReplaceColorCode(String shapeId, String oldColor, String newColor) {
+        return String.format(Locale.US, """
+        function normalizeHex(hex) {
+            if (!hex) return null;
+            hex = hex.toUpperCase();
+
+            if (hex.length === 9) {
+                hex = hex.substring(0, 7);
+            }
+
+            return hex;
+        }
+
+        function hexToRgb(hex) {
+            hex = normalizeHex(hex);
+            if (!hex || !hex.startsWith('#')) return null;
+
+            const bigint = parseInt(hex.substring(1), 16);
+            return {
+                r: (bigint >> 16) & 255,
+                g: (bigint >> 8) & 255,
+                b: bigint & 255
+            };
+        }
+
+        function isSimilarColor(c1, c2, tolerance = 5) {
+            if (!c1 || !c2) return false;
+            return Math.abs(c1.r - c2.r) <= tolerance &&
+                   Math.abs(c1.g - c2.g) <= tolerance &&
+                   Math.abs(c1.b - c2.b) <= tolerance;
+        }
+
+        function isRainbow(value) {
+            if (!value) return false;
+            value = value.toLowerCase();
+            return value.includes("rainbow") ||
+                   value.includes("arc-en-ciel") ||
+                   value.includes("arc en ciel");
+        }
+
+        let shape = null;
+        try {
+            shape = penpot.currentPage.getShapeById('%s');
+        } catch (e) {
+            if (penpot.selection.length > 0) {
+                shape = penpot.selection[0];
+            }
+        }
+
+        if (!shape) {
+            throw new Error('Shape not found. ID: %s');
+        }
+
+        let replaced = false;
+
+        const targetRgb = hexToRgb('%s');
+
+        // ===== RAINBOW MODE =====
+        if (isRainbow('%s')) {
+            shape.fills = [{
+              fillColorGradient: {
+                type: 'linear',
+                startX: 0,
+                startY: 0,
+                endX: 1,
+                endY: 0,
+                stops: [
+                  { color: '#FF0000', offset: 0 },
+                  { color: '#FF7F00', offset: 0.16 },
+                  { color: '#FFFF00', offset: 0.33 },
+                  { color: '#00FF00', offset: 0.5 },
+                  { color: '#0000FF', offset: 0.66 },
+                  { color: '#4B0082', offset: 0.83 },
+                  { color: '#8F00FF', offset: 1 }
+                ]
+              }
+            }];
+
+            return { id: shape.id, gradient: 'rainbow' };
+        }
+
+        // ===== NORMAL COLOR REPLACEMENT =====
+        if (shape.fills && shape.fills.length > 0) {
+            shape.fills = shape.fills.map(fill => {
+                const fillRgb = hexToRgb(fill.fillColor);
+                if (isSimilarColor(fillRgb, targetRgb)) {
+                    replaced = true;
+                    return { ...fill, fillColor: '%s' };
+                }
+                return fill;
+            });
+        }
+
+        if (shape.strokes && shape.strokes.length > 0) {
+            shape.strokes = shape.strokes.map(stroke => {
+                const strokeRgb = hexToRgb(stroke.strokeColor);
+                if (isSimilarColor(strokeRgb, targetRgb)) {
+                    replaced = true;
+                    return { ...stroke, strokeColor: '%s' };
+                }
+                return stroke;
+            });
+        }
+
+        if (!replaced) {
+            throw new Error('No similar color found to replace');
+        }
+
+        return { id: shape.id, replacedColor: '%s', newColor: '%s' };
+        """,
+                shapeId,
+                shapeId,
+                oldColor,
+                newColor,
+                newColor,
+                newColor,
+                oldColor,
+                newColor
+        );
+    }
+
     // ==================== RESPONSE FORMATTING ====================
 
     private String formatSuccess(String operation, String shapeId, String details) {
-        return String.format(
+        return String.format(Locale.US,
             "{\"success\": true, \"operation\": %s, \"shapeId\": %s, \"details\": %s}",
             JsonUtils.escapeJson(operation),
             JsonUtils.escapeJson(shapeId),
@@ -392,7 +717,7 @@ public class PenpotAssetTools {
     }
 
     private String formatError(String errorMessage) {
-        return String.format(
+        return String.format(Locale.US,
             "{\"success\": false, \"error\": %s}",
             JsonUtils.escapeJson(errorMessage)
         );
