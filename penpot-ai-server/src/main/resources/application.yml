@@ -32,7 +32,7 @@ penpot:
       memory:
         # Nombre maximum de messages à conserver en mémoire par conversation
         # Plus cette valeur est élevée, plus le contexte est maintenu, mais plus la consommation mémoire augmente
-        max-messages: ${PENPOT_CHAT_MEMORY_MAX_MESSAGES:20}
+        max-messages: ${PENPOT_CHAT_MEMORY_MAX_MESSAGES:200}
     # Configuration RAG (Retrieval-Augmented Generation) pour les templates marketing
     rag:
       # Chemin vers les fichiers de templates (supporte les wildcards)
@@ -52,7 +52,7 @@ spring:
       # URL de base d'Ollama sur la VM distante
       # Interface graphique Open WebUI : http://10.130.163.62:3000/
       # VM
-      base-url: ${OLLAMA_BASE_URL:http://10.130.163.62:11434}
+      base-url: ${OLLAMA_BASE_URL:http://192.168.41.75:11434}
       # PC FAC
       #base-url: ${OLLAMA_BASE_URL:http://192.168.41.3:11434}
 
@@ -67,6 +67,7 @@ spring:
           # Nombre maximum de tokens dans la réponse
           max-tokens: ${OLLAMA_MAX_TOKENS:4096}
           function-calling: auto
+          num_ctx: 16000
 
       # Configuration des embeddings (pour la recherche sémantique)
       embedding:
