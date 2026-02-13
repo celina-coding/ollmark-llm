@@ -32,7 +32,7 @@ public class ChatMemoryConfig {
     /**
      * Nombre maximum de messages dans la fenêtre de mémoire.
      */
-    @Value("${penpot.ai.chat.memory.max-messages:20}")
+    @Value("${penpot.ai.chat.memory.max-messages}")
     private int maxMessages;
 
     @Autowired

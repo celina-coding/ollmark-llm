@@ -32,7 +32,7 @@ penpot:
       memory:
         # Nombre maximum de messages à conserver en mémoire par conversation
         # Plus cette valeur est élevée, plus le contexte est maintenu, mais plus la consommation mémoire augmente
-        max-messages: ${PENPOT_CHAT_MEMORY_MAX_MESSAGES:200}
+        max-messages: ${PENPOT_CHAT_MEMORY_MAX_MESSAGES:50}
     # Configuration RAG (Retrieval-Augmented Generation) pour les templates marketing
     rag:
       # Chemin vers les fichiers de templates (supporte les wildcards)

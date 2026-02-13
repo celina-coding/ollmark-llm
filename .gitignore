@@ -7,3 +7,4 @@
 **dist*
 /penpot-ai-server/data/*
 **/.env
+.idea
