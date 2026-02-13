@@ -63,6 +63,9 @@ public class OllamaAiAdapter implements AiServicePort {
     /** Tools Penpot pour la gestion du contenu. */
     private final PenpotContentTools penpotContentTools;
 
+    /** Tools Penpot pour la gestion du contenu. */
+    private final PenpotDeleteTools penpotDeleteTools;
+
     @Override
     public String chat(String conversationId, String userMessage) {
         try {
@@ -83,7 +86,8 @@ public class OllamaAiAdapter implements AiServicePort {
                     penpotTransformTools,
                     penpotLayoutTools,
                     penpotAssetTools,
-                    penpotContentTools
+                    penpotContentTools,
+                    penpotDeleteTools
                 )
                 .call()
                 .content();
