@@ -89,7 +89,7 @@ public class OllamaAiAdapter implements AiServicePort {
                     penpotLayoutTools,
                     penpotAssetTools,
                     penpotContentTools,
-                    penpotDeleteTools
+                    penpotDeleteTools,
                     penpotInspectorTools
                 )
                 .call()
