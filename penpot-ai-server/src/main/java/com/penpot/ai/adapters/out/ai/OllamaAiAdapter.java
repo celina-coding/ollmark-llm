@@ -9,7 +9,7 @@ import com.penpot.ai.shared.exception.ToolExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.*;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.context.annotation.Primary;
@@ -143,6 +143,7 @@ public class OllamaAiAdapter implements AiServicePort {
                 .advisors(
                     // RAG modulaire : enrichit le prompt avec les templates pertinents
                     retrievalAugmentationAdvisor,
+                    new ReReadingAdvisor(),
                     new SimpleLoggerAdvisor()
                 )
                 .advisors(advisor -> advisor.param(CONVERSATION_ID, conversationId))
@@ -178,18 +179,10 @@ public class OllamaAiAdapter implements AiServicePort {
     /**
      * Génère un plan de design structuré ({@link DesignPlan}) à partir d'une requête.
      *
-     * <p>Utilise {@code entity(DesignPlan.class)} pour mapper directement la réponse
-     * du LLM vers un record Java sans parsing manuel.</p>
-     *
      * <p>Le {@code StructuredOutputValidationAdvisor} valide la réponse contre le
      * schéma JSON généré depuis {@link DesignPlan} et retente jusqu'à 3 fois si
      * la validation échoue. Chaque retry inclut les erreurs de validation pour
      * guider le modèle vers une correction.</p>
-     *
-     * <h3>Quand utiliser cette méthode ?</h3>
-     * <p>Appelée pour les tâches COMPLEX ou CREATIVE où le modèle doit planifier
-     * explicitement une séquence d'opérations avant de les exécuter.
-     * Les tâches SIMPLE utilisent directement {@link #chat} avec les tools.</p>
      *
      * @param conversationId identifiant de la conversation
      * @param userMessage    la requête de design
@@ -231,7 +224,6 @@ public class OllamaAiAdapter implements AiServicePort {
                 plan.action(), plan.hasShapes() ? plan.shapes().size() : 0, plan.complexity()
             );
             return plan;
-
         } catch (Exception e) {
             log.error("Error during design planning for conversation={}", conversationId, e);
             return DesignPlan.explain(
