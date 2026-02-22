@@ -18,11 +18,18 @@ public class PenpotInspectorTools {
 
     private final PenpotToolExecutor toolExecutor;
 
-    @Tool(description = """
-        List all elements (shapes, boards, text) on the current page.
-        Use this to discover existing elements or find IDs to modify them.
-        Returns a list with [Type] Name (ID).
-        """)
+    /**
+     * Liste tous les éléments présents sur la page Penpot courante.
+     *
+     * @return JSON contenant la liste des shapes avec type, nom et ID
+     */
+    @Tool(
+        description = """
+            List all elements/shapes present on the current Penpot page.
+            Returns each shape's type, name, and ID.
+            Use this to understand the current page structure before creating or modifying elements.""",
+        returnDirect = true
+    )
     public String listElements() {
         log.info("Tool called: listElements");
         return toolExecutor.execute(
