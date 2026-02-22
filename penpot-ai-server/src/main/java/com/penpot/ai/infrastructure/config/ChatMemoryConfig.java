@@ -10,18 +10,10 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 /**
  * Configuration de la mémoire de conversation (Chat Memory).
  * 
- * Implémente le système de mémoire persistante recommandé par Spring AI.
- * Utilise JdbcChatMemoryRepository pour la persistence en base de données.
- * 
  * Configuration depuis application.yml :
  * - penpot.chat.memory.max-messages : Nombre max de messages en mémoire
  * - spring.ai.chat.memory.repository.jdbc.initialize-schema : Initialisation schéma
  * - spring.datasource.* : Configuration de la base de données
- * 
- * Principes appliqués :
- * - Single Responsibility : Configuration dédiée à la mémoire
- * - Dependency Inversion : Utilise les abstractions Spring AI
- * - Open/Closed : Extensible via injection de repository custom
  * 
  * @see <a href="https://docs.spring.ai/reference/api/chatmemory.html">Spring AI Chat Memory</a>
  */

@@ -39,9 +39,11 @@ penpot:
       templates-path: ${PENPOT_RAG_TEMPLATES_PATH:classpath:data/rag/templates/*.json}
       # Seuil de similarité pour la recherche sémantique (0.0 à 1.0)
       # Plus élevé = correspondances plus strictes
-      similarity-threshold: ${PENPOT_RAG_SIMILARITY_THRESHOLD:0.6}
+      similarity-threshold: ${PENPOT_RAG_SIMILARITY_THRESHOLD:0.5}
       # Nombre de templates à retourner lors d'une recherche
-      top-k: ${PENPOT_RAG_TOP_K:3}
+      top-k: ${PENPOT_RAG_TOP_K:5}
+      # Nombre de variantes générées
+      query-variants: ${PENPOT_RAG_QUERY_VARIANTS:3}
 
 # ============================================
 # Configuration Spring AI avec Ollama (VM distante)
@@ -51,8 +53,9 @@ spring:
     ollama:
       # URL de base d'Ollama sur la VM distante
       # Interface graphique Open WebUI : http://10.130.163.62:3000/
+      # PC Amine : 192.168.41.76
       # VM
-      base-url: ${OLLAMA_BASE_URL:http://192.168.41.76:11434}
+      base-url: ${OLLAMA_BASE_URL:http://10.130.163.62:11434}
       # PC FAC
       #base-url: ${OLLAMA_BASE_URL:http://192.168.41.3:11434}
 
@@ -65,9 +68,16 @@ spring:
           # Température (0.0 = déterministe, 1.0+ = créatif)
           temperature: ${OLLAMA_TEMPERATURE:0.7}
           # Nombre maximum de tokens dans la réponse
-          max-tokens: ${OLLAMA_MAX_TOKENS:4096}
+          max-tokens: ${OLLAMA_MAX_TOKENS:32000}
           function-calling: auto
-          num_ctx: 16000
+          num_ctx: 32000
+        # Loggue le prompt complet envoyé au modèle (dev uniquement)
+        observations:
+          log-prompt: ${SPRING_AI_LOG_PROMPT:false}
+
+      tools:
+        observations:
+          include-content: true
 
       # Configuration des embeddings (pour la recherche sémantique)
       embedding:
@@ -133,24 +143,16 @@ spring:
 # ============================================
 logging:
   level:
-    # Niveau de log pour le package principal
     com.penpot.ai: ${penpot.ai.log-level:DEBUG}
-
     org.springframework.ai.chat.client: TRACE
-
-    # Logs pour Spring AI ChatMemory
+    org.springframework.ai.rag: DEBUG
     org.springframework.ai.chat.memory: DEBUG
-
-    # Logs pour Spring AI JDBC Repository
     org.springframework.ai.chat.memory.repository.jdbc: DEBUG
-
-    # Logs pour Spring AI Ollama client
+    org.springframework.ai.chat.client.advisor: DEBUG
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG
+    com.penpot.ai.adapters.out.ai.RequestComplexityAnalyzer: DEBUG
     org.springframework.ai.ollama: ${penpot.ai.log-level}
-
-    # Logs WebSocket
     org.springframework.web.socket: INFO
-
-    # Logs HTTP client
     org.springframework.web.client: INFO
 
   # Configuration du fichier de log

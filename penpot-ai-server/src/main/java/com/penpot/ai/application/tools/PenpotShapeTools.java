@@ -1,26 +1,19 @@
 package com.penpot.ai.application.tools;
 
-import com.penpot.ai.core.ports.in.ExecuteCodeUseCase;
-import com.penpot.ai.core.domain.*;
-import com.penpot.ai.shared.util.JsonUtils;
+import com.penpot.ai.application.tools.support.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.*;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
+
 /**
  * Tools pour la création de formes graphiques dans Penpot.
- * Ces tools sont exposés à l'IA via function calling.
- * 
- * <h2>Principe de responsabilité unique</h2>
- * Cette classe gère uniquement la création de formes basiques :
- * rectangle, ellipse, texte, board, group.
- * 
- * <h2>Architecture</h2>
- * - Chaque méthode @Tool génère du code JavaScript Penpot
- * - Exécution déléguée à ExecuteCodeUseCase
- * - Retour de résultat formaté en JSON
- * 
+ *
+ * <p>L'exécution et le formatage sont délégués à {@link PenpotToolExecutor}.</p>
+ * <p>La génération de texte réutilise {@link PenpotJsSnippets#createText}.</p>
+ *
  * @see PenpotLayoutTools pour l'alignement
  * @see PenpotTransformTools pour les transformations
  */
@@ -29,26 +22,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PenpotShapeTools {
 
-    private final ExecuteCodeUseCase executeCodeUseCase;
+    private final PenpotToolExecutor toolExecutor;
 
-    /**
-     * Crée un rectangle dans Penpot.
-     * 
-     * @param x Position X du rectangle
-     * @param y Position Y du rectangle
-     * @param width Largeur du rectangle
-     * @param height Hauteur du rectangle
-     * @param fillColor Couleur de remplissage (format hex: #RRGGBB)
-     * @param name Nom optionnel du rectangle
-     * @return JSON avec l'ID de la forme créée
-     */
     @Tool(description = """
         Create a rectangle shape in Penpot.
 
         CRITICAL: This tool returns a UUID that you MUST use in subsequent operations.
         Save this ID immediately after receiving it!
-
-        Use this when the user wants to create a rectangular element.
 
         Examples:
         - "Create a red rectangle 100x50"
@@ -64,53 +44,14 @@ public class PenpotShapeTools {
         @ToolParam(description = "Fill color in hex format (#RRGGBB)", required = false) String fillColor,
         @ToolParam(description = "Optional name for the rectangle", required = false) String name
     ) {
-        log.info("Tool called: createRectangle (x={}, y={}, w={}, h={}, color={})", 
-            x, y, width, height, fillColor);
-
-        String code = buildRectangleCode(x, y, width, height, fillColor, name);
-
-        try {
-            TaskResult result = executeCodeUseCase.execute(
-                ExecuteCodeCommand.of(code)
-            );
-
-            if (!result.isSuccess()) {
-                return formatError(result.getError().orElse("Unknown error"));
-            }
-
-            log.debug(code);
-            String shapeId = result.getData()
-                .map(Object::toString)
-                .orElse("unknown");
-
-            return formatSuccessWithId("rectangle", shapeId);
-        } catch (Exception e) {
-            log.error("Failed to create rectangle", e);
-            return formatError(e.getMessage());
-        }
+        log.info("Tool called: createRectangle (x={}, y={}, w={}, h={}, color={})", x, y, width, height, fillColor);
+        return toolExecutor.createShape(buildRectangleCode(x, y, width, height, fillColor, name), "rectangle");
     }
 
-    /**
-     * Crée une ellipse (cercle ou ovale) dans Penpot.
-     * 
-     * @param x Position X du centre
-     * @param y Position Y du centre
-     * @param width Largeur
-     * @param height Hauteur
-     * @param fillColor Couleur de remplissage
-     * @param name Nom optionnel
-     * @return JSON avec l'ID de la forme créée
-     */
     @Tool(description = """
         Create an ellipse (circle or oval) shape in Penpot.
 
         CRITICAL: Returns a UUID that you MUST save for later operations!
-
-        Use this for circular or oval elements.
-
-        Examples:
-        - "Create a circle with radius 50"
-        - "Add an oval 100x50"
 
         For a perfect circle, use the same width and height.
         """)
@@ -122,54 +63,14 @@ public class PenpotShapeTools {
         @ToolParam(description = "Fill color in hex format", required = false) String fillColor,
         @ToolParam(description = "Optional name for the ellipse", required = false) String name
     ) {
-        log.info("Tool called: createEllipse (x={}, y={}, w={}, h={})", 
-            x, y, width, height);
-
-        String code = buildEllipseCode(x, y, width, height, fillColor, name);
-
-        try {
-            TaskResult result = executeCodeUseCase.execute(
-                ExecuteCodeCommand.of(code)
-            );
-
-            if (!result.isSuccess()) {
-                return formatError(result.getError().orElse("Unknown error"));
-            }
-
-            log.debug(code);
-            String shapeId = result.getData()
-                .map(Object::toString)
-                .orElse("unknown");
-
-            return formatSuccessWithId("ellipse", shapeId);
-        } catch (Exception e) {
-            log.error("Failed to create ellipse", e);
-            return formatError(e.getMessage());
-        }
+        log.info("Tool called: createEllipse (x={}, y={}, w={}, h={})", x, y, width, height);
+        return toolExecutor.createShape(buildEllipseCode(x, y, width, height, fillColor, name), "ellipse");
     }
 
-    /**
-     * Crée un élément texte dans Penpot.
-     * 
-     * @param content Contenu du texte
-     * @param x Position X
-     * @param y Position Y
-     * @param fontSize Taille de la police
-     * @param fontWeight Graisse (normal, bold)
-     * @param fillColor Couleur du texte
-     * @param name Nom optionnel
-     * @return JSON avec l'ID du texte créé
-     */
     @Tool(description = """
         Create a text element in Penpot.
 
         CRITICAL: Returns a UUID that you MUST save!
-
-        Use this when the user wants to add text content.
-
-        Examples:
-        - "Add text 'Hello World' at position (50, 100)"
-        - "Create a title with size 48"
 
         Font sizes: small=14, medium=18, large=24, xlarge=36, xxlarge=48
         Font weights: normal, bold
@@ -183,41 +84,13 @@ public class PenpotShapeTools {
         @ToolParam(description = "Text color in hex format (default: #000000)", required = false) String fillColor,
         @ToolParam(description = "Optional name for the text element", required = false) String name
     ) {
-        log.info("Tool called: createText (content='{}', x={}, y={})", 
-            content, x, y);
-
-        String code = buildTextCode(content, x, y, fontSize, fontWeight, fillColor, name);
-
-        try {
-            TaskResult result = executeCodeUseCase.execute(
-                ExecuteCodeCommand.of(code)
-            );
-
-            if (!result.isSuccess()) {
-                return formatError(result.getError().orElse("Unknown error"));
-            }
-
-            log.debug(code);
-            String shapeId = result.getData()
-                .map(Object::toString)
-                .orElse("unknown");
-
-            return formatSuccessWithId("text", shapeId);
-        } catch (Exception e) {
-            log.error("Failed to create text", e);
-            return formatError(e.getMessage());
-        }
+        log.info("Tool called: createText (content='{}', x={}, y={})", content, x, y);
+        return toolExecutor.createShape(
+            PenpotJsSnippets.createText(content, x, y, fontSize, fontWeight, fillColor, name),
+            "text"
+        );
     }
 
-    /**
-     * Crée un board (plan de travail) dans Penpot.
-     * 
-     * @param width Largeur du board
-     * @param height Hauteur du board
-     * @param name Nom du board
-     * @param backgroundColor Couleur de fond
-     * @return JSON avec l'ID du board créé
-     */
     @Tool(description = """
         Create a board (artboard/canvas) in Penpot.
         Use this as a container for design elements.
@@ -229,10 +102,6 @@ public class PenpotShapeTools {
         - Instagram story: 1080x1920
         - A4 portrait: 2480x3508 (at 300dpi)
         - Email: 600x1200
-
-        Examples:
-        - "Create a board for Instagram post"
-        - "Add a canvas 1920x1080"
         """)
     public String createBoard(
         @ToolParam(description = "Board width in pixels") Integer width,
@@ -240,55 +109,14 @@ public class PenpotShapeTools {
         @ToolParam(description = "Name of the board") String name,
         @ToolParam(description = "Background color in hex format", required = false) String backgroundColor
     ) {
-        log.info("Tool called: createBoard (w={}, h={}, name='{}')", 
-            width, height, name);
-
-        String code = buildBoardCode(width, height, name, backgroundColor);
-
-        try {
-            TaskResult result = executeCodeUseCase.execute(
-                ExecuteCodeCommand.of(code)
-            );
-
-            if (!result.isSuccess()) {
-                return formatError(result.getError().orElse("Unknown error"));
-            }
-
-            log.debug(code);
-            String shapeId = result.getData()
-                .map(Object::toString)
-                .orElse("unknown");
-
-            return formatSuccessWithId("board", shapeId);
-        } catch (Exception e) {
-            log.error("Failed to create board", e);
-            return formatError(e.getMessage());
-        }
+        log.info("Tool called: createBoard (w={}, h={}, name='{}')", width, height, name);
+        return toolExecutor.createShape(buildBoardCode(width, height, name, backgroundColor), "board");
     }
 
-    /**
-     * Crée une étoile dans Penpot via SVG.
-     * 
-     * @param x Position X
-     * @param y Position Y
-     * @param width Largeur
-     * @param height Hauteur
-     * @param points Nombre de pointes (défaut 5)
-     * @param innerRadius Rayon interne en % (défaut 38)
-     * @param fillColor Couleur de remplissage
-     * @param name Nom optionnel
-     * @return JSON avec l'ID de la forme créée
-     */
     @Tool(description = """
         Create a star shape in Penpot.
 
         CRITICAL: Returns a UUID that you MUST save!
-
-        Use this for star-shaped elements, ratings, or decorative stars.
-
-        Examples:
-        - "Create a 5-point star 100x100"
-        - "Add a gold star with 8 points"
 
         Default is 5 points with 38% inner radius.
         """)
@@ -302,180 +130,50 @@ public class PenpotShapeTools {
         @ToolParam(description = "Fill color in hex format", required = false) String fillColor,
         @ToolParam(description = "Optional name for the star", required = false) String name
     ) {
-        log.info("Tool called: createStar (x={}, y={}, w={}, h={}, points={})", 
-            x, y, width, height, points);
-
-        String code = buildStarCode(x, y, width, height, points, innerRadius, fillColor, name);
-
-        try {
-            TaskResult result = executeCodeUseCase.execute(
-                ExecuteCodeCommand.of(code)
-            );
-
-            if (!result.isSuccess()) {
-                return formatError(result.getError().orElse("Unknown error"));
-            }
-
-            log.debug(code);
-            String shapeId = result.getData()
-                .map(Object::toString)
-                .orElse("unknown");
-
-            return formatSuccessWithId("star", shapeId);
-        } catch (Exception e) {
-            log.error("Failed to create star", e);
-            return formatError(e.getMessage());
-        }
+        log.info("Tool called: createStar (x={}, y={}, w={}, h={}, points={})", x, y, width, height, points);
+        return toolExecutor.createShape(buildStarCode(x, y, width, height, points, innerRadius, fillColor, name), "star");
     }
 
     // ==================== CODE GENERATION METHODS ====================
 
-    private String buildRectangleCode(
-        Integer x,
-        Integer y,
-        Integer width,
-        Integer height, 
-        String fillColor,
-        String name
-    ) {
+    private String buildRectangleCode(Integer x, Integer y, Integer width, Integer height, String fillColor, String name) {
         StringBuilder code = new StringBuilder();
         code.append("const rect = penpot.createRectangle();\n");
         code.append(String.format("rect.x = %d;\n", x));
         code.append(String.format("rect.y = %d;\n", y));
         code.append(String.format("rect.resize(%d, %d);\n", width, height));
-
-        if (fillColor != null && !fillColor.isBlank()) {
+        if (fillColor != null && !fillColor.isBlank())
             code.append(String.format("rect.fills = [{ fillColor: '%s' }];\n", fillColor));
-        }
-
-        if (name != null && !name.isBlank()) {
-            code.append(String.format("rect.name = '%s';\n", 
-                name.replace("'", "\\'")));
-        }
-
+        if (name != null && !name.isBlank())
+            code.append(String.format("rect.name = '%s';\n", PenpotJsSnippets.escapeJsString(name)));
         code.append("return rect.id;\n");
         return code.toString();
     }
 
-    private String buildEllipseCode(
-        Integer x,
-        Integer y,
-        Integer width,
-        Integer height,
-        String fillColor,
-        String name
-    ) {
+    private String buildEllipseCode(Integer x, Integer y, Integer width, Integer height, String fillColor, String name) {
         StringBuilder code = new StringBuilder();
         code.append("const ellipse = penpot.createEllipse();\n");
         code.append(String.format("ellipse.x = %d;\n", x));
         code.append(String.format("ellipse.y = %d;\n", y));
         code.append(String.format("ellipse.resize(%d, %d);\n", width, height));
-
-        if (fillColor != null && !fillColor.isBlank()) {
+        if (fillColor != null && !fillColor.isBlank())
             code.append(String.format("ellipse.fills = [{ fillColor: '%s' }];\n", fillColor));
-        }
-
-        if (name != null && !name.isBlank()) {
-            code.append(String.format("ellipse.name = '%s';\n", 
-                name.replace("'", "\\'")));
-        }
-
+        if (name != null && !name.isBlank())
+            code.append(String.format("ellipse.name = '%s';\n", PenpotJsSnippets.escapeJsString(name)));
         code.append("return ellipse.id;\n");
         return code.toString();
     }
 
-    private String buildTextCode(
-        String content, Integer x, Integer y,
-        Integer fontSize, String fontWeight, String fillColor, String name
-    ) {
-        StringBuilder code = new StringBuilder();
-
-        String escapedContent = content.replace("'", "\\'")
-                                       .replace("\n", "\\n");
-
-        code.append(String.format("const text = penpot.createText('%s');\n", escapedContent));
-        code.append(String.format("text.x = %d;\n", x));
-        code.append(String.format("text.y = %d;\n", y));
-
-        if (fontSize != null && fontSize > 0) {
-            code.append(String.format("text.fontSize = %d;\n", fontSize));
-        }
-
-        if (fontWeight != null && !fontWeight.isBlank()) {
-            code.append(String.format("text.fontWeight = '%s';\n", fontWeight));
-        }
-
-        if (fillColor != null && !fillColor.isBlank()) {
-            code.append(String.format("text.fills = [{ fillColor: '%s' }];\n", fillColor));
-        }
-
-        if (name != null && !name.isBlank()) {
-            code.append(String.format("text.name = '%s';\n", 
-                name.replace("'", "\\'")));
-        }
-
-        code.append("return text.id;\n");
-        return code.toString();
-    }
-
-    private String buildBoardCode(
-        Integer width, Integer height, String name, String backgroundColor
-    ) {
+    private String buildBoardCode(Integer width, Integer height, String name, String backgroundColor) {
         StringBuilder code = new StringBuilder();
         code.append("const board = penpot.createBoard();\n");
         code.append(String.format("board.resize(%d, %d);\n", width, height));
-
-        if (name != null && !name.isBlank()) {
-            code.append(String.format("board.name = '%s';\n", 
-                name.replace("'", "\\'")));
-        }
-
-        if (backgroundColor != null && !backgroundColor.isBlank()) {
-            code.append(String.format("board.fills = [{ fillColor: '%s' }];\n", 
-                backgroundColor));
-        }
-
+        if (name != null && !name.isBlank())
+            code.append(String.format("board.name = '%s';\n", PenpotJsSnippets.escapeJsString(name)));
+        if (backgroundColor != null && !backgroundColor.isBlank())
+            code.append(String.format("board.fills = [{ fillColor: '%s' }];\n", backgroundColor));
         code.append("return board.id;\n");
         return code.toString();
-    }
-
-    /**
-     * Format de réponse OPTIMISÉ pour extraction d'ID par l'IA.
-     * 
-     * Le format est conçu pour que l'IA puisse facilement extraire l'UUID :
-     * - ID clairement marqué avec "SHAPE_ID:"
-     * - UUID sur une ligne séparée
-     * - Instructions explicites pour l'utilisation
-     */
-    private String formatSuccessWithId(String shapeType, String shapeId) {
-        return String.format(
-            "%s created successfully!\n\n" +
-            "SHAPE_ID: %s\n\n" +
-            "SAVE THIS ID! Use it in subsequent operations like:\n" +
-            "- alignShapes(shapeIds=\"%s,...\", alignment=\"top\")\n" +
-            "- rotateShape(shapeId=\"%s\", angle=45)\n" +
-            "- moveShape(shapeId=\"%s\", newX=200, newY=300)",
-            shapeType,
-            shapeId,
-            shapeId,
-            shapeId,
-            shapeId
-        );
-    }
-
-    private String formatSuccess(String shapeType, Object data) {
-        return String.format(
-            "{\"success\": true, \"shapeType\": %s, \"id\": %s}",
-            JsonUtils.escapeJson(shapeType),
-            data != null ? JsonUtils.escapeJson(data.toString()) : "null"
-        );
-    }
-
-    private String formatError(String errorMessage) {
-        return String.format(
-            "{\"success\": false, \"error\": %s}",
-            JsonUtils.escapeJson(errorMessage)
-        );
     }
 
     private String buildStarCode(
@@ -483,32 +181,26 @@ public class PenpotShapeTools {
         Integer points, Integer innerRadius, String fillColor, String name
     ) {
         int actualPoints = (points != null && points > 2) ? points : 5;
-        double ratio = (innerRadius != null && innerRadius > 0 && innerRadius < 100) 
+        double ratio = (innerRadius != null && innerRadius > 0 && innerRadius < 100)
             ? innerRadius / 100.0 : 0.382;
 
         String pathData = generateStarPath(width, height, actualPoints, ratio);
-        
         String color = (fillColor != null && !fillColor.isBlank()) ? fillColor : "#CCCCCC";
         String svg = String.format(
-            "<svg width='%d' height='%d' viewBox='0 0 %d %d' xmlns='http://www.w3.org/2000/svg'><path d='%s' fill='%s'/></svg>",
+            "<svg width='%d' height='%d' viewBox='0 0 %d %d' xmlns='http://www.w3.org/2000/svg'>"
+            + "<path d='%s' fill='%s'/></svg>",
             width, height, width, height, pathData, color
         );
-        
+
         StringBuilder code = new StringBuilder();
         code.append(String.format("const svg = `%s`;\n", svg));
         code.append("const group = penpot.createShapeFromSvg(svg);\n");
-        code.append("if (group) {\n");
-        code.append(String.format("  group.x = %d;\n", x));
-        code.append(String.format("  group.y = %d;\n", y));
-        
-        if (name != null && !name.isBlank()) {
-            code.append(String.format("  group.name = '%s';\n", name.replace("'", "\\'")));
-        }
-        code.append("  return group.id;\n");
-        code.append("} else {\n");
-        code.append("  throw new Error('Failed to create star from SVG');\n");
-        code.append("}\n");
-        
+        code.append("if (!group) throw new Error('Failed to create star from SVG');\n");
+        code.append(String.format("group.x = %d;\n", x));
+        code.append(String.format("group.y = %d;\n", y));
+        if (name != null && !name.isBlank())
+            code.append(String.format("group.name = '%s';\n", PenpotJsSnippets.escapeJsString(name)));
+        code.append("return group.id;\n");
         return code.toString();
     }
 
@@ -517,19 +209,17 @@ public class PenpotShapeTools {
         double cy = height / 2.0;
         double rx = width / 2.0;
         double ry = height / 2.0;
-        
+
         StringBuilder sb = new StringBuilder();
         double step = Math.PI / points;
-        double angle = -Math.PI / 2; // Start top
-        
+        double angle = -Math.PI / 2;
+
         for (int i = 0; i < 2 * points; i++) {
             double r = (i % 2 == 0) ? 1.0 : innerRadiusRatio;
             double currX = cx + Math.cos(angle) * rx * r;
             double currY = cy + Math.sin(angle) * ry * r;
-            
             if (i == 0) sb.append("M").append(currX).append(" ").append(currY);
-            else sb.append(" L").append(currX).append(" ").append(currY);
-            
+            else        sb.append(" L").append(currX).append(" ").append(currY);
             angle += step;
         }
         sb.append(" Z");

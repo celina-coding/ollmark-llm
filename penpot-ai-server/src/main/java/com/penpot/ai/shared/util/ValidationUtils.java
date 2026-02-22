@@ -37,7 +37,6 @@ public class ValidationUtils {
         }
     }
 
-
     /**
      * Valide qu'une chaîne respecte une longueur maximale.
      * 
