@@ -1,14 +1,14 @@
 package com.penpot.ai.infrastructure.config;
 
 import com.penpot.ai.core.domain.TaskComplexity;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
@@ -17,15 +17,26 @@ import java.util.Map;
  *
  * <h2>Trois profils d'options</h2>
  * <ul>
- *     <li><b>SIMPLE</b>  — température 0.1, déterministe, pour les opérations atomiques</li>
+ *     <li><b>SIMPLE</b>   — température 0.1, déterministe, pour les opérations atomiques</li>
  *     <li><b>CREATIVE</b> — température 0.8, diversité, pour les suggestions esthétiques</li>
  *     <li><b>COMPLEX</b>  — thinking activé, température 0.6, pour les orchestrations complètes</li>
  * </ul>
  *
- * <p>Le {@link ChatClient.Builder} de base est configuré avec les options DEFAULT (SIMPLE).
- * {@link com.penpot.ai.adapters.out.ai.OllamaAiAdapter} utilise
- * {@link #buildChatClientForComplexity(TaskComplexity)} pour obtenir un client adapté
- * à chaque requête.</p>
+ * <h2>Cohabitation avec RouterConfig</h2>
+ * <p>Depuis l'introduction du router ({@link RouterConfig}), deux ChatClient coexistent :</p>
+ * <ul>
+ *     <li>{@code executorChatClient} ({@code @Primary}) — défini ici, modèle qwen3:8b
+ *         avec mémoire et factory de complexité.</li>
+ *     <li>{@code routerChatClient} — défini dans {@link RouterConfig}, modèle phi3:mini
+ *         sans mémoire, dédié à la classification d'intention.</li>
+ * </ul>
+ * <p>Le qualifier {@code "executorChatClient"} est utilisé dans {@code OllamaAiAdapter}
+ * pour lever toute ambiguïté Spring lors de l'injection.</p>
+ *
+ * <h2>Principe SRP</h2>
+ * Cette classe configure uniquement l'exécuteur (qwen3:8b).
+ * {@link RouterConfig} configure uniquement le classifieur (phi3:mini).
+ * Aucune des deux ne connaît l'autre.
  */
 @Slf4j
 @Configuration
@@ -90,45 +101,68 @@ public class OllamaConfig {
             .build();
     }
 
-    // ==================== CHAT CLIENT ====================
+    // ==================== CHAT CLIENT EXÉCUTEUR ====================
 
     /**
-     * {@link ChatClient.Builder} par défaut (profil SIMPLE).
-     * Configuré avec le {@link MessageChatMemoryAdvisor} pour la mémoire conversationnelle.
+     * {@link ChatClient.Builder} de l'exécuteur (qwen3:8b).
      *
-     * <p>Ce bean est utilisé comme base par {@link #chatClient(ChatClient.Builder)},
-     * et également comme source pour créer des builders dérivés via
-     * {@link ChatClient.Builder#mutate()} dans {@code OllamaAiAdapter}.</p>
+     * <p>Qualifié {@code "executorChatClientBuilder"} pour ne pas entrer en conflit
+     * lors de l'injection. Configuré avec :</p>
+     * <ul>
+     *   <li>Options SIMPLE par défaut (surchargées par la factory selon la complexité)</li>
+     *   <li>{@link MessageChatMemoryAdvisor} pour la mémoire conversationnelle</li>
+     * </ul>
+     *
+     * @param chatModel    le modèle Ollama auto-configuré par Spring AI
+     * @param memoryAdvisor l'advisor de mémoire configuré dans {@link ChatMemoryConfig}
+     * @return builder pré-configuré pour l'exécuteur
      */
-    @Bean
+    @Bean("executorChatClientBuilder")
     public ChatClient.Builder chatClientBuilder(
         OllamaChatModel chatModel,
         MessageChatMemoryAdvisor memoryAdvisor
     ) {
-        log.info("Configuring default ChatClient.Builder with model: {}", modelName);
+        log.info("Configuring executor ChatClient.Builder with model: {}", modelName);
         return ChatClient.builder(chatModel)
             .defaultOptions(simpleOptions())
             .defaultAdvisors(memoryAdvisor);
     }
 
     /**
-     * Bean {@link ChatClient} par défaut — utilisé pour les appels SIMPLES.
+     * Bean {@link ChatClient} exécuteur principal.
+     *
+     * <p>{@code @Primary} : injecté par défaut lorsqu'aucun qualifier n'est spécifié
+     * (tests, beans tiers). Le router ({@code routerChatClient}) est toujours accédé
+     * via {@code @Qualifier("routerChatClient")} et n'entre jamais en conflit.</p>
+     *
+     * <p>Qualifié {@code "executorChatClient"} pour permettre une injection explicite
+     * dans {@code OllamaAiAdapter}.</p>
+     *
+     * @param builder le builder exécuteur qualifié
+     * @return le client prêt à l'emploi
      */
-    @Bean
-    public ChatClient chatClient(ChatClient.Builder builder) {
-        log.info("Building default ChatClient instance (SIMPLE profile)");
+    @Bean("executorChatClient")
+    @Primary
+    public ChatClient chatClient(
+        @Qualifier("executorChatClientBuilder") ChatClient.Builder builder
+    ) {
+        log.info("Building executor ChatClient (@Primary, SIMPLE profile default)");
         return builder.build();
     }
 
     // ==================== FACTORY PAR COMPLEXITÉ ====================
 
     /**
-     * Factory exposée en tant que bean Spring pour permettre à {@code OllamaAiAdapter}
-     * de construire un {@link ChatClient} adapté à chaque niveau de complexité.
+     * Factory pour construire un {@link ChatClient} adapté à chaque niveau de complexité.
      *
-     * @param chatModel    le modèle Ollama auto-configuré
+     * <p>Utilisée par {@code OllamaAiAdapter} pour adapter dynamiquement les options
+     * (température, thinking mode, topK) selon l'intention détectée. La factory réutilise
+     * le même {@link OllamaChatModel} et le même {@link MessageChatMemoryAdvisor} que
+     * l'exécuteur principal.</p>
+     *
+     * @param chatModel     le modèle Ollama auto-configuré
      * @param memoryAdvisor l'advisor de mémoire
-     * @return une factory typée
+     * @return factory typée {@link ChatClientFactory}
      */
     @Bean
     public ChatClientFactory chatClientFactory(
@@ -143,7 +177,8 @@ public class OllamaConfig {
 
         return complexity -> {
             OllamaChatOptions opts = optionsMap.getOrDefault(complexity, simpleOptions());
-            log.debug("Building ChatClient for complexity={} (options={})", complexity, opts);
+            log.debug("Building ChatClient for complexity={} (model={}, opts={})",
+                complexity, modelName, opts);
             return ChatClient.builder(chatModel)
                 .defaultOptions(opts)
                 .defaultAdvisors(memoryAdvisor)
@@ -155,7 +190,6 @@ public class OllamaConfig {
 
     /**
      * Interface fonctionnelle pour la factory de {@link ChatClient} par complexité.
-     * Permet l'injection et le mock en tests.
      */
     @FunctionalInterface
     public interface ChatClientFactory {

@@ -1,67 +1,61 @@
 package com.penpot.ai.adapters.out.ai;
 
-import com.penpot.ai.core.domain.*;
-import com.penpot.ai.core.ports.out.AiServicePort;
+import com.penpot.ai.application.router.ToolCategoryResolver;
 import com.penpot.ai.application.service.PromptsConfigService;
-import com.penpot.ai.application.tools.*;
+import com.penpot.ai.core.domain.*;
+import com.penpot.ai.core.ports.out.*;
 import com.penpot.ai.infrastructure.config.OllamaConfig.ChatClientFactory;
 import com.penpot.ai.shared.exception.ToolExecutionException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.*;
+import com.penpot.ai.application.advisor.ReReadingAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
 /**
  * Adaptateur sortant centralisé vers le service d'IA conversationnelle Ollama.
  *
- * <h2>Fonctionnalités</h2>
- * <ul>
- *     <li><b>Complexité dynamique</b> : détecte automatiquement si la requête est
- *         simple / créative / complexe et configure les options Ollama en conséquence
- *         via {@link RequestComplexityAnalyzer} + {@link ChatClientFactory}.</li>
- *
- *     <li><b>RAG modulaire</b> : utilise {@link RetrievalAugmentationAdvisor} avec
- *         {@code RewriteQueryTransformer} et {@code MultiQueryExpander} pour améliorer
- *         la pertinence des templates trouvés.</li>
- *
- *     <li><b>Structured Output</b> : la méthode {@link #planDesign(String, String)}
- *         retourne un {@link DesignPlan} typé via {@code entity(DesignPlan.class)},
- *         avec validation et retry automatique via {@code StructuredOutputValidationAdvisor}.</li>
- * </ul>
- *
- * <h2>Flux d'appel pour le chat standard</h2>
+ * <h2>Pipeline complet avec router</h2>
  * <pre>
- * 1. Analyser la complexité du message
- * 2. Obtenir un ChatClient adapté (options SIMPLE / CREATIVE / COMPLEX)
- * 3. Construire le prompt (system + user + advisors)
- * 4. Inclure : RAG advisor + Memory advisor + Logger advisor
- * 5. Appeler l'IA avec les tools Penpot
- * 6. Retourner la réponse textuelle
+ * userMessage
+ *     │
+ *     ├─ (1) RequestComplexityAnalyzer  →  TaskComplexity
+ *     │                                    (SIMPLE / CREATIVE / COMPLEX)
+ *     │
+ *     ├─ (2) ToolRouterPort.route()     →  Set&lt;ToolCategory&gt;
+ *     │       phi3:mini                     ex: {COLOR_AND_STYLE, INSPECTION}
+ *     │
+ *     ├─ (3) ToolCategoryResolver       →  Object[] tools  (sous-ensemble filtré)
+ *     │       PenpotToolRegistry            ex: [assetTools, inspectorTools]
+ *     │
+ *     └─ (4) ChatClientFactory          →  ChatClient  (options selon complexité)
+ *             qwen3:8b                       + RAG advisor + Memory advisor
+ *                                            + tools filtrés
+ *                                            → String response
  * </pre>
- *
- * @see RequestComplexityAnalyzer Détection de complexité
- * @see ChatClientFactory Factory de ChatClient par complexité
- * @see RetrievalAugmentationAdvisor RAG modulaire
- * @see DesignPlan Structured output pour la planification
+ * 
+ * @see ToolRouterPort       Port de routing phi3:mini
+ * @see ToolCategoryResolver Registry de résolution catégorie → tools
+ * @see ChatClientFactory    Factory de complexité qwen3:8b
+ * @see RequestComplexityAnalyzer Analyseur de complexité
  */
 @Slf4j
 @Component
 @Primary
-@RequiredArgsConstructor
 public class OllamaAiAdapter implements AiServicePort {
 
-    // ==================== DÉPENDANCES CORE ====================
+    /** Client exécuteur. */
+    private final ChatClient executorChatClient;
 
-    /** Client par défaut */
-    private final ChatClient chatClient;
-
-    /** Factory pour obtenir un client adapté à chaque complexité. */
+    /** Factory pour adapter les options selon la complexité détectée. */
     private final ChatClientFactory chatClientFactory;
 
     /** Analyseur de complexité des requêtes. */
@@ -76,91 +70,71 @@ public class OllamaAiAdapter implements AiServicePort {
     /** RAG Modulaire : advisor complet avec rewrite + multi-query + retrieval. */
     private final RetrievalAugmentationAdvisor retrievalAugmentationAdvisor;
 
-    // ==================== TOOLS PENPOT ====================
+    // ==================== ROUTER ====================
 
-    private final TemplateSearchTools templateSearchTools;
-
-    /** Tools Penpot pour la création de formes. */
-    private final PenpotShapeTools penpotShapeTools;
-
-    /** Tools Penpot pour les transformations géométriques. */
-    private final PenpotTransformTools penpotTransformTools;
-
-    /** Tools Penpot pour l'alignement et la distribution. */
-    private final PenpotLayoutTools penpotLayoutTools;
-
-    /** Tools Penpot pour la gestion des assets et styles. */
-    private final PenpotAssetTools penpotAssetTools;
-
-    /** Tools Penpot pour la gestion du contenu. */
-    private final PenpotContentTools penpotContentTools;
-
-    /** Tools Penpot pour la gestion du contenu. */
-    private final PenpotDeleteTools penpotDeleteTools;
-
-    /** Tools Penpot pour l'inspection de la page. */
-    private final PenpotInspectorTools penpotInspectorTools;
-
-    // ==================== CHAT PRINCIPAL ====================
+    /** Port de routing : analyse l'intention et retourne les catégories de tools. */
+    private final ToolRouterPort toolRouter;
 
     /**
-     * Traite un message utilisateur dans le cadre d'une conversation persistée.
-     *
-     * <h3>Pipeline</h3>
-     * <ol>
-     *     <li>Détection de complexité ({@link RequestComplexityAnalyzer#analyze})</li>
-     *     <li>Sélection du {@link ChatClient} adapté (options SIMPLE/CREATIVE/COMPLEX)</li>
-     *     <li>Appel avec : RAG advisor, Memory advisor, Logger advisor, Tools Penpot</li>
-     * </ol>
-     *
-     * <h3>Note sur le RAG</h3>
-     * <p>Le {@link RetrievalAugmentationAdvisor} remplace les appels manuels à
-     * {@code RagTemplateService} effectués via les tools. Il opère en amont du LLM,
-     * enrichissant le prompt avec les templates pertinents avant même que le modèle
-     * ne décide d'appeler un tool.</p>
-     *
-     * @param conversationId identifiant unique de la conversation
-     * @param userMessage    message de l'utilisateur
-     * @return réponse textuelle de l'IA
+     * Résolveur : convertit un {@link Set}&lt;{@link ToolCategory}&gt; en tableau
+     * d'instances de tools Spring AI.
      */
+    private final ToolCategoryResolver toolCategoryResolver;
+
+    // ==================== CONSTRUCTEUR ====================
+
+    public OllamaAiAdapter(
+        @Qualifier("executorChatClient") ChatClient executorChatClient,
+        ChatClientFactory chatClientFactory,
+        RequestComplexityAnalyzer complexityAnalyzer,
+        ChatMemory chatMemory,
+        PromptsConfigService promptsConfigService,
+        RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
+        ToolRouterPort toolRouter,
+        ToolCategoryResolver toolCategoryResolver
+    ) {
+        this.executorChatClient = executorChatClient;
+        this.chatClientFactory = chatClientFactory;
+        this.complexityAnalyzer = complexityAnalyzer;
+        this.chatMemory = chatMemory;
+        this.promptsConfigService = promptsConfigService;
+        this.retrievalAugmentationAdvisor = retrievalAugmentationAdvisor;
+        this.toolRouter = toolRouter;
+        this.toolCategoryResolver = toolCategoryResolver;
+    }
+
     @Override
     public String chat(String conversationId, String userMessage) {
         try {
-            // 1. Détection de complexité
+            // Étape 1 : Complexité
             TaskComplexity complexity = complexityAnalyzer.analyze(userMessage);
-            log.info(
-                "Processing chat (conversation={}, complexity={}, messageLength={})",
-                conversationId, complexity, userMessage.length()
-            );
+            log.info("Processing chat (conversation={}, complexity={}, messageLength={})",
+                conversationId, complexity, userMessage.length());
 
-            // 2. Client adapté à la complexité détectée
+            // Étape 2 : Router
+            Set<ToolCategory> categories = toolRouter.route(userMessage);
+            log.info("[Router] → categories: {}", categories);
+
+            // Étape 3 : Résolution des tools
+            Object[] tools = toolCategoryResolver.resolveTools(categories);
+            log.info("[Registry] → {} tool instance(s) selected", tools.length);
+
+            // Étape 4 : Exécuteur
             ChatClient adaptedClient = chatClientFactory.buildForComplexity(complexity);
-
-            // 3. Appel IA avec tous les advisors et tools
             String response = adaptedClient.prompt()
                 .system(promptsConfigService.getInitialInstructions())
                 .user(userMessage)
                 .advisors(
-                    // RAG modulaire : enrichit le prompt avec les templates pertinents
                     retrievalAugmentationAdvisor,
                     new ReReadingAdvisor(),
                     new SimpleLoggerAdvisor()
                 )
                 .advisors(advisor -> advisor.param(CONVERSATION_ID, conversationId))
-                .tools(
-                    templateSearchTools,
-                    penpotShapeTools,
-                    penpotTransformTools,
-                    penpotLayoutTools,
-                    penpotAssetTools,
-                    penpotContentTools,
-                    penpotDeleteTools,
-                    penpotInspectorTools
-                )
+                .tools(tools)
                 .call()
                 .content();
 
-            // 4. Log du thinking si présent (mode COMPLEX avec qwen3/deepseek)
+            // Thinking mode (COMPLEX uniquement)
             logThinkingIfPresent(adaptedClient, userMessage, conversationId);
 
             log.info("Chat response generated (length={} chars)", response.length());
@@ -174,34 +148,32 @@ public class OllamaAiAdapter implements AiServicePort {
         }
     }
 
-    // ==================== STRUCTURED OUTPUT ====================
-
     /**
      * Génère un plan de design structuré ({@link DesignPlan}) à partir d'une requête.
      *
-     * <p>Le {@code StructuredOutputValidationAdvisor} valide la réponse contre le
-     * schéma JSON généré depuis {@link DesignPlan} et retente jusqu'à 3 fois si
-     * la validation échoue. Chaque retry inclut les erreurs de validation pour
-     * guider le modèle vers une correction.</p>
+     * <p>Utilise toujours le profil COMPLEX (thinking activé) et le
+     * {@code StructuredOutputValidationAdvisor} avec 3 tentatives pour garantir
+     * un JSON valide conforme au schéma {@link DesignPlan}.</p>
+     *
+     * <p>Note : le planning n'utilise <b>pas</b> le router — il expose volontairement
+     * tous les tools via le RAG advisor pour que le modèle puisse planifier
+     * une séquence complète d'opérations.</p>
      *
      * @param conversationId identifiant de la conversation
-     * @param userMessage    la requête de design
-     * @return le plan structuré ou un plan "explain" en cas d'échec
+     * @param userMessage    requête de design à planifier
+     * @return le plan structuré, ou un plan {@code explain} en cas d'échec
      */
     public DesignPlan planDesign(String conversationId, String userMessage) {
         try {
             log.info("Planning design for conversation={}", conversationId);
 
-            // Advisor de validation avec 3 tentatives max
             var validationAdvisor = org.springframework.ai.chat.client.advisor
                 .StructuredOutputValidationAdvisor.builder()
                 .outputType(DesignPlan.class)
                 .maxRepeatAttempts(3)
                 .build();
 
-            // Client COMPLEX pour la planification (thinking activé)
             ChatClient planningClient = chatClientFactory.buildForComplexity(TaskComplexity.COMPLEX);
-
             DesignPlan plan = planningClient.prompt()
                 .system(buildPlanningSystemPrompt())
                 .user(userMessage)
@@ -219,10 +191,10 @@ public class OllamaAiAdapter implements AiServicePort {
                 return DesignPlan.explain("Unable to generate a design plan. Please try rephrasing.");
             }
 
-            log.info(
-                "Design plan generated: action={}, shapes={}, complexity={}",
-                plan.action(), plan.hasShapes() ? plan.shapes().size() : 0, plan.complexity()
-            );
+            log.info("Design plan generated: action={}, shapes={}, complexity={}",
+                plan.action(),
+                plan.hasShapes() ? plan.shapes().size() : 0,
+                plan.complexity());
             return plan;
         } catch (Exception e) {
             log.error("Error during design planning for conversation={}", conversationId, e);
@@ -232,14 +204,6 @@ public class OllamaAiAdapter implements AiServicePort {
         }
     }
 
-    // ==================== GESTION MÉMOIRE ====================
-
-    /**
-     * Efface l'historique d'une conversation.
-     *
-     * @param conversationId l'ID de la conversation à effacer
-     * @throws IllegalArgumentException si l'ID est null ou vide
-     */
     @Override
     public void clearConversation(String conversationId) {
         if (conversationId == null || conversationId.isBlank()) {
@@ -247,9 +211,9 @@ public class OllamaAiAdapter implements AiServicePort {
         }
         try {
             log.info("Clearing conversation history for: {}", conversationId);
-            int messageBefore = chatMemory.get(conversationId).size();
+            int countBefore = chatMemory.get(conversationId).size();
             chatMemory.clear(conversationId);
-            log.info("Cleared conversation {} ({} messages removed)", conversationId, messageBefore);
+            log.info("Cleared conversation {} ({} messages removed)", conversationId, countBefore);
         } catch (Exception e) {
             log.error("Failed to clear conversation: {}", conversationId, e);
             throw new ToolExecutionException(
@@ -258,11 +222,9 @@ public class OllamaAiAdapter implements AiServicePort {
         }
     }
 
-    // ==================== MÉTHODES PRIVÉES ====================
-
     /**
-     * Construit le prompt système spécialisé pour la génération de plans de design.
-     * Explique au modèle le format JSON attendu et les champs obligatoires.
+     * Construit le prompt système pour la génération de plans de design.
+     * Ajoute les instructions JSON au prompt de base de prompts.yml.
      */
     private String buildPlanningSystemPrompt() {
         return promptsConfigService.getInitialInstructions() + """
@@ -290,10 +252,10 @@ public class OllamaAiAdapter implements AiServicePort {
 
     /**
      * Tente de logger le contenu de thinking si le modèle l'a généré.
-     * Silencieux si non disponible (modèles sans thinking mode).
      *
-     * <p>Le thinking est uniquement disponible en mode COMPLEX avec des modèles
-     * compatibles comme qwen3 ou deepseek-r1.</p>
+     * <p>Le thinking est uniquement produit en mode COMPLEX avec des modèles
+     * compatibles (qwen3, deepseek-r1). L'appel est protégé par un try/catch
+     * pour ne jamais impacter le flux principal.</p>
      */
     private void logThinkingIfPresent(ChatClient client, String userMessage, String conversationId) {
         try {
@@ -314,7 +276,7 @@ public class OllamaAiAdapter implements AiServicePort {
                 }
             }
         } catch (Exception e) {
-            log.trace("Could not retrieve thinking metadata: {}", e.getMessage());
+            log.trace("Could not retrieve thinking metadata (non-fatal): {}", e.getMessage());
         }
     }
 }

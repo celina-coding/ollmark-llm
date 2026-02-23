@@ -11,6 +11,23 @@ server:
 # ============================================
 penpot:
   ai:
+    # =============================
+    # CONFIGURATION DUAL-MODEL
+    # =============================
+
+    # Modèle léger de routage (classification d’intention)
+    router:
+      model: ${PENPOT_ROUTER_MODEL:llama3.1}
+      temperature: ${PENPOT_ROUTER_TEMPERATURE:0.0}
+      max-tokens: ${PENPOT_ROUTER_MAX_TOKENS:256}
+
+    # Modèle exécuteur principal (tool calling + génération)
+    executor:
+        model: ${PENPOT_EXECUTOR_MODEL:qwen3:8b}
+        temperature: ${PENPOT_EXECUTOR_TEMPERATURE:0.7}
+        max-tokens: ${PENPOT_EXECUTOR_MAX_TOKENS:4096}
+        num-ctx: ${PENPOT_EXECUTOR_NUM_CTX:32000}
+
     # Adresse du serveur pour les clients externes
     server-address: ${PENPOT_SERVER_ADDRESS:localhost}
     # Port WebSocket pour la communication avec le plugin
@@ -46,16 +63,16 @@ penpot:
       query-variants: ${PENPOT_RAG_QUERY_VARIANTS:3}
 
 # ============================================
-# Configuration Spring AI avec Ollama (VM distante)
+# Configuration Spring AI avec Ollama
 # ============================================
 spring:
   ai:
     ollama:
       # URL de base d'Ollama sur la VM distante
       # Interface graphique Open WebUI : http://10.130.163.62:3000/
-      # PC Amine : 192.168.41.76
+      # PC Amine : 192.168.41.75
       # VM
-      base-url: ${OLLAMA_BASE_URL:http://10.130.163.62:11434}
+      base-url: ${OLLAMA_BASE_URL:http://192.168.41.75:11434}
       # PC FAC
       #base-url: ${OLLAMA_BASE_URL:http://192.168.41.3:11434}
 
@@ -63,7 +80,6 @@ spring:
       chat:
         options:
           # Modèle à utiliser (configurable via Open WebUI)
-          # Exemples : qwen3:1.7b, qwen:8b, phi3:3.8b
           model: ${OLLAMA_MODEL:qwen3:8b}
           # Température (0.0 = déterministe, 1.0+ = créatif)
           temperature: ${OLLAMA_TEMPERATURE:0.7}
@@ -206,8 +222,7 @@ management:
 #   → Exemple : curl http://10.130.163.62:11434/api/tags
 # 
 # MODÈLES :
-# - Chat léger : qwen3:1.7b (rapide, bon pour le prototypage)
-# - Chat équilibré : qwen3:8b
+# - Chat : qwen3:8b
 # - Embeddings : embeddinggemma-300m
 # 
 # BASE DE DONNÉES H2 :
