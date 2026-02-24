@@ -110,14 +110,14 @@ public class AiController {
 
             String response = conversationChatUseCase.chat(
                 request.getConversationId(), 
-                request.getMessage()
+                request.getMessage(),
+                request.getUserToken()
             );
 
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "conversationId", request.getConversationId(),
-                "response", response,
-                "info", "Conversation history managed automatically by ChatMemory"
+                "response", response
             ));
         } catch (IllegalArgumentException e) {
             log.warn("Invalid chat request: {}", e.getMessage());
@@ -247,6 +247,8 @@ class ChatRequest {
 
     /** Message envoyé par l’utilisateur. */
     private String message;
+
+    private String userToken;
 }
 
 /**

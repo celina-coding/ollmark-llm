@@ -11,9 +11,9 @@ import java.util.Locale;
 /**
  * Tools pour les transformations géométriques dans Penpot.
  *
- * <p><b>SRP :</b> gère uniquement les transformations (rotate, scale, move, resize).</p>
- * <p>Le lookup de forme réutilise {@link PenpotJsSnippets#findShapeOrFallback}.</p>
- * <p>L'exécution est déléguée à {@link PenpotToolExecutor#transformShape}.</p>
+ * <p>Gère uniquement les transformations (rotate, scale, move, resize).</p>
+ * <p>Le lookup de forme réutilise {@link PenpotJsSnippets#findShapeOrFallback()}.</p>
+ * <p>L'exécution est déléguée à {@link PenpotToolExecutor#transformShape()}.</p>
  */
 @Slf4j
 @Component

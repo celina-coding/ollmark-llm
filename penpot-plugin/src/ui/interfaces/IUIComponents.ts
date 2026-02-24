@@ -5,22 +5,6 @@
  * - Initialisation avec accès au DOM
  * - Nettoyage des ressources
  * - Identification par elementId
- * 
- * @example
- * ```typescript
- * class MyComponent implements IUIComponent {
- *   constructor(public readonly elementId: string) {}
- *   
- *   initialize(): void {
- *     const el = document.getElementById(this.elementId);
- *     // Setup...
- *   }
- *   
- *   destroy(): void {
- *     // Cleanup...
- *   }
- * }
- * ```
  */
 export interface IUIComponent {
     /** ID de l'élément DOM géré par ce composant */
@@ -48,30 +32,6 @@ export interface IStatusDisplay {
      * @param connected - État de connexion à afficher
      */
     setConnected(connected: boolean): void;
-}
-
-/**
- * Interface pour la gestion des logs.
- * 
- * @example
- * ```typescript
- * const logger: ILogger = new LoggerComponent('logs');
- * logger.log('Operation started');
- * logger.log('Operation completed');
- * logger.clear(); // Vide tous les logs
- * ```
- */
-export interface ILogger {
-    /**
-     * Ajoute un message au log.
-     * @param message - Message à logger
-     */
-    log(message: string): void;
-
-    /**
-     * Efface tous les logs affichés.
-     */
-    clear(): void;
 }
 
 /**

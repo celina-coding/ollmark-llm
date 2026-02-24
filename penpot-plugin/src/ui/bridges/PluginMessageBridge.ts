@@ -1,4 +1,5 @@
 import { IWebSocketConnection } from '../interfaces/IUIComponents';
+import { ILogger, LogFn, createLogger } from '../../common/Logger';
 
 /**
  * Pont de communication bidirectionnel entre le plugin Penpot et le WebSocket.
@@ -27,39 +28,22 @@ import { IWebSocketConnection } from '../interfaces/IUIComponents';
  * - `task-response` : Réponses de tâches du plugin
  * - `themechange` : Changements de thème Penpot
  * - Messages de tâche : Requêtes vers le plugin
- * 
- * @example
- * ```typescript
- * const logger = { log: (msg) => console.log(`[Bridge] ${msg}`) };
- * const bridge = new PluginMessageBridge(webSocketService, logger);
- * 
- * // Initialisation des ponts bidirectionnels
- * bridge.initialize();
- * 
- * // Le bridge transfère automatiquement tous les messages
- * // dans les deux directions
- * ```
  */
 export class PluginMessageBridge {
+    private readonly log: LogFn;
+
     /**
      * Crée une instance du pont de messages.
      * 
      * @param webSocket - Service WebSocket pour la communication serveur
      * @param logger - Logger optionnel pour tracer les opérations
-     * 
-     * @example
-     * ```typescript
-     * const wsService = new WebSocketService('ws://localhost:4401');
-     * const bridge = new PluginMessageBridge(
-     *   wsService,
-     *   { log: (msg) => console.log(`[MessageBridge] ${msg}`) }
-     * );
-     * ```
      */
     constructor(
         private readonly webSocket: IWebSocketConnection,
-        private readonly logger?: { log: (msg: string) => void }
-    ) {}
+        logger?: ILogger
+    ) {
+        this.log = createLogger(logger);
+    }
 
     /**
      * Initialise les ponts de communication bidirectionnels.
@@ -73,15 +57,6 @@ export class PluginMessageBridge {
      * **Event listeners** :
      * - WebSocket.onMessage : Messages serveur → plugin
      * - window.addEventListener('message') : Messages plugin → serveur
-     * 
-     * @example
-     * ```typescript
-     * const bridge = new PluginMessageBridge(webSocket, logger);
-     * bridge.initialize();
-     * 
-     * // Le bridge est maintenant actif et transfère tous les messages
-     * // dans les deux directions automatiquement
-     * ```
      */
     initialize(): void {
         this.setupWebSocketToPluginBridge();
@@ -113,21 +88,6 @@ export class PluginMessageBridge {
      *   "params": { "code": "..." }
      * }
      * ```
-     * 
-     * @private
-     * 
-     * @example
-     * ```typescript
-     * // Message WebSocket reçu
-     * {
-     *   id: 'req-abc',
-     *   task: 'executeCode',
-     *   params: { code: 'return 42;' }
-     * }
-     * 
-     * // Transféré au plugin via postMessage
-     * // Log: "→ Message transféré au plugin (task: executeCode)"
-     * ```
      */
     private setupWebSocketToPluginBridge(): void {
         this.webSocket.onMessage((data) => {
@@ -155,60 +115,13 @@ export class PluginMessageBridge {
      * - `task-response` : Réponse de tâche → WebSocket
      * - `themechange` : Changement de thème → Log seulement
      * - Autres : Ignorés
-     * 
-     * **Sécurité** :
-     * - Validation que le message est un objet
-     * - Vérification de connexion WebSocket avant envoi
-     * 
-     * @private
-     * 
-     * @example
-     * ```typescript
-     * // Message du plugin runtime
-     * {
-     *   type: 'task-response',
-     *   response: {
-     *     id: 'req-abc',
-     *     success: true,
-     *     data: { result: 42 }
-     *   }
-     * }
-     * 
-     * // Transféré au WebSocket
-     * // Log: "← task-response envoyé (id=req-abc, success=true)"
-     * ```
      */
     private setupPluginToWebSocketBridge(): void {
         window.addEventListener('message', (event) => {
             const message = event.data;
-            if (!this.isValidMessage(message)) return;
+            if (!message || typeof message !== 'object') return;
             this.handlePluginMessage(message);
         });
-    }
-
-    /**
-     * Valide qu'un message est un objet valide.
-     * 
-     * **Critères de validation** :
-     * - Message non null
-     * - Message de type 'object'
-     * 
-     * @param message - Message à valider
-     * @returns true si le message est valide
-     * 
-     * @private
-     * 
-     * @example
-     * ```typescript
-     * isValidMessage({ type: 'test' }) // true
-     * isValidMessage('string')         // false
-     * isValidMessage(null)             // false
-     * isValidMessage(undefined)        // false
-     * isValidMessage(42)               // false
-     * ```
-     */
-    private isValidMessage(message: any): boolean {
-        return message && typeof message === 'object';
     }
 
     /**
@@ -220,25 +133,6 @@ export class PluginMessageBridge {
      * - Autres → Ignorés
      * 
      * @param message - Message du plugin à traiter
-     * 
-     * @private
-     * 
-     * @example
-     * ```typescript
-     * // Message task-response
-     * handlePluginMessage({
-     *   type: 'task-response',
-     *   response: { id: 'req-1', success: true }
-     * });
-     * // → Appelle forwardTaskResponse()
-     * 
-     * // Message themechange
-     * handlePluginMessage({
-     *   type: 'themechange',
-     *   theme: 'dark'
-     * });
-     * // → Log: "Thème changé: dark"
-     * ```
      */
     private handlePluginMessage(message: any): void {
         // Handler 1 : Réponses de tâches
@@ -250,7 +144,6 @@ export class PluginMessageBridge {
         // Handler 2 : Changements de thème
         if (message.type === 'themechange') {
             this.log(`Thème changé: ${message.theme}`);
-            return;
         }
     }
 
@@ -272,36 +165,6 @@ export class PluginMessageBridge {
      * - Erreur d'envoi : Log l'erreur
      * 
      * @param message - Message contenant la réponse de tâche
-     * 
-     * @private
-     * 
-     * @example
-     * ```typescript
-     * // Message reçu du plugin
-     * const message = {
-     *   type: 'task-response',
-     *   response: {
-     *     id: 'req-123',
-     *     success: true,
-     *     data: { result: 42 }
-     *   }
-     * };
-     * 
-     * forwardTaskResponse(message);
-     * 
-     * // WebSocket reçoit :
-     * // { id: 'req-123', success: true, data: { result: 42 } }
-     * 
-     * // Log: "← task-response envoyé (id=req-123, success=true)"
-     * ```
-     * 
-     * @example
-     * ```typescript
-     * // WebSocket déconnecté
-     * forwardTaskResponse(message);
-     * // Log: "✗ WebSocket non connecté, impossible d'envoyer task-response"
-     * // Aucun envoi effectué
-     * ```
      */
     private forwardTaskResponse(message: any): void {
         if (!this.webSocket.isConnected()) {
@@ -316,15 +179,5 @@ export class PluginMessageBridge {
         } catch (error: any) {
             this.log(`✗ Erreur envoi task-response: ${error.message}`);
         }
-    }
-
-    /**
-     * Enregistre un message via le logger optionnel.
-     * 
-     * @param message - Message à logger
-     * @private
-     */
-    private log(message: string): void {
-        if (this.logger) this.logger.log(message);
     }
 }

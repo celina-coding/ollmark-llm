@@ -31,7 +31,7 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
  *     │                                    (SIMPLE / CREATIVE / COMPLEX)
  *     │
  *     ├─ (2) ToolRouterPort.route()     →  Set&lt;ToolCategory&gt;
- *     │       phi3:mini                     ex: {COLOR_AND_STYLE, INSPECTION}
+ *     │       ollama3.1                     ex: {COLOR_AND_STYLE, INSPECTION}
  *     │
  *     ├─ (3) ToolCategoryResolver       →  Object[] tools  (sous-ensemble filtré)
  *     │       PenpotToolRegistry            ex: [assetTools, inspectorTools]
@@ -42,7 +42,7 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
  *                                            → String response
  * </pre>
  * 
- * @see ToolRouterPort       Port de routing phi3:mini
+ * @see ToolRouterPort       Port de routing ollama3.1
  * @see ToolCategoryResolver Registry de résolution catégorie → tools
  * @see ChatClientFactory    Factory de complexité qwen3:8b
  * @see RequestComplexityAnalyzer Analyseur de complexité
@@ -104,7 +104,7 @@ public class OllamaAiAdapter implements AiServicePort {
     }
 
     @Override
-    public String chat(String conversationId, String userMessage) {
+    public String chat(String conversationId, String userMessage, String userToken) {
         try {
             // Étape 1 : Complexité
             TaskComplexity complexity = complexityAnalyzer.analyze(userMessage);
@@ -136,7 +136,6 @@ public class OllamaAiAdapter implements AiServicePort {
 
             // Thinking mode (COMPLEX uniquement)
             logThinkingIfPresent(adaptedClient, userMessage, conversationId);
-
             log.info("Chat response generated (length={} chars)", response.length());
             return response;
         } catch (Exception e) {

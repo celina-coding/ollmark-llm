@@ -33,15 +33,6 @@ public class ChatMemoryConfig {
     /**
      * Configure le ChatMemory avec MessageWindowChatMemory.
      * 
-     * MessageWindowChatMemory maintient une fenêtre glissante de N messages
-     * les plus récents, tout en préservant les messages système.
-     * 
-     * Auto-configuration Spring AI :
-     * - Si JdbcChatMemoryRepository est présent (dépendance ajoutée dans pom.xml), 
-     *   il sera auto-configuré et injecté automatiquement
-     * - Le schéma SQL est créé automatiquement selon la configuration
-     * - Supporte H2, PostgreSQL, MySQL, SQL Server, Oracle, etc.
-     * 
      * @param chatMemoryRepository repository auto-configuré par Spring AI
      * @return le ChatMemory configuré
      */
@@ -62,19 +53,6 @@ public class ChatMemoryConfig {
     /**
      * Configure le MessageChatMemoryAdvisor pour le ChatClient.
      * 
-     * MessageChatMemoryAdvisor gère automatiquement :
-     * - Récupération de l'historique avant chaque appel AI
-     * - Sauvegarde du message utilisateur dans l'historique
-     * - Sauvegarde de la réponse AI dans l'historique
-     * - Gestion de la fenêtre de messages (garde les N derniers)
-     * 
-     * Architecture :
-     * 1. User envoie un message avec conversationId
-     * 2. Advisor récupère l'historique depuis ChatMemory
-     * 3. Historique + nouveau message → envoyé à l'AI
-     * 4. Réponse AI → sauvegardée dans ChatMemory
-     * 5. Retour de la réponse à l'utilisateur
-     * 
      * @param chatMemory le ChatMemory configuré
      * @return l'advisor configuré
      */
@@ -83,49 +61,5 @@ public class ChatMemoryConfig {
         log.info("Configuring MessageChatMemoryAdvisor");
         log.info("Automatic conversation history management enabled");
         return MessageChatMemoryAdvisor.builder(chatMemory).build();
-    }
-
-    /**
-     * Bean pour obtenir des statistiques sur la mémoire (optionnel).
-     * Utile pour monitoring et debugging.
-     * 
-     * @param chatMemory le ChatMemory configuré
-     * @return le service de statistiques
-     */
-    @Bean
-    public ChatMemoryStatsService chatMemoryStatsService(ChatMemory chatMemory) {
-        return new ChatMemoryStatsService(chatMemory);
-    }
-
-    /**
-     * Service utilitaire pour obtenir des statistiques sur ChatMemory.
-     */
-    public static class ChatMemoryStatsService {
-        private final ChatMemory chatMemory;
-
-        public ChatMemoryStatsService(ChatMemory chatMemory) {
-            this.chatMemory = chatMemory;
-        }
-
-        /**
-         * Obtient le nombre de messages pour une conversation.
-         * 
-         * @param conversationId ID de la conversation
-         * @return nombre de messages
-         */
-        public int getMessageCount(String conversationId) {
-            return chatMemory.get(conversationId).size();
-        }
-
-        /**
-         * Log les statistiques d'une conversation.
-         * 
-         * @param conversationId ID de la conversation
-         */
-        public void logConversationStats(String conversationId) {
-            int messageCount = getMessageCount(conversationId);
-            log.info("Conversation {} has {} messages in history", 
-                conversationId, messageCount);
-        }
     }
 }

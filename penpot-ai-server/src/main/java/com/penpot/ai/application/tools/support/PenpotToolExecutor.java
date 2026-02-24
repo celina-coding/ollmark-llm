@@ -11,16 +11,6 @@ import java.util.function.Function;
 
 /**
  * Service d'exécution centralisé pour tous les Tools Penpot.
- *
- * <p><b>DRY :</b> élimine la duplication du pattern
- * {@code try → executeCode → check success → format result} présent dans chaque tool.</p>
- *
- * <p><b>SRP :</b> responsabilité unique — exécuter du code Penpot et mapper le résultat.</p>
- *
- * <p><b>OCP :</b> extensible via {@link ExecuteCodeCommand#execute(String, String, Function)} sans modification
- * de cette classe. Les méthodes de convenance couvrent les cas standard.</p>
- *
- * <p><b>DIP :</b> dépend de l'abstraction {@link ExecuteCodeUseCase}, jamais d'une implémentation.</p>
  */
 @Slf4j
 @Service

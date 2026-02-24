@@ -20,11 +20,12 @@ public interface ConversationChatUseCase {
      * 
      * @param conversationId ID unique de la conversation (ex: "user-alice-abc123")
      * @param message        message de l'utilisateur
+     * @param userToken
      * @return réponse générée par l'IA
      * @throws IllegalArgumentException si les paramètres sont invalides
      * @throws RuntimeException         si l'appel IA échoue
      */
-    String chat(String conversationId, String message);
+    String chat(String conversationId, String message, String userToken);
 
     /**
      * Démarre une nouvelle conversation.

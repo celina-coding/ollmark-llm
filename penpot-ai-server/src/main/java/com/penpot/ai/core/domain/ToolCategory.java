@@ -13,11 +13,6 @@ package com.penpot.ai.core.domain;
  * Chaque valeur reflète une <i>intention utilisateur</i> claire et exclusive,
  * pas un nom de classe Java. Cela permet au router LLM de classifier
  * correctement sans connaître l'implémentation.
- *
- * <h2>Idée d'amélioration future</h2>
- * Chaque valeur pourrait porter des métadonnées (mots-clés, exemples) via
- * un champ annoté, permettant de générer dynamiquement le prompt système
- * du router plutôt que de le coder en dur dans {@code IntentRouterService}.
  */
 public enum ToolCategory {
 

@@ -11,7 +11,7 @@ import java.util.Locale;
 /**
  * Tools pour la gestion des assets et styles dans Penpot.
  *
- * <p><b>SRP :</b> gère uniquement les opérations de style (fill, gradient, stroke, shadow...).</p>
+ * <p>Gère uniquement les opérations de style (fill, gradient, stroke, shadow...).</p>
  * <p>Le lookup de forme réutilise {@link PenpotJsSnippets#findShapeOrFallback}.</p>
  * <p>L'exécution est déléguée à {@link PenpotToolExecutor#applyStyle}.</p>
  */

@@ -15,14 +15,6 @@ import org.springframework.context.annotation.*;
  * {@code OllamaConfig} configure l'exécuteur (qwen3:8b avec mémoire),
  * {@code RouterConfig} configure le classifieur (phi3:mini sans mémoire).
  *
- * <h2>Pourquoi phi3:mini pour le router ?</h2>
- * <ul>
- *   <li><b>Latence</b> : 3.8B params → ~100-200ms vs ~800ms+ pour qwen3:8b</li>
- *   <li><b>Classification</b> : phi3:mini est excellent sur les tâches de catégorisation
- *       courtes (instruction-tuned par Microsoft)</li>
- *   <li><b>Coût mémoire GPU</b> : charge minimale, laisse de la VRAM à l'exécuteur</li>
- * </ul>
- *
  * <h2>Paramètres intentionnels</h2>
  * <ul>
  *   <li>{@code temperature=0.0} : classification déterministe, pas de créativité</li>
@@ -30,10 +22,6 @@ import org.springframework.context.annotation.*;
  *   <li>Pas de {@code MessageChatMemoryAdvisor} : le router ne doit pas avoir de mémoire
  *       (chaque requête est indépendante)</li>
  * </ul>
- *
- * <h2>Idée d'amélioration future</h2>
- * Ajouter un {@code SimpleLoggerAdvisor} conditionnel sur profil {@code dev}
- * pour loguer toutes les requêtes/réponses router en debug.
  */
 @Slf4j
 @Configuration
@@ -49,13 +37,6 @@ public class RouterConfig {
 
     /**
      * Crée une instance dédiée de {@link OllamaChatModel} pour phi3:mini.
-     *
-     * <p>Utilise la même {@link OllamaApi} que le modèle principal (même URL Ollama),
-     * mais avec des options totalement différentes.
-     * Le modèle executor n'est pas affecté par cette configuration.</p>
-     *
-     * <p>Ce bean n'est PAS {@code @Primary} : il est toujours injecté via
-     * {@code @Qualifier("routerChatClient")} dans {@code IntentRouterService}.</p>
      *
      * @param ollamaApi l'API Ollama partagée, injectée automatiquement par Spring AI
      * @return un ChatClient léger dédié à la classification

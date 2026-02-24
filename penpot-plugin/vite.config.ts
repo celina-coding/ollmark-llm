@@ -14,8 +14,8 @@ const isMultiUserMode = process.env.MULTI_USER_MODE === "true";
 // Preview server configuration
 const previewPort = parseInt(process.env.PENPOT_PLUGIN_SERVER_PORT || "4400", 10);
 const allowedHosts = process.env.PENPOT_PLUGIN_SERVER_LISTEN_ADDRESS
-  ? process.env.PENPOT_PLUGIN_SERVER_LISTEN_ADDRESS.split(",").map((h) => h.trim())
-  : [];
+    ? process.env.PENPOT_PLUGIN_SERVER_LISTEN_ADDRESS.split(",").map((h) => h.trim())
+    : [];
 
 // ============================================================================
 // Configuration Logging
@@ -36,79 +36,79 @@ console.log("=".repeat(60));
 // ============================================================================
 
 export default defineConfig({
-  // Plugins
-  plugins: [
-    livePreview({
-      reload: true,
-      config: {
-        build: {
-          sourcemap: true,
+    // Plugins
+    plugins: [
+        livePreview({
+            reload: true,
+            config: {
+                build: {
+                    sourcemap: true,
+                },
+            },
+        }),
+    ],
+
+    // Build configuration
+    build: {
+        // Output directory
+        outDir: "dist",
+
+        // Enable source maps for debugging
+        sourcemap: true,
+
+        // Target modern browsers
+        target: "es2022",
+
+        // Minification
+        minify: "esbuild",
+
+        // Rollup options
+        rollupOptions: {
+            input: {
+                plugin: "src/plugin.ts",
+                index: "./index.html",
+            },
+            output: {
+                entryFileNames: "[name].js",
+                chunkFileNames: "chunks/[name]-[hash].js",
+                assetFileNames: "assets/[name]-[hash][extname]",
+            },
         },
-      },
-    }),
-  ],
 
-  // Build configuration
-  build: {
-    // Output directory
-    outDir: "dist",
-    
-    // Enable source maps for debugging
-    sourcemap: true,
-    
-    // Target modern browsers
-    target: "es2022",
-    
-    // Minification
-    minify: "esbuild",
-    
-    // Rollup options
-    rollupOptions: {
-      input: {
-        plugin: "src/plugin.ts",
-        index: "./index.html",
-      },
-      output: {
-        entryFileNames: "[name].js",
-        chunkFileNames: "chunks/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash][extname]",
-      },
+        // Don't emit on errors
+        emptyOutDir: true,
     },
-    
-    // Don't emit on errors
-    emptyOutDir: true,
-  },
 
-  // Preview server configuration
-  preview: {
-    port: previewPort,
-    cors: true,
-    strictPort: true,
-    host: allowedHosts.length > 0 ? allowedHosts[0] : "localhost",
-  },
-
-  // Development server configuration
-  server: {
-    port: previewPort,
-    cors: true,
-    strictPort: false,
-  },
-
-  // Define global constants
-  define: {
-    IS_MULTI_USER_MODE: JSON.stringify(isMultiUserMode),
-    PENPOT_WEBSOCKET_URL: JSON.stringify(websocketUrl),
-  },
-
-  // Resolve configuration
-  resolve: {
-    alias: {
-      "@": "/src",
+    // Preview server configuration
+    preview: {
+        port: previewPort,
+        cors: true,
+        strictPort: true,
+        host: allowedHosts.length > 0 ? allowedHosts[0] : "localhost",
     },
-  },
 
-  // Optimizations
-  optimizeDeps: {
-    include: ["@penpot/plugin-types", "@penpot/plugin-styles"],
-  },
+    // Development server configuration
+    server: {
+        port: previewPort,
+        cors: true,
+        strictPort: false,
+    },
+
+    // Define global constants
+    define: {
+        IS_MULTI_USER_MODE: JSON.stringify(isMultiUserMode),
+        PENPOT_WEBSOCKET_URL: JSON.stringify(websocketUrl),
+    },
+
+    // Resolve configuration
+    resolve: {
+        alias: {
+            "@": "/src",
+        },
+    },
+
+    // Optimizations
+    optimizeDeps: {
+        include: ["@penpot/plugin-types", "@penpot/plugin-styles"],
+    },
 });

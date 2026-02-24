@@ -60,18 +60,16 @@ declare const IS_MULTI_USER_MODE: boolean;
  * - Build-time : Variable `IS_MULTI_USER_MODE`
  * - Fallback : `false` (mono-utilisateur par défaut)
  * 
- * **Impact** :
- * - Affecte le comportement de l'UI
- * - Peut influencer la gestion des sessions
- * - Transmis à l'UI via query parameter
- * 
  * @constant {boolean}
  */
 const isMultiUserMode = typeof IS_MULTI_USER_MODE !== "undefined" ? IS_MULTI_USER_MODE : false;
 
+const userToken = crypto.randomUUID();
+
 // Logging de démarrage
 console.log("[Plugin] Starting Penpot AI Plugin");
 console.log("[Plugin] Multi-user mode:", isMultiUserMode);
+console.log('[Plugin] User token:', userToken);
 
 // ============================================================================
 // Initialisation de l'Orchestrateur
@@ -131,13 +129,13 @@ console.log("[Plugin] Registered handlers:", orchestrator.getRegisteredHandlers(
  * - Hauteur : 800px
  * 
  * **URL générée** :
- * `?theme=dark&multiUser=false`
+ * `?theme=dark&multiUser=false&userToken=xxx`
  * 
  * @see https://doc.plugins.penpot.app/ Documentation API Penpot
  */
 penpot.ui.open(
     "Penpot AI Plugin",
-    `?theme=${penpot.theme}&multiUser=${isMultiUserMode}`,
+    `?theme=${penpot.theme}&multiUser=${isMultiUserMode}&userToken=${userToken}`,
     { width: 500, height: 800 }
 );
 
@@ -177,16 +175,6 @@ penpot.ui.open(
  * // [Plugin] Processing task request
  * // [PluginOrchestrator] Received task request: executeCode
  * // ...
- * 
- * // Message invalide
- * {
- *   type: 'unknown',
- *   data: 'something'
- * }
- * 
- * // Logs:
- * // [Plugin] Received message: { type: 'unknown', ... }
- * // [Plugin] Unknown message type
  * ```
  */
 penpot.ui.onMessage<PluginTaskRequest | any>((message) => {
@@ -228,21 +216,9 @@ penpot.ui.onMessage<PluginTaskRequest | any>((message) => {
  * ```
  * 
  * @param {string} theme - Nouveau thème ('dark' ou 'light')
- * 
- * @example
- * ```typescript
- * // Utilisateur change le thème dans Penpot
- * // → Event 'themechange' déclenché
- * // → Message envoyé à l'UI
- * // → UI met à jour ses styles
- * ```
  */
 penpot.on("themechange", (theme) => {
-    penpot.ui.sendMessage({
-        source: "penpot",
-        type: "themechange",
-        theme,
-    });
+    penpot.ui.sendMessage({ source: 'penpot', type: 'themechange', theme });
 });
 
 // ============================================================================
@@ -264,25 +240,6 @@ penpot.on("themechange", (theme) => {
  * 
  * @param message - Message à valider
  * @returns `true` si le message est une PluginTaskRequest valide
- * 
- * @example
- * ```typescript
- * const message: any = { id: '123', task: 'test', params: {} };
- * 
- * if (isTaskRequest(message)) {
- *   // TypeScript sait que message est PluginTaskRequest
- *   console.log(message.task); // OK
- *   orchestrator.handleTaskRequest(message); // OK
- * }
- * 
- * // Tests de validation
- * isTaskRequest({ id: '1', task: 'test', params: {} })   // true
- * isTaskRequest({ id: '1', task: 'test' })               // false (pas de params)
- * isTaskRequest({ id: 1, task: 'test', params: {} })     // false (id not string)
- * isTaskRequest({ task: 'test', params: {} })            // false (pas d'id)
- * isTaskRequest(null)                                    // false
- * isTaskRequest('string')                                // false
- * ```
  */
 function isTaskRequest(message: any): message is PluginTaskRequest {
     return (

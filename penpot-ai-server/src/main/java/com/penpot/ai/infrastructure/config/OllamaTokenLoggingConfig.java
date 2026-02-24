@@ -1,17 +1,14 @@
 package com.penpot.ai.infrastructure.config;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestClientCustomizer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.*;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
@@ -30,7 +27,6 @@ public class OllamaTokenLoggingConfig {
     @Bean
     public RestClientCustomizer ollamaRestClientTokenLogger() {
         return builder -> builder
-            // Important: permet de relire le body après interception.
             .requestFactory(new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()))
             .requestInterceptor(this::logTokenMetricsInterceptor);
     }
@@ -40,12 +36,9 @@ public class OllamaTokenLoggingConfig {
 
         ClientHttpResponse response = execution.execute(request, body);
 
-        // On lit la réponse en bytes (buffering activé ci-dessus), sans la "consommer" définitivement.
         byte[] responseBytes = response.getBody().readAllBytes();
         String responseText = new String(responseBytes, StandardCharsets.UTF_8);
 
-        // Ollama /api/chat ou /api/generate peut renvoyer du "NDJSON" (stream) ou un JSON unique.
-        // On cherche le dernier objet avec "done": true.
         try {
             JsonNode lastDone = null;
 
@@ -54,17 +47,13 @@ public class OllamaTokenLoggingConfig {
                 if (line.isEmpty()) continue;
 
                 JsonNode node = mapper.readTree(line);
-                if (node.path("done").asBoolean(false)) {
-                    lastDone = node;
-                }
+                if (node.path("done").asBoolean(false)) lastDone = node;
             }
 
             // si non-stream: un seul JSON
             if (lastDone == null && responseText.trim().startsWith("{")) {
                 JsonNode node = mapper.readTree(responseText);
-                if (node.path("done").asBoolean(false)) {
-                    lastDone = node;
-                }
+                if (node.path("done").asBoolean(false)) lastDone = node;
             }
 
             if (lastDone != null) {
@@ -74,7 +63,6 @@ public class OllamaTokenLoggingConfig {
                 if (prompt >= 0 && completion >= 0) {
                     int total = prompt + completion;
 
-                    // "restants" côté contexte (pratique)
                     int remainingPrompt = numCtx - prompt;
                     int remainingTotal = numCtx - total;
 
@@ -84,11 +72,9 @@ public class OllamaTokenLoggingConfig {
                 }
             }
         } catch (Exception e) {
-            // debug only, ne casse jamais l'appel
             log.debug("Failed to parse Ollama token metrics from response", e);
         }
 
-        // On renvoie une réponse "reconstituée" avec le body intact pour que Spring AI puisse lire normalement.
         return new CachedBodyClientHttpResponse(response, responseBytes);
     }
 

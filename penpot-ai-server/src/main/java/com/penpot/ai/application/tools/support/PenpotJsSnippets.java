@@ -6,10 +6,6 @@ import java.util.List;
 
 /**
  * Utilitaire de génération des fragments JavaScript Penpot récurrents.
- *
- * <p><b>DRY :</b> centralise les patterns JS dupliqués dans tous les tools
- * (lookup de forme, collection multi-formes, création de texte...).</p>
- * <p><b>SRP :</b> responsabilité unique — générer du code JS structurel Penpot.</p>
  */
 @UtilityClass
 public class PenpotJsSnippets {

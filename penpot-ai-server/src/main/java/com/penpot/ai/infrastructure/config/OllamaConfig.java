@@ -32,11 +32,6 @@ import java.util.Map;
  * </ul>
  * <p>Le qualifier {@code "executorChatClient"} est utilisé dans {@code OllamaAiAdapter}
  * pour lever toute ambiguïté Spring lors de l'injection.</p>
- *
- * <h2>Principe SRP</h2>
- * Cette classe configure uniquement l'exécuteur (qwen3:8b).
- * {@link RouterConfig} configure uniquement le classifieur (phi3:mini).
- * Aucune des deux ne connaît l'autre.
  */
 @Slf4j
 @Configuration
@@ -51,8 +46,6 @@ public class OllamaConfig {
 
     @Value("${spring.ai.ollama.chat.options.max-tokens:32000}")
     private Integer maxTokens;
-
-    // ==================== OPTIONS PAR PROFIL ====================
 
     /**
      * Options pour les tâches SIMPLES : déterministe, faible créativité.
@@ -101,8 +94,6 @@ public class OllamaConfig {
             .build();
     }
 
-    // ==================== CHAT CLIENT EXÉCUTEUR ====================
-
     /**
      * {@link ChatClient.Builder} de l'exécuteur (qwen3:8b).
      *
@@ -150,8 +141,6 @@ public class OllamaConfig {
         return builder.build();
     }
 
-    // ==================== FACTORY PAR COMPLEXITÉ ====================
-
     /**
      * Factory pour construire un {@link ChatClient} adapté à chaque niveau de complexité.
      *
@@ -185,8 +174,6 @@ public class OllamaConfig {
                 .build();
         };
     }
-
-    // ==================== INTERFACE INTERNE ====================
 
     /**
      * Interface fonctionnelle pour la factory de {@link ChatClient} par complexité.

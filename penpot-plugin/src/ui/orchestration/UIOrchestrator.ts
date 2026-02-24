@@ -14,28 +14,6 @@ import { PluginMessageBridge } from '../bridges/PluginMessageBridge';
  * 2. **initialize()** : Configuration et démarrage du système
  * 3. **Opération** : Gestion des événements utilisateur
  * 4. **destroy()** : Nettoyage des ressources
- * 
- * @example
- * ```typescript
- * // Initialisation de l'UI
- * const orchestrator = new UIOrchestrator(
- *   'ws://localhost:4401/plugin',
- *   'http://localhost:4401'
- * );
- * 
- * // Démarrage du système
- * orchestrator.initialize();
- * 
- * // L'UI est maintenant fonctionnelle :
- * // - WebSocket connecté
- * // - Conversation auto-initialisée
- * // - Tous les event handlers en place
- * 
- * // Nettoyage à la fermeture
- * window.addEventListener('beforeunload', () => {
- *   orchestrator.destroy();
- * });
- * ```
  */
 export class UIOrchestrator {
     /** Composant d'affichage des logs */
@@ -68,25 +46,11 @@ export class UIOrchestrator {
      * 
      * @param wsUrl - URL du WebSocket (ex: 'ws://localhost:4401/plugin')
      * @param apiBaseUrl - URL de base de l'API (ex: 'http://localhost:4401')
-     * 
-     * @example
-     * ```typescript
-     * // Configuration locale
-     * const orchestrator = new UIOrchestrator(
-     *   'ws://localhost:4401/plugin',
-     *   'http://localhost:4401'
-     * );
-     * 
-     * // Configuration production
-     * const orchestrator = new UIOrchestrator(
-     *   'wss://api.example.com/plugin',
-     *   'https://api.example.com'
-     * );
-     * ```
      */
     constructor(
         private readonly wsUrl: string,
-        private readonly apiBaseUrl: string
+        private readonly apiBaseUrl: string,
+        private readonly userToken: string
     ) {
         // Initialisation des composants UI
         this.logger = new LoggerComponent('logs');
@@ -94,8 +58,9 @@ export class UIOrchestrator {
         this.chatDisplay = new ChatDisplayComponent('chatBox', 'chatMsg', 'sendChatBtn');
 
         // Initialisation des services avec injection du logger
-        this.webSocketService = new WebSocketService(wsUrl, this.logger);
-        this.apiService = new ApiService(apiBaseUrl, this.logger);
+        const wsUrlWithToken = `${this.wsUrl}?userToken=${userToken}`;
+        this.webSocketService = new WebSocketService(wsUrlWithToken, this.logger);
+        this.apiService = new ApiService(this.apiBaseUrl, this.userToken, this.logger);
 
         // Initialisation du manager avec injection de dépendances
         this.conversationManager = new ConversationManager(
@@ -124,22 +89,6 @@ export class UIOrchestrator {
      * - Activation de l'UI quand prêt
      * 
      * **Doit être appelé une fois** après la construction.
-     * 
-     * @example
-     * ```typescript
-     * const orchestrator = new UIOrchestrator(wsUrl, apiUrl);
-     * orchestrator.initialize();
-     * 
-     * // Séquence de logs :
-     * // [Logger] Initializing...
-     * // [StatusDisplay] Initializing...
-     * // [ChatDisplay] Initializing...
-     * // [WebSocket] Connexion WebSocket: ws://...
-     * // [WebSocket] ✓ WebSocket connecté
-     * // [API] Création nouvelle conversation...
-     * // [API] ✓ Conversation créée: conv_abc123
-     * // [Chat] Conversation prête. ID: conv_abc1...
-     * ```
      */
     initialize(): void {
         this.initializeComponents();
@@ -158,13 +107,6 @@ export class UIOrchestrator {
      * 3. Libération des event listeners
      * 
      * **Doit être appelé** avant la fermeture de la fenêtre.
-     * 
-     * @example
-     * ```typescript
-     * window.addEventListener('beforeunload', () => {
-     *   orchestrator.destroy();
-     * });
-     * ```
      */
     destroy(): void {
         this.logger.destroy();
@@ -178,8 +120,6 @@ export class UIOrchestrator {
      * 
      * **Appelle** la méthode `initialize()` de chaque composant
      * qui configure le DOM et les références d'éléments.
-     * 
-     * @private
      */
     private initializeComponents(): void {
         this.logger.initialize();
@@ -204,11 +144,8 @@ export class UIOrchestrator {
     private wireEventHandlers(): void {
         // === WebSocket connection toggle ===
         this.statusDisplay.onConnectClick(() => {
-            if (this.webSocketService.isConnected()) {
-                this.webSocketService.disconnect();
-            } else {
-                this.webSocketService.connect();
-            }
+            if (this.webSocketService.isConnected()) this.webSocketService.disconnect();
+            else this.webSocketService.connect();
         });
 
         // === Chat message sending ===
@@ -221,24 +158,19 @@ export class UIOrchestrator {
         });
 
         // === New conversation button ===
-        const newConvBtn = document.getElementById('newConvBtn2');
-        newConvBtn?.addEventListener('click', async (e) => {
+        document.getElementById('newConvBtn')?.addEventListener('click', async (e) => {
             e.preventDefault();
             await this.conversationManager.createNew();
         });
 
         // === Reset conversation button ===
-        const deleteConvBtn = document.getElementById('deleteConvBtn2');
-        deleteConvBtn?.addEventListener('click', (e) => {
+        document.getElementById('deleteConvBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
             this.conversationManager.reset();
         });
 
         // === Clear logs buttons ===
-        const clearLogsBtn = document.getElementById('clearLogsBtn');
-        const clearLogsBtn2 = document.getElementById('clearLogsBtn2');
-        clearLogsBtn?.addEventListener('click', () => this.logger.clear());
-        clearLogsBtn2?.addEventListener('click', () => this.logger.clear());
+        document.getElementById('clearLogsBtn')?.addEventListener('click', () => this.logger.clear());
 
         // === Additional UI features ===
         this.setupModeSelection();
@@ -251,8 +183,6 @@ export class UIOrchestrator {
      * **Comportements automatiques** :
      * - **Connexion** → Auto-initialise une conversation
      * - **Déconnexion** → Réinitialise l'état de la conversation
-     * 
-     * @private
      */
     private setupStatusMonitoring(): void {
         this.webSocketService.onStatusChange((connected) => {
@@ -269,8 +199,6 @@ export class UIOrchestrator {
      * - Capture toute erreur d'initialisation
      * - Log l'erreur pour debugging
      * - N'empêche pas le fonctionnement de l'UI
-     * 
-     * @private
      */
     private async autoInitializeConversation(): Promise<void> {
         try {
@@ -290,8 +218,6 @@ export class UIOrchestrator {
      * **Comportement** :
      * - Affiche/masque les panneaux correspondants
      * - Conserve l'état entre les changements
-     * 
-     * @private
      */
     private setupModeSelection(): void {
         const modeSelect = document.getElementById('modeSelect') as HTMLSelectElement | null;
@@ -299,15 +225,9 @@ export class UIOrchestrator {
         const jsPanel = document.getElementById('jsPanel');
 
         modeSelect?.addEventListener('change', () => {
-            const mode = (modeSelect.value as 'chat' | 'js') || 'chat';
-
-            if (mode === 'chat') {
-                if (chatPanel) chatPanel.style.display = '';
-                if (jsPanel) jsPanel.style.display = 'none';
-            } else {
-                if (chatPanel) chatPanel.style.display = 'none';
-                if (jsPanel) jsPanel.style.display = '';
-            }
+            const isChat = modeSelect.value === 'chat';
+            if (chatPanel) chatPanel.style.display = isChat ? '' : 'none';
+            if (jsPanel)   jsPanel.style.display   = isChat ? 'none' : '';
         });
     }
 
@@ -323,8 +243,6 @@ export class UIOrchestrator {
      * - Ignore le code vide
      * - Gère les erreurs d'exécution
      * - Affiche les logs et résultats séparément
-     * 
-     * @private
      */
     private setupJavaScriptExecution(): void {
         const runJsBtn = document.getElementById('runJsBtn');
@@ -332,7 +250,6 @@ export class UIOrchestrator {
 
         runJsBtn?.addEventListener('click', async () => {
             const code = jsCodeTextarea?.value ?? '';
-
             if (!code.trim()) {
                 this.logger.log('Code vide ignoré');
                 return;

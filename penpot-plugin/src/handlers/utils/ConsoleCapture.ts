@@ -42,69 +42,24 @@ export class ConsoleCapture {
     }
 
     // Toutes les méthodes console standard
-    log(...args: any[]): void {
-        this.appendToLog("LOG", ...args);
-    }
+    readonly log   = (...args: any[]): void => this.appendToLog('LOG',   ...args);
+    readonly warn  = (...args: any[]): void => this.appendToLog('WARN',  ...args);
+    readonly error = (...args: any[]): void => this.appendToLog('ERROR', ...args);
+    readonly info  = (...args: any[]): void => this.appendToLog('INFO',  ...args);
+    readonly debug = (...args: any[]): void => this.appendToLog('DEBUG', ...args);
+    readonly trace = (...args: any[]): void => this.appendToLog('TRACE', ...args);
 
-    warn(...args: any[]): void {
-        this.appendToLog("WARN", ...args);
-    }
-
-    error(...args: any[]): void {
-        this.appendToLog("ERROR", ...args);
-    }
-
-    info(...args: any[]): void {
-        this.appendToLog("INFO", ...args);
-    }
-
-    debug(...args: any[]): void {
-        this.appendToLog("DEBUG", ...args);
-    }
-
-    trace(...args: any[]): void {
-        this.appendToLog("TRACE", ...args);
-    }
-
-    table(data: any): void {
-        this.appendToLog("TABLE", data);
-    }
-
-    time(label?: string): void {
-        this.appendToLog("TIME", `Timer started: ${label || "default"}`);
-    }
-
-    timeEnd(label?: string): void {
-        this.appendToLog("TIME_END", `Timer ended: ${label || "default"}`);
-    }
-
-    group(label?: string): void {
-        this.appendToLog("GROUP", label || "");
-    }
-
-    groupCollapsed(label?: string): void {
-        this.appendToLog("GROUP_COLLAPSED", label || "");
-    }
-
-    groupEnd(): void {
-        this.appendToLog("GROUP_END", "");
-    }
-
-    clear(): void {
-        // Intentionally empty - we want to capture logs
-    }
-
-    count(label?: string): void {
-        this.appendToLog("COUNT", label || "default");
-    }
-
-    countReset(label?: string): void {
-        this.appendToLog("COUNT_RESET", label || "default");
-    }
+    table(data: any): void                { this.appendToLog('TABLE',           data);                          }
+    time(label?: string): void            { this.appendToLog('TIME',            `Timer started: ${label ?? 'default'}`); }
+    timeEnd(label?: string): void         { this.appendToLog('TIME_END',        `Timer ended: ${label ?? 'default'}`);   }
+    group(label?: string): void           { this.appendToLog('GROUP',           label ?? '');                   }
+    groupCollapsed(label?: string): void  { this.appendToLog('GROUP_COLLAPSED', label ?? '');                   }
+    groupEnd(): void                      { this.appendToLog('GROUP_END',       '');                            }
+    count(label?: string): void           { this.appendToLog('COUNT',           label ?? 'default');            }
+    countReset(label?: string): void      { this.appendToLog('COUNT_RESET',     label ?? 'default');            }
+    clear(): void                         { /* capture intentionnelle, on ne vide pas */ }
 
     assert(condition: boolean, ...args: any[]): void {
-        if (!condition) {
-            this.appendToLog("ASSERT", ...args);
-        }
+        if (!condition) this.appendToLog('ASSERT', ...args);
     }
 }

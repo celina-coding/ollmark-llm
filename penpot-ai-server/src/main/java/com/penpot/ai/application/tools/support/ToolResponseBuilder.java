@@ -8,10 +8,6 @@ import java.util.stream.Collectors;
 
 /**
  * Constructeur centralisé des réponses JSON pour tous les Tools Penpot.
- *
- * <p><b>SRP :</b> responsabilité unique — formater les réponses des tools.</p>
- * <p><b>DRY :</b> élimine la duplication des méthodes {@code formatError}/{@code formatSuccess}
- * présentes dans chacun des 7+ tool classes.</p>
  */
 @UtilityClass
 public class ToolResponseBuilder {

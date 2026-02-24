@@ -1,4 +1,5 @@
 import { IConversationManager, IApiService, IChatDisplay } from '../interfaces/IUIComponents';
+import { ILogger, LogFn, createLogger } from '../../common/Logger';
 
 /**
  * Gestionnaire d'état et de flux des conversations.
@@ -16,26 +17,6 @@ import { IConversationManager, IApiService, IChatDisplay } from '../interfaces/I
  * - Logger les opérations
  * 
  * @implements {IConversationManager}
- * 
- * @example
- * ```typescript
- * const manager = new ConversationManager(
- *   apiService,
- *   chatDisplay,
- *   logger
- * );
- * 
- * // Créer une conversation
- * await manager.createNew();
- * 
- * // Envoyer un message
- * if (manager.isReady()) {
- *   await manager.sendMessage('Bonjour !');
- * }
- * 
- * // Réinitialiser
- * manager.reset();
- * ```
  */
 export class ConversationManager implements IConversationManager {
     /** ID de la conversation courante, null si aucune conversation */
@@ -43,6 +24,8 @@ export class ConversationManager implements IConversationManager {
 
     /** Indique si une conversation est prête à recevoir des messages */
     private ready: boolean = false;
+
+    private readonly log: LogFn;
 
     /**
      * Crée une instance du gestionnaire de conversations.
@@ -63,8 +46,10 @@ export class ConversationManager implements IConversationManager {
     constructor(
         private readonly apiService: IApiService,
         private readonly chatDisplay: IChatDisplay,
-        private readonly logger?: { log: (msg: string) => void }
-    ) {}
+        logger?: ILogger
+    ) {
+        this.log = createLogger(logger);
+    }
 
     /**
      * Crée une nouvelle conversation.
@@ -84,18 +69,6 @@ export class ConversationManager implements IConversationManager {
      * - Ne marque PAS comme prêt en cas d'erreur
      * 
      * @returns Promise résolue quand la conversation est créée
-     * 
-     * @example
-     * ```typescript
-     * try {
-     *   await manager.createNew();
-     *   console.log('ID:', manager.getCurrentId());
-     *   // ID: "conv_abc123def456"
-     * } catch (error) {
-     *   // Erreur déjà affichée dans le chat
-     *   console.error('Failed:', error);
-     * }
-     * ```
      */
     async createNew(): Promise<void> {
         this.reset();
@@ -134,14 +107,6 @@ export class ConversationManager implements IConversationManager {
      * - Appelé automatiquement par `createNew()`
      * - Peut être appelé manuellement pour nettoyer
      * - Utilisé lors de la déconnexion WebSocket
-     * 
-     * @example
-     * ```typescript
-     * // Nettoyage manuel
-     * manager.reset();
-     * console.log(manager.isReady()); // false
-     * console.log(manager.getCurrentId()); // null
-     * ```
      */
     reset(): void {
         this.currentConversationId = null;
@@ -172,25 +137,8 @@ export class ConversationManager implements IConversationManager {
      * - Log les erreurs
      * - Réactive toujours les inputs (finally)
      * 
-     * **Pattern UX** :
-     * - Feedback immédiat (affichage message utilisateur)
-     * - Désactivation pendant traitement (évite spam)
-     * - Réactivation garantie (finally)
-     * 
      * @param message - Message utilisateur à envoyer
      * @returns Promise résolue quand l'envoi est terminé
-     * 
-     * @example
-     * ```typescript
-     * await manager.sendMessage('Explique les Promises');
-     * 
-     * // Chat affichera :
-     * // Vous • 14:32
-     * // Explique les Promises
-     * //
-     * // IA • 14:32
-     * // Une Promise est un objet représentant...
-     * ```
      */
     async sendMessage(message: string): Promise<void> {
         if (!this.ready || !this.currentConversationId) {
@@ -207,11 +155,7 @@ export class ConversationManager implements IConversationManager {
         this.chatDisplay.setInputEnabled(false);
 
         try {
-            const { response } = await this.apiService.sendMessage(
-                this.currentConversationId,
-                message
-            );
-
+            const { response } = await this.apiService.sendMessage(this.currentConversationId, message);
             this.chatDisplay.appendMessage('ai', response || '(réponse vide)');
         } catch (error: any) {
             const errorMessage = error?.message || String(error);
@@ -226,16 +170,6 @@ export class ConversationManager implements IConversationManager {
      * Récupère l'ID de la conversation courante.
      * 
      * @returns ID de conversation ou null si aucune conversation
-     * 
-     * @example
-     * ```typescript
-     * const id = manager.getCurrentId();
-     * if (id) {
-     *   console.log('Conversation active:', id);
-     * } else {
-     *   console.log('Aucune conversation');
-     * }
-     * ```
      */
     getCurrentId(): string | null {
         return this.currentConversationId;
@@ -245,27 +179,8 @@ export class ConversationManager implements IConversationManager {
      * Vérifie si le manager est prêt à envoyer des messages.
      * 
      * @returns `true` si une conversation est active et prête
-     * 
-     * @example
-     * ```typescript
-     * if (manager.isReady()) {
-     *   await manager.sendMessage('Hello');
-     * } else {
-     *   await manager.createNew();
-     * }
-     * ```
      */
     isReady(): boolean {
         return this.ready;
-    }
-
-    /**
-     * Enregistre un message via le logger optionnel.
-     * 
-     * @param message - Message à logger
-     * @private
-     */
-    private log(message: string): void {
-        if (this.logger) this.logger.log(message);
     }
 }

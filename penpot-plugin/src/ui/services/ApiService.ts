@@ -1,4 +1,5 @@
 import { IApiService } from '../interfaces/IUIComponents';
+import { ILogger, LogFn, createLogger } from '../../common/Logger';
 
 /**
  * Service d'appels API HTTP.
@@ -35,24 +36,21 @@ import { IApiService } from '../interfaces/IUIComponents';
  * ```
  */
 export class ApiService implements IApiService {
+    private readonly log: LogFn;
+
     /**
      * Crée une instance du service API.
      * 
      * @param baseUrl - URL de base du backend (ex: 'http://localhost:4401')
      * @param logger - Logger optionnel pour tracer les opérations
-     * 
-     * @example
-     * ```typescript
-     * const api = new ApiService(
-     *   'http://localhost:4401',
-     *   { log: (msg) => console.log(`[API] ${msg}`) }
-     * );
-     * ```
      */
     constructor(
         private readonly baseUrl: string,
-        private readonly logger?: { log: (msg: string) => void }
-    ) {}
+        private readonly userToken: string,
+        logger?: ILogger
+    ) {
+        this.log = createLogger(logger);
+    }
 
     /**
      * Crée une nouvelle conversation avec l'IA.
@@ -68,30 +66,16 @@ export class ApiService implements IApiService {
      * @returns Promise contenant l'ID de la conversation créée
      * @throws {Error} Si le backend ne retourne pas de conversationId
      * @throws {Error} Si la requête HTTP échoue
-     * 
-     * @example
-     * ```typescript
-     * try {
-     *   const { conversationId } = await apiService.newConversation();
-     *   console.log('Conversation créée:', conversationId);
-     *   // conversationId: "conv_abc123def456"
-     * } catch (error) {
-     *   console.error('Échec création:', error.message);
-     * }
-     * ```
      */
     async newConversation(): Promise<{ conversationId: string }> {
         this.log('Création nouvelle conversation...');
 
         const data = await this.postJson<{ conversationId?: string }>(
             `${this.baseUrl}/ai/chat/new`,
-            {}
+            { userToken: this.userToken }
         );
 
-        if (!data.conversationId) {
-            throw new Error('Aucun conversationId dans la réponse');
-        }
-
+        if (!data.conversationId) throw new Error('Aucun conversationId dans la réponse');
         this.log(`✓ Conversation créée: ${data.conversationId}`);
         return { conversationId: data.conversationId };
     }
@@ -119,24 +103,13 @@ export class ApiService implements IApiService {
      * @param conversationId - ID de la conversation (de `newConversation()`)
      * @param message - Message utilisateur à envoyer
      * @returns Promise contenant la réponse de l'IA
-     * 
-     * @example
-     * ```typescript
-     * const { response } = await apiService.sendMessage(
-     *   conversationId,
-     *   'Explique-moi les closures en JavaScript'
-     * );
-     * 
-     * console.log(response);
-     * // "Une closure est une fonction qui..."
-     * ```
      */
     async sendMessage(conversationId: string, message: string): Promise<{ response: string }> {
         this.log(`Envoi message (${message.length} chars)...`);
 
         const data = await this.postJson<{ response?: string }>(
             `${this.baseUrl}/ai/chat`,
-            { conversationId, message }
+            { conversationId, message, userToken: this.userToken }
         );
 
         this.log('✓ Réponse reçue');
@@ -172,19 +145,6 @@ export class ApiService implements IApiService {
      * 
      * @param code - Code JavaScript à exécuter
      * @returns Promise avec succès, résultat et logs
-     * 
-     * @example
-     * ```typescript
-     * const result = await apiService.executeCode(`
-     *   console.log('Hello');
-     *   const sum = 40 + 2;
-     *   return sum;
-     * `);
-     * 
-     * console.log(result.success); // true
-     * console.log(result.result);  // 42
-     * console.log(result.logs);    // "[LOG] Hello\n"
-     * ```
      */
     async executeCode(code: string): Promise<{ success: boolean; logs?: string; result?: any }> {
         this.log(`Exécution JavaScript (${code.length} chars)...`);
@@ -224,23 +184,12 @@ export class ApiService implements IApiService {
      * @param body - Corps de la requête (sera JSON.stringify)
      * @returns Promise des données parsées
      * @throws {Error} Si la requête échoue (status non-OK)
-     * 
-     * @private
-     * 
-     * @example
-     * ```typescript
-     * // Usage interne dans les méthodes publiques
-     * const data = await this.postJson<ResponseType>(
-     *   'http://api.com/endpoint',
-     *   { param: 'value' }
-     * );
-     * ```
      */
     private async postJson<T>(url: string, body: any): Promise<T> {
         const response = await fetch(url, {
-            method: 'POST',
+            method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            body:    JSON.stringify(body),
         });
 
         const text = await response.text();
@@ -257,17 +206,5 @@ export class ApiService implements IApiService {
         }
 
         return data as T;
-    }
-
-    /**
-     * Enregistre un message via le logger optionnel.
-     * 
-     * @param message - Message à logger
-     * @private
-     */
-    private log(message: string): void {
-        if (this.logger) {
-            this.logger.log(message);
-        }
     }
 }

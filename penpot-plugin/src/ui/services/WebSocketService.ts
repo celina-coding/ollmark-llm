@@ -1,4 +1,5 @@
 import { IWebSocketConnection } from '../interfaces/IUIComponents';
+import { ILogger, LogFn, createLogger } from '../../common/Logger';
 
 /**
  * Service de gestion de connexion WebSocket.
@@ -46,6 +47,8 @@ export class WebSocketService implements IWebSocketConnection {
     /** Handlers pour les changements d'état de connexion */
     private statusHandlers: Array<(connected: boolean) => void> = [];
 
+    private readonly log: LogFn;
+
     /**
      * Crée une instance du service WebSocket.
      * 
@@ -62,8 +65,10 @@ export class WebSocketService implements IWebSocketConnection {
      */
     constructor(
         private readonly url: string,
-        private readonly logger?: { log: (msg: string) => void }
-    ) {}
+        logger?: ILogger
+    ) {
+        this.log = createLogger(logger);
+    }
 
     /**
      * Établit la connexion WebSocket au serveur.
@@ -163,13 +168,6 @@ export class WebSocketService implements IWebSocketConnection {
      * - Les handlers `onclose` seront automatiquement déclenchés
      * 
      * **Note** : Utilise le code de fermeture par défaut (1000 - Normal Closure).
-     * 
-     * @example
-     * ```typescript
-     * wsService.disconnect();
-     * // Logs: "Fermeture WebSocket..."
-     * // Puis: "WebSocket fermé (code: 1000)"
-     * ```
      */
     disconnect(): void {
         if (this.ws) {
@@ -191,19 +189,6 @@ export class WebSocketService implements IWebSocketConnection {
      * 
      * @param data - Données à envoyer (sera JSON.stringify)
      * @throws {Error} Si WebSocket n'est pas connecté
-     * 
-     * @example
-     * ```typescript
-     * try {
-     *   wsService.send({
-     *     id: 'req-123',
-     *     task: 'executeCode',
-     *     params: { code: 'return 42;' }
-     *   });
-     * } catch (error) {
-     *   console.error('Failed to send:', error);
-     * }
-     * ```
      */
     send(data: any): void {
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
@@ -211,8 +196,7 @@ export class WebSocketService implements IWebSocketConnection {
             throw new Error('WebSocket not connected');
         }
 
-        const json = JSON.stringify(data);
-        this.ws.send(json);
+        this.ws.send(JSON.stringify(data));
         this.log(`→ Message envoyé (id=${data?.id ?? '?'})`);
     }
 
@@ -220,16 +204,6 @@ export class WebSocketService implements IWebSocketConnection {
      * Vérifie si la connexion WebSocket est active.
      * 
      * @returns `true` si WebSocket existe et est dans l'état OPEN
-     * 
-     * @example
-     * ```typescript
-     * if (wsService.isConnected()) {
-     *   wsService.send({ type: 'heartbeat' });
-     * } else {
-     *   console.log('Not connected, attempting reconnect...');
-     *   wsService.connect();
-     * }
-     * ```
      */
     isConnected(): boolean {
         return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
@@ -239,20 +213,6 @@ export class WebSocketService implements IWebSocketConnection {
      * Enregistre un handler pour les messages entrants.
      * 
      * @param handler - Fonction appelée à chaque message reçu
-     * 
-     * @example
-     * ```typescript
-     * // Multiples observers
-     * wsService.onMessage((data) => {
-     *   console.log('Observer 1:', data);
-     * });
-     * 
-     * wsService.onMessage((data) => {
-     *   if (data.type === 'notification') {
-     *     showNotification(data.message);
-     *   }
-     * });
-     * ```
      */
     onMessage(handler: (data: any) => void): void {
         this.messageHandlers.push(handler);
@@ -262,18 +222,6 @@ export class WebSocketService implements IWebSocketConnection {
      * Enregistre un handler pour les changements d'état de connexion.
      * 
      * @param handler - Fonction appelée à chaque changement d'état
-     * 
-     * @example
-     * ```typescript
-     * wsService.onStatusChange((connected) => {
-     *   statusIndicator.className = connected ? 'online' : 'offline';
-     *   if (connected) {
-     *     initializeSession();
-     *   } else {
-     *     cleanupSession();
-     *   }
-     * });
-     * ```
      */
     onStatusChange(handler: (connected: boolean) => void): void {
         this.statusHandlers.push(handler);
@@ -286,7 +234,7 @@ export class WebSocketService implements IWebSocketConnection {
      * @private
      */
     private notifyMessageReceived(data: any): void {
-        this.messageHandlers.forEach(handler => handler(data));
+        this.messageHandlers.forEach((h) => h(data));
     }
 
     /**
@@ -296,16 +244,6 @@ export class WebSocketService implements IWebSocketConnection {
      * @private
      */
     private notifyStatusChange(connected: boolean): void {
-        this.statusHandlers.forEach(handler => handler(connected));
-    }
-
-    /**
-     * Enregistre un message via le logger optionnel.
-     * 
-     * @param message - Message à logger
-     * @private
-     */
-    private log(message: string): void {
-        if (this.logger) this.logger.log(message);
+        this.statusHandlers.forEach((h) => h(connected));
     }
 }
