@@ -9,7 +9,6 @@ import com.penpot.ai.model.*;
 import com.penpot.ai.shared.exception.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import java.util.*;

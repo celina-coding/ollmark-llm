@@ -5,6 +5,7 @@ package com.penpot.ai.infrastructure.strategy;
  * Permet d'ajouter de nouveaux formats sans modifier le code existant (OCP).
  */
 public interface ResultFormatter {
+
     /**
      * Formate un résultat dans une représentation textuelle.
      * 

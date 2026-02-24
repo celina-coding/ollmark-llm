@@ -1,10 +1,7 @@
 package com.penpot.ai.core.domain;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.*;
+import java.util.*;
 
 /**
  * Plan de design structuré généré par l'IA via {@code entity(DesignPlan.class)}.
@@ -58,9 +55,6 @@ public record DesignPlan(
     @JsonPropertyDescription("Confirmation message to display to the user after execution")
     String userFacingMessage
 ) {
-
-    // ==================== NESTED RECORDS ====================
-
     /**
      * Instruction de création ou modification d'une forme Penpot.
      *
@@ -87,8 +81,6 @@ public record DesignPlan(
         @JsonPropertyDescription("Names of shapes that must be created before this one")
         List<String> dependsOn
     ) {}
-
-    // ==================== FACTORY METHODS ====================
 
     /**
      * Crée un DesignPlan vide pour les cas où l'IA ne retourne pas de plan structuré.

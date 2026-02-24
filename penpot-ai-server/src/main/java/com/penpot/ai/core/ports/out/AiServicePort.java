@@ -1,7 +1,5 @@
 package com.penpot.ai.core.ports.out;
 
-import com.penpot.ai.core.domain.AiContext;
-
 /**
  * Port de sortie pour les services d'intelligence artificielle.
  * 

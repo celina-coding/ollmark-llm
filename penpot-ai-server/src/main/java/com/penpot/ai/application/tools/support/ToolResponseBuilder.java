@@ -12,21 +12,15 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class ToolResponseBuilder {
 
-    // ==================== ERREURS ====================
-
     /** Réponse d'erreur générique. */
     public static String error(String message) {
         return String.format("{\"success\": false, \"error\": %s}", JsonUtils.escapeJson(message));
     }
 
-    // ==================== SUCCÈS SIMPLES ====================
-
     /** Réponse succès avec message texte libre. */
     public static String success(String message) {
         return String.format("{\"success\": true, \"message\": %s}", JsonUtils.escapeJson(message));
     }
-
-    // ==================== CRÉATION DE FORMES ====================
 
     /**
      * Réponse pour la création d'une forme.
@@ -54,8 +48,6 @@ public class ToolResponseBuilder {
         );
     }
 
-    // ==================== OPÉRATIONS SUR UNE FORME ====================
-
     /**
      * Réponse pour une transformation ou application de style (rotate, fill, shadow...).
      */
@@ -67,8 +59,6 @@ public class ToolResponseBuilder {
             JsonUtils.escapeJson(details)
         );
     }
-
-    // ==================== OPÉRATIONS MULTI-FORMES ====================
 
     /**
      * Réponse pour une opération sur plusieurs formes (align, distribute, z-order...).

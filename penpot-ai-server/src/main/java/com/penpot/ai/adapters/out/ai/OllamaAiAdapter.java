@@ -137,23 +137,6 @@ public class OllamaAiAdapter implements AiServicePort {
             // Étape 4 : Exécuteur
             ChatClient adaptedClient = chatClientFactory.buildForComplexity(complexity);
             String response = adaptedClient.prompt()
-                .system(promptsConfigService.getInitialInstructions());
-            // Étape 1 : Complexité
-            TaskComplexity complexity = complexityAnalyzer.analyze(userMessage);
-            log.info("Processing chat (conversation={}, complexity={}, messageLength={})",
-                conversationId, complexity, userMessage.length());
-
-            // Étape 2 : Router
-            Set<ToolCategory> categories = toolRouter.route(userMessage);
-            log.info("[Router] → categories: {}", categories);
-
-            // Étape 3 : Résolution des tools
-            Object[] tools = toolCategoryResolver.resolveTools(categories);
-            log.info("[Registry] → {} tool instance(s) selected", tools.length);
-
-            // Étape 4 : Exécuteur
-            ChatClient adaptedClient = chatClientFactory.buildForComplexity(complexity);
-            String response = adaptedClient.prompt()
                 .system(promptsConfigService.getInitialInstructions())
                 .user(userMessage)
                 .advisors(

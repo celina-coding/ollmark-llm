@@ -18,9 +18,7 @@ public class ValidationUtils {
      * @throws ValidationException si la validation échoue
      */
     public static void requireNonBlank(String value, String fieldName) {
-        if (value == null || value.isBlank()) {
-            throw new ValidationException(fieldName + " cannot be null or empty");
-        }
+        if (value == null || value.isBlank()) throw new ValidationException(fieldName + " cannot be null or empty");
     }
 
     /**
@@ -32,9 +30,7 @@ public class ValidationUtils {
      */
     public static void validateString(String value, String fieldName, int maxLength) {
         requireNonBlank(value, fieldName);
-        if (maxLength > 0) {
-            requireMaxLength(value, maxLength, fieldName);
-        }
+        if (maxLength > 0) requireMaxLength(value, maxLength, fieldName);
     }
 
     /**

@@ -1,5 +1,6 @@
 import "./style.css";
 import { UIOrchestrator } from './ui/orchestration/UIOrchestrator';
+import { generateUUID } from './utils/Uuid';
 
 /**
  * **Point d'entrée principal de l'interface utilisateur du plugin Penpot.**
@@ -98,7 +99,7 @@ const API_BASE_URL = WS_URL.replace(/^ws/, "http").replace(/\/plugin$/, "");
  */
 function bootstrap(): void {
     const params = new URLSearchParams(window.location.search);
-    const userToken = params.get('userToken') ?? crypto.randomUUID();
+    const userToken = params.get('userToken') ?? generateUUID();
 
     const orchestrator = new UIOrchestrator(WS_URL, API_BASE_URL, userToken);
     orchestrator.initialize();

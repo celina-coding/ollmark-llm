@@ -109,15 +109,6 @@ public class SessionManager {
     }
 
     /**
-     * Obtient toutes les sessions actives.
-     * 
-     * @return map immutable des sessions
-     */
-    public Map<String, WebSocketSession> getAllSessions() {
-        return Map.copyOf(sessions);
-    }
-
-    /**
      * Obtient le token utilisateur pour une session.
      * 
      * @param sessionId l'ID de la session

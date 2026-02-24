@@ -2,7 +2,6 @@ package com.penpot.ai.core.domain.spec;
 
 import lombok.*;
 import java.util.Map;
-import com.penpot.ai.core.domain.spec.TypeStyle;
 
 @Value
 @Builder

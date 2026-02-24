@@ -10,8 +10,6 @@ import java.util.List;
 @UtilityClass
 public class PenpotJsSnippets {
 
-    // ==================== LOOKUP D'UNE SEULE FORME ====================
-
     /**
      * Génère le code JS pour trouver une forme par ID, avec fallback sur la sélection.
      * <p>Variable résultante dans le scope JS : {@code shape}.</p>
@@ -57,8 +55,6 @@ public class PenpotJsSnippets {
             """, firstId, firstId);
     }
 
-    // ==================== COLLECTION DE PLUSIEURS FORMES ====================
-
     /**
      * Génère le code JS pour collecter plusieurs formes avec fallback sur la sélection.
      * <p>Variable résultante : {@code shapes} (tableau).</p>
@@ -96,8 +92,6 @@ public class PenpotJsSnippets {
             """, toolName));
         return sb.toString();
     }
-
-    // ==================== CRÉATION DE TEXTE ====================
 
     /**
      * Génère le code JS pour créer un élément texte Penpot.

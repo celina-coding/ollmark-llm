@@ -70,9 +70,8 @@ spring:
     ollama:
       # URL de base d'Ollama sur la VM distante
       # Interface graphique Open WebUI : http://10.130.163.62:3000/
-      # PC Amine : 192.168.41.75
       # VM
-      base-url: ${OLLAMA_BASE_URL:http://192.168.41.75:11434}
+      base-url: ${OLLAMA_BASE_URL:https://impoverished-cleta-noninvidiously.ngrok-free.dev}
       # PC FAC
       #base-url: ${OLLAMA_BASE_URL:http://192.168.41.3:11434}
 

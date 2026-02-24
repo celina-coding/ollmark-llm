@@ -2,7 +2,6 @@ package com.penpot.ai.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
-import java.util.UUID;
 
 /**
  * Requête de tâche envoyée au plugin Penpot via WebSocket.

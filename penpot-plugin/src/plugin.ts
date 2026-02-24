@@ -1,6 +1,7 @@
 import { PluginOrchestrator } from './orchestration/PluginOrchestrator';
 import { ExecuteCodeTaskHandler } from './handlers/code/ExecuteCodeTaskHandler';
 import { PluginTaskRequest } from './common/types';
+import { generateUUID } from './utils/Uuid';
 
 /**
  * **Point d'entrée principal du runtime du plugin Penpot.**
@@ -37,6 +38,24 @@ import { PluginTaskRequest } from './common/types';
  * @module plugin
  */
 
+
+// ============================================================================
+// UUID Generation
+// ============================================================================
+
+/**
+ * Génère un UUID v4 sans dépendre de crypto.randomUUID().
+ * Version inline pour le sandbox Penpot qui ne supporte pas les imports externes.
+ */
+function generatePluginUUID(): string {
+    // Le sandbox Penpot n'a pas accès à crypto, on utilise Math.random()
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 // ============================================================================
 // Configuration
 // ============================================================================
@@ -64,7 +83,7 @@ declare const IS_MULTI_USER_MODE: boolean;
  */
 const isMultiUserMode = typeof IS_MULTI_USER_MODE !== "undefined" ? IS_MULTI_USER_MODE : false;
 
-const userToken = crypto.randomUUID();
+const userToken = generatePluginUUID();
 
 // Logging de démarrage
 console.log("[Plugin] Starting Penpot AI Plugin");

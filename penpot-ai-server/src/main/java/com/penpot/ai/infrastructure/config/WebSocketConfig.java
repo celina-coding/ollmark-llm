@@ -42,7 +42,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
         log.info("Registering WebSocket handler on endpoint: /plugin");
 
         registry.addHandler(pluginWebSocketHandler, "/plugin")
-                .setAllowedOrigins("*");
+            .setAllowedOrigins("*");
 
         log.info("WebSocket handler registered successfully (expected port: {})", 
             websocketPort);

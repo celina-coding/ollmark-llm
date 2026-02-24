@@ -74,12 +74,8 @@ public class TemplateSpecsFormatter {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("mode", layout.getMode());
 
-        if (layout.getDirection() != null) {
-            map.put("direction", layout.getDirection());
-        }
-        if (layout.getType() != null) {
-            map.put("type", layout.getType());
-        }
+        if (layout.getDirection() != null) map.put("direction", layout.getDirection());
+        if (layout.getType() != null) map.put("type", layout.getType());
         if (layout.getHint() != null) map.put("hint", layout.getHint());
 
         return map;

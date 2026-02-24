@@ -51,15 +51,11 @@ public class TaskFactory {
      */
     private void validateCode(String code) {
         if (code == null || code.isBlank()) {
-            throw new IllegalArgumentException(
-                "Code cannot be null or empty"
-            );
+            throw new IllegalArgumentException("Code cannot be null or empty");
         }
 
         if (code.length() > 100_000) {
-            throw new IllegalArgumentException(
-                "Code is too long (max 100,000 characters)"
-            );
+            throw new IllegalArgumentException("Code is too long (max 100,000 characters)");
         }
     }
 }

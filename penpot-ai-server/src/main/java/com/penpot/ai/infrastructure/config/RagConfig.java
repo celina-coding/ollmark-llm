@@ -62,8 +62,6 @@ public class RagConfig {
     @Value("${penpot.ai.rag.query-variants:3}")
     private int queryVariants;
 
-    // ==================== VECTOR STORE ====================
-
     /**
      * VectorStore en mémoire.
      */
@@ -72,8 +70,6 @@ public class RagConfig {
         log.info("Initializing SimpleVectorStore (in-memory)");
         return SimpleVectorStore.builder(embeddingModel).build();
     }
-
-    // ==================== RAG MODULAIRE ====================
 
     /**
      * {@link RetrievalAugmentationAdvisor} complet avec pipeline pré-retrieval.
