@@ -9,6 +9,7 @@ import com.penpot.ai.shared.exception.ToolExecutionException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import com.penpot.ai.application.advisor.ReReadingAdvisor;
+import com.penpot.ai.application.advisor.InspectionFirstAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
@@ -70,6 +71,9 @@ public class OllamaAiAdapter implements AiServicePort {
     /** RAG Modulaire : advisor complet avec rewrite + multi-query + retrieval. */
     private final RetrievalAugmentationAdvisor retrievalAugmentationAdvisor;
 
+    /** Inspection First Advisor */
+    private final InspectionFirstAdvisor inspectionFirstAdvisor;
+
     // ==================== ROUTER ====================
 
     /** Port de routing : analyse l'intention et retourne les catégories de tools. */
@@ -91,7 +95,9 @@ public class OllamaAiAdapter implements AiServicePort {
         PromptsConfigService promptsConfigService,
         RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
         ToolRouterPort toolRouter,
-        ToolCategoryResolver toolCategoryResolver
+        ToolCategoryResolver toolCategoryResolver,
+        InspectionFirstAdvisor inspectionFirstAdvisor
+
     ) {
         this.executorChatClient = executorChatClient;
         this.chatClientFactory = chatClientFactory;
@@ -101,6 +107,7 @@ public class OllamaAiAdapter implements AiServicePort {
         this.retrievalAugmentationAdvisor = retrievalAugmentationAdvisor;
         this.toolRouter = toolRouter;
         this.toolCategoryResolver = toolCategoryResolver;
+        this.inspectionFirstAdvisor = inspectionFirstAdvisor;
     }
 
     @Override
@@ -125,11 +132,15 @@ public class OllamaAiAdapter implements AiServicePort {
                 .system(promptsConfigService.getInitialInstructions())
                 .user(userMessage)
                 .advisors(
+                    inspectionFirstAdvisor,
                     retrievalAugmentationAdvisor,
                     new ReReadingAdvisor(),
                     new SimpleLoggerAdvisor()
                 )
-                .advisors(advisor -> advisor.param(CONVERSATION_ID, conversationId))
+                .advisors(advisor -> advisor
+                .param(CONVERSATION_ID, conversationId)
+                .param(InspectionFirstAdvisor.CTX_TOOL_CATEGORIES,
+                    categories.stream().map(Enum::name).toList()))
                 .tools(tools)
                 .call()
                 .content();
