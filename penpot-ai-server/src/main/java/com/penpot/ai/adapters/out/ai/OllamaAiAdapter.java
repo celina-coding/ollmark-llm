@@ -137,7 +137,7 @@ public class OllamaAiAdapter implements AiServicePort {
             // Étape 4 : Exécuteur
             ChatClient adaptedClient = chatClientFactory.buildForComplexity(complexity);
             String response = adaptedClient.prompt()
-                .system(promptsConfigService.getInitialInstructions())
+                .system(promptsConfigService.getInitialInstructions());
             // Étape 1 : Complexité
             TaskComplexity complexity = complexityAnalyzer.analyze(userMessage);
             log.info("Processing chat (conversation={}, complexity={}, messageLength={})",

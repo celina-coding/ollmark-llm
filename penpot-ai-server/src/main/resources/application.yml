@@ -4,7 +4,7 @@
 
 server:
   port: 4401
-  address: ${PENPOT_SERVER_LISTEN_ADDRESS:localhost}
+  address: 0.0.0.0
 
 # ============================================
 # Configuration Penpot
