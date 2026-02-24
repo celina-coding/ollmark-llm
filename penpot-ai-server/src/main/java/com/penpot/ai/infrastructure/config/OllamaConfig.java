@@ -3,6 +3,9 @@ package com.penpot.ai.infrastructure.config;
 import com.penpot.ai.core.domain.TaskComplexity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.penpot.ai.core.domain.TaskComplexity;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.ollama.OllamaChatModel;
@@ -89,6 +92,12 @@ public class OllamaConfig {
      * <p>Le mode thinking ({@code enableThinking()}) permet au modèle d'exposer
      * son raisonnement interne avant de répondre, accessible via
      * {@code response.getResult().getMetadata().get("thinking")}.</p>
+     * Options pour les tâches COMPLEXES : thinking activé, raisonnement profond.
+     * Exemples : créer un design complet, orchestrer une séquence multi-étapes.
+     *
+     * <p>Le mode thinking ({@code enableThinking()}) permet au modèle d'exposer
+     * son raisonnement interne avant de répondre, accessible via
+     * {@code response.getResult().getMetadata().get("thinking")}.</p>
      */
     @Bean("complexOptions")
     @RefreshScope
@@ -122,12 +131,25 @@ public class OllamaConfig {
         MessageChatMemoryAdvisor memoryAdvisor
     ) {
         log.info("Configuring executor ChatClient.Builder with model: {}", modelName);
+        log.info("Configuring executor ChatClient.Builder with model: {}", modelName);
         return ChatClient.builder(chatModel)
+            .defaultOptions(simpleOptions())
             .defaultOptions(simpleOptions())
             .defaultAdvisors(memoryAdvisor);
     }
 
     /**
+     * Bean {@link ChatClient} exécuteur principal.
+     *
+     * <p>{@code @Primary} : injecté par défaut lorsqu'aucun qualifier n'est spécifié
+     * (tests, beans tiers). Le router ({@code routerChatClient}) est toujours accédé
+     * via {@code @Qualifier("routerChatClient")} et n'entre jamais en conflit.</p>
+     *
+     * <p>Qualifié {@code "executorChatClient"} pour permettre une injection explicite
+     * dans {@code OllamaAiAdapter}.</p>
+     *
+     * @param builder le builder exécuteur qualifié
+     * @return le client prêt à l'emploi
      * Bean {@link ChatClient} exécuteur principal.
      *
      * <p>{@code @Primary} : injecté par défaut lorsqu'aucun qualifier n'est spécifié

@@ -15,6 +15,17 @@ import org.springframework.context.annotation.*;
  * {@code OllamaConfig} configure l'exécuteur (qwen3:8b avec mémoire),
  * {@code RouterConfig} configure le classifieur (phi3:mini sans mémoire).
  *
+<<<<<<< HEAD
+=======
+ * <h2>Pourquoi phi3:mini pour le router ?</h2>
+ * <ul>
+ *   <li><b>Latence</b> : 3.8B params → ~100-200ms vs ~800ms+ pour qwen3:8b</li>
+ *   <li><b>Classification</b> : phi3:mini est excellent sur les tâches de catégorisation
+ *       courtes (instruction-tuned par Microsoft)</li>
+ *   <li><b>Coût mémoire GPU</b> : charge minimale, laisse de la VRAM à l'exécuteur</li>
+ * </ul>
+ *
+>>>>>>> feature/modification-contenu
  * <h2>Paramètres intentionnels</h2>
  * <ul>
  *   <li>{@code temperature=0.0} : classification déterministe, pas de créativité</li>
@@ -22,6 +33,13 @@ import org.springframework.context.annotation.*;
  *   <li>Pas de {@code MessageChatMemoryAdvisor} : le router ne doit pas avoir de mémoire
  *       (chaque requête est indépendante)</li>
  * </ul>
+<<<<<<< HEAD
+=======
+ *
+ * <h2>Idée d'amélioration future</h2>
+ * Ajouter un {@code SimpleLoggerAdvisor} conditionnel sur profil {@code dev}
+ * pour loguer toutes les requêtes/réponses router en debug.
+>>>>>>> feature/modification-contenu
  */
 @Slf4j
 @Configuration

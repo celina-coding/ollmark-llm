@@ -9,13 +9,18 @@ import com.penpot.ai.shared.exception.ToolExecutionException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import com.penpot.ai.application.advisor.ReReadingAdvisor;
+import com.penpot.ai.application.advisor.InspectionFirstAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 
 import java.util.Set;
 
@@ -64,13 +69,18 @@ public class OllamaAiAdapter implements AiServicePort {
     private final RequestComplexityAnalyzer complexityAnalyzer;
 
     /** Mémoire de conversation persistée. */
+    /** Mémoire de conversation persistée. */
     private final ChatMemory chatMemory;
 
+    /** Service de configuration des prompts système. */
     /** Service de configuration des prompts système. */
     private final PromptsConfigService promptsConfigService;
 
     /** RAG Modulaire : advisor complet avec rewrite + multi-query + retrieval. */
     private final RetrievalAugmentationAdvisor retrievalAugmentationAdvisor;
+
+    /** Inspection First Advisor */
+    private final InspectionFirstAdvisor inspectionFirstAdvisor;
 
     // ==================== ROUTER ====================
 
@@ -93,7 +103,9 @@ public class OllamaAiAdapter implements AiServicePort {
         PromptsConfigService promptsConfigService,
         RetrievalAugmentationAdvisor retrievalAugmentationAdvisor,
         ToolRouterPort toolRouter,
-        ToolCategoryResolver toolCategoryResolver
+        ToolCategoryResolver toolCategoryResolver,
+        InspectionFirstAdvisor inspectionFirstAdvisor
+
     ) {
         this.executorChatClient = executorChatClient;
         this.chatClientFactory = chatClientFactory;
@@ -103,6 +115,7 @@ public class OllamaAiAdapter implements AiServicePort {
         this.retrievalAugmentationAdvisor = retrievalAugmentationAdvisor;
         this.toolRouter = toolRouter;
         this.toolCategoryResolver = toolCategoryResolver;
+        this.inspectionFirstAdvisor = inspectionFirstAdvisor;
     }
 
     @Override
@@ -125,18 +138,41 @@ public class OllamaAiAdapter implements AiServicePort {
             ChatClient adaptedClient = chatClientFactory.buildForComplexity(complexity);
             String response = adaptedClient.prompt()
                 .system(promptsConfigService.getInitialInstructions())
+            // Étape 1 : Complexité
+            TaskComplexity complexity = complexityAnalyzer.analyze(userMessage);
+            log.info("Processing chat (conversation={}, complexity={}, messageLength={})",
+                conversationId, complexity, userMessage.length());
+
+            // Étape 2 : Router
+            Set<ToolCategory> categories = toolRouter.route(userMessage);
+            log.info("[Router] → categories: {}", categories);
+
+            // Étape 3 : Résolution des tools
+            Object[] tools = toolCategoryResolver.resolveTools(categories);
+            log.info("[Registry] → {} tool instance(s) selected", tools.length);
+
+            // Étape 4 : Exécuteur
+            ChatClient adaptedClient = chatClientFactory.buildForComplexity(complexity);
+            String response = adaptedClient.prompt()
+                .system(promptsConfigService.getInitialInstructions())
                 .user(userMessage)
                 .advisors(
+                    inspectionFirstAdvisor,
                     retrievalAugmentationAdvisor,
+                    new ReReadingAdvisor(),
                     new SimpleLoggerAdvisor()
                 )
-                .advisors(advisor -> advisor.param(CONVERSATION_ID, conversationId))
+                .advisors(advisor -> advisor
+                .param(CONVERSATION_ID, conversationId)
+                .param(InspectionFirstAdvisor.CTX_TOOL_CATEGORIES,
+                    categories.stream().map(Enum::name).toList()))
                 .tools(tools)
                 .call()
                 .content();
 
             // Thinking mode (COMPLEX uniquement)
             logThinkingIfPresent(adaptedClient, userMessage, conversationId);
+
             log.info("Chat response generated (length={} chars)", response.length());
             return response;
         } catch (Exception e) {
