@@ -38,13 +38,13 @@ import java.util.Map;
  */
 @Slf4j
 @Configuration
-@RefreshScope
 @RequiredArgsConstructor
+@RefreshScope
 public class OllamaConfig {
 
     @Value("${spring.ai.ollama.chat.options.model}")
     private String modelName;
-
+    
     @Value("${spring.ai.ollama.chat.options.temperature:0.7}")
     private Double defaultTemperature;
 
@@ -56,6 +56,7 @@ public class OllamaConfig {
      * Exemples : changer une couleur, déplacer un élément, opacité.
      */
     @Bean("simpleOptions")
+    @RefreshScope
     public OllamaChatOptions simpleOptions() {
         log.info("Configuring SIMPLE ChatOptions (temperature=0.1, topK=10)");
         return OllamaChatOptions.builder()
@@ -70,6 +71,7 @@ public class OllamaConfig {
      * Exemples : suggérer un layout, proposer une palette de couleurs.
      */
     @Bean("creativeOptions")
+    @RefreshScope
     public OllamaChatOptions creativeOptions() {
         log.info("Configuring CREATIVE ChatOptions (temperature=0.8, topK=40, topP=0.9)");
         return OllamaChatOptions.builder()
@@ -89,6 +91,7 @@ public class OllamaConfig {
      * {@code response.getResult().getMetadata().get("thinking")}.</p>
      */
     @Bean("complexOptions")
+    @RefreshScope
     public OllamaChatOptions complexOptions() {
         log.info("Configuring COMPLEX ChatOptions (thinking enabled, temperature=0.6)");
         return OllamaChatOptions.builder()
@@ -113,6 +116,7 @@ public class OllamaConfig {
      * @return builder pré-configuré pour l'exécuteur
      */
     @Bean("executorChatClientBuilder")
+    @RefreshScope
     public ChatClient.Builder chatClientBuilder(
         OllamaChatModel chatModel,
         MessageChatMemoryAdvisor memoryAdvisor
@@ -137,6 +141,7 @@ public class OllamaConfig {
      * @return le client prêt à l'emploi
      */
     @Bean("executorChatClient")
+    @RefreshScope
     @Primary
     public ChatClient chatClient(
         @Qualifier("executorChatClientBuilder") ChatClient.Builder builder
@@ -158,20 +163,22 @@ public class OllamaConfig {
      * @return factory typée {@link ChatClientFactory}
      */
     @Bean
+    @RefreshScope
     public ChatClientFactory chatClientFactory(
         OllamaChatModel chatModel,
-        MessageChatMemoryAdvisor memoryAdvisor
+        MessageChatMemoryAdvisor memoryAdvisor,
+        @Qualifier("simpleOptions") OllamaChatOptions simple,
+        @Qualifier("creativeOptions") OllamaChatOptions creative,
+        @Qualifier("complexOptions") OllamaChatOptions complex
     ) {
         Map<TaskComplexity, OllamaChatOptions> optionsMap = Map.of(
-            TaskComplexity.SIMPLE,   simpleOptions(),
-            TaskComplexity.CREATIVE, creativeOptions(),
-            TaskComplexity.COMPLEX,  complexOptions()
+            TaskComplexity.SIMPLE, simple,
+            TaskComplexity.CREATIVE, creative,
+            TaskComplexity.COMPLEX, complex
         );
 
         return complexity -> {
-            OllamaChatOptions opts = optionsMap.getOrDefault(complexity, simpleOptions());
-            log.debug("Building ChatClient for complexity={} (model={}, opts={})",
-                complexity, modelName, opts);
+            OllamaChatOptions opts = optionsMap.getOrDefault(complexity, simple);
             return ChatClient.builder(chatModel)
                 .defaultOptions(opts)
                 .defaultAdvisors(memoryAdvisor)
