@@ -28,7 +28,7 @@ public interface AiServicePort {
      * @return réponse textuelle générée par l'IA
      * @throws RuntimeException si l'appel IA échoue
      */
-    String chat(String conversationId, String userMessage);
+    String chat(String conversationId, String userMessage, String userToken);
 
     /**
      * Efface complètement l'historique d'une conversation.

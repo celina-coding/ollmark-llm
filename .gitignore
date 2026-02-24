@@ -8,3 +8,6 @@
 /penpot-ai-server/data/*
 **/.env
 .idea
+*.mv.db
+*.trace.db
+/data/

@@ -13,6 +13,7 @@ import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -49,6 +50,7 @@ import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
  */
 @Slf4j
 @Component
+@RefreshScope
 @Primary
 public class OllamaAiAdapter implements AiServicePort {
 
@@ -126,7 +128,6 @@ public class OllamaAiAdapter implements AiServicePort {
                 .user(userMessage)
                 .advisors(
                     retrievalAugmentationAdvisor,
-                    new ReReadingAdvisor(),
                     new SimpleLoggerAdvisor()
                 )
                 .advisors(advisor -> advisor.param(CONVERSATION_ID, conversationId))

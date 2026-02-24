@@ -58,14 +58,14 @@ public class ConversationChatUseCaseImpl implements ConversationChatUseCase {
     private final AiServicePort aiService;
 
     @Override
-    public String chat(String conversationId, String message) {
+    public String chat(String conversationId, String message, String userToken) {
         validateChatInput(conversationId, message);
 
         log.info("Processing chat request for conversation: {} (message length: {} chars)", 
             conversationId, message.length());
 
         try {
-            String response = aiService.chat(conversationId, message);
+            String response = aiService.chat(conversationId, message,userToken);
             log.info("Chat completed successfully (response length: {} chars)", response.length());
             return response;
         } catch (Exception e) {

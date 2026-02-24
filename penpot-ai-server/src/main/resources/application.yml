@@ -203,7 +203,7 @@ management:
     web:
       exposure:
         # Exposer certains endpoints pour le monitoring
-        include: health,info,metrics,loggers
+        include: health,info,metrics,loggers,refresh
   endpoint:
     health:
       show-details: when-authorized
