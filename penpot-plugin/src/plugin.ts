@@ -1,7 +1,6 @@
 import { PluginOrchestrator } from './orchestration/PluginOrchestrator';
 import { ExecuteCodeTaskHandler } from './handlers/code/ExecuteCodeTaskHandler';
 import { PluginTaskRequest } from './common/types';
-import { generateUUID } from './utils/Uuid';
 
 /**
  * **Point d'entrée principal du runtime du plugin Penpot.**
