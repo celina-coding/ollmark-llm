@@ -11,3 +11,4 @@
 *.mv.db
 *.trace.db
 /data/
+.metals/
