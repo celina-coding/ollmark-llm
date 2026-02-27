@@ -293,4 +293,107 @@ class PenpotTransformToolsUnitTest {
           .hasMessage("Rotation failed");
     } 
 
+    /**
+     * Teste le succès du scale avec des facteurs positifs.
+     * <p>
+     * Vérifie que le code JavaScript généré calcule correctement les nouvelles dimensions
+     * en multipliant la largeur et la hauteur actuelles par les facteurs fournis, 
+     * tout en gérant les valeurs par défaut (fallback à 1 si non défini).
+     * </p>
+     */
+    @Test
+    public void shouldBeSuccessfulWhenScalingShape() {
+        // GIVEN
+        String shapeId = "rect-scale";
+        float scaleX = 2.0f; 
+        float scaleY = 0.5f; 
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.scaleShape(shapeId, scaleX, scaleY);
+
+        // THEN
+        verify(toolExecutor, times(1)).transformShape(
+            jsCodeCaptor.capture(),
+            eq("scaled"),
+            eq(shapeId)
+        );
+
+        String capturedJsCode = jsCodeCaptor.getValue();
+        assertThat(capturedJsCode)
+            .contains("const currentWidth = shape.width || 1;")
+            .contains("const currentHeight = shape.height || 1;")
+            .contains("shape.resize(currentWidth * 2.00, currentHeight * 0.50);")
+            .contains("return { id: shape.id, width: shape.width, height: shape.height };");
+    }
+
+    /**
+     * Teste le repli sur la sélection courante si l'identifiant de la forme est vide.
+     * <p>
+     * Garantit que l'outil de mise à l'échelle peut s'appliquer sur l'objet sélectionné 
+     * dans l'interface Penpot si aucun ID n'est fourni par l'IA.
+     * </p>
+     */
+    @Test
+    public void shouldFallbackToSelectionWhenShapeIdIsEmptyForScale() {
+        // GIVEN
+        String emptyId = "";
+        float sX = 1.5f;
+        float sY = 1.5f;
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.scaleShape(emptyId, sX, sY);
+
+        // THEN
+        verify(toolExecutor).transformShape(jsCodeCaptor.capture(), eq("scaled"), eq(""));
+        assertThat(jsCodeCaptor.getValue())
+            .contains("if (penpot.selection.length > 0) shape = penpot.selection[0];")
+            .contains("shape.resize(currentWidth * 1.50, currentHeight * 1.50);");
+    }
+
+    /**
+     * Teste la robustesse de la génération de code face à des facteurs d'échelle négatifs.
+     * <p>
+     * Vérifie que le formateur traite correctement les signes négatifs, permettant ainsi
+     * des transformations de type "miroir" via l'API JavaScript de Penpot.
+     * </p>
+     */
+    @Test
+    public void shouldHandleNegativeScaleFactors() {
+        // GIVEN
+        String shapeId = "id-neg";
+        float scaleX = -1.0f;
+        float scaleY = 1.0f;
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.scaleShape(shapeId, scaleX, scaleY);
+
+        // THEN
+        verify(toolExecutor).transformShape(jsCodeCaptor.capture(), eq("scaled"), eq(shapeId));
+        assertThat(jsCodeCaptor.getValue())
+            .contains("shape.resize(currentWidth * -1.00, currentHeight * 1.00);");
+    }
+
+    /**
+     * Teste la propagation des exceptions lors d'un échec technique de l'exécuteur.
+     * <p>
+     * Assure que si une erreur survient lors de la communication avec le plugin,
+     * l'exception est correctement levée pour informer l'appelant.
+     * </p>
+     */
+    @Test
+    public void shouldThrowExceptionWhenExecutorFailsForScale() {
+        // GIVEN
+        when(toolExecutor.transformShape(anyString(), eq("scaled"), anyString()))
+            .thenThrow(new RuntimeException("Scaling error"));
+
+        // THEN
+        assertThatThrownBy(() -> {
+            // WHEN
+            penpotTransformTools.scaleShape("id", 2.0f, 2.0f);
+        }).isInstanceOf(RuntimeException.class)
+          .hasMessage("Scaling error");
+    }
 }
