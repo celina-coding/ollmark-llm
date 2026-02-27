@@ -166,5 +166,131 @@ class PenpotTransformToolsUnitTest {
         .hasMessage("Connection failed");
     }
 
+    /**
+     * Teste la rotation réussie d'une forme avec un angle positif.
+     * <p>
+     * Vérifie que le code JS généré récupère la forme par son ID et 
+     * incrémente correctement la propriété rotation.
+     * </p>
+     */
+    @Test 
+    public void shouldBeSuccessfulWhenRotatingShape(){
+        //GIVEN 
+        String shapeId = "rect-456";
+        int angle = 45;
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+        //WHEN 
+        penpotTransformTools.rotateShape(shapeId, angle);
+
+        //THEN
+        verify(toolExecutor, times(1)).transformShape(
+            jsCodeCaptor.capture(),
+            eq("rotated"),
+            eq(shapeId)
+        );
+
+        String capturedJsCode = jsCodeCaptor.getValue();
+        assertThat(capturedJsCode)
+            .contains("penpot.currentPage.getShapeById('rect-456')")
+            .contains("shape.rotation = (shape.rotation || 0) + 45;")
+            .contains("return { id: shape.id, rotation: shape.rotation };");
+
+    }
+    /**
+     * Teste le mécanisme de repli sur la sélection si l'ID de la forme est vide.
+     * <p>
+     * Garantit que l'outil peut fonctionner sur l'objet actuellement sélectionné 
+     * dans l'interface Penpot si aucun identifiant n'est fourni.
+     * </p>
+     */
+    @Test
+    public void shouldFallbackToSelectionWhenShapeIdIsEmptyForRotate() {
+        // GIVEN
+        String emptyId = "";
+        int angle = 90;
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.rotateShape(emptyId, angle);
+
+        // THEN
+        verify(toolExecutor).transformShape(jsCodeCaptor.capture(), eq("rotated"), eq(""));
+        
+        assertThat(jsCodeCaptor.getValue())
+            .contains("if (penpot.selection.length > 0) shape = penpot.selection[0];")
+            .contains("shape.rotation = (shape.rotation || 0) + 90;");
+    }  
+
+    /**
+     * Teste la rotation avec un angle négatif (sens anti-horaire).
+     * <p>
+     * Vérifie que le signe négatif est correctement traité dans la chaîne 
+     * de caractères du code JavaScript généré.
+     * </p>
+     */
+    @Test
+    public void shouldHandleNegativeAngleWhenRotating() {
+        // GIVEN
+        String shapeId = "rect-789";
+        int negativeAngle = -45;
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.rotateShape(shapeId, negativeAngle);
+
+        // THEN
+        verify(toolExecutor).transformShape(
+            jsCodeCaptor.capture(),
+            eq("rotated"),
+            eq(shapeId)
+        );
+
+        String capturedJsCode = jsCodeCaptor.getValue();
+        assertThat(capturedJsCode).contains("shape.rotation = (shape.rotation || 0) + -45;");
+    }
+
+    /**
+     * Teste la rotation avec un angle de zéro degré.
+     * <p>
+     * Cas limite vérifiant que le générateur de code produit un script valide 
+     * même si l'action n'entraîne aucune modification visuelle.
+     * </p>
+     */
+     @Test
+    public void shouldGenerateCorrectJsWhenAngleIsZero() {
+        // GIVEN
+        String shapeId = "rect-zero";
+        int angle = 0;
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.rotateShape(shapeId, angle);
+
+        // THEN
+        verify(toolExecutor).transformShape(jsCodeCaptor.capture(), eq("rotated"), eq(shapeId));
+        assertThat(jsCodeCaptor.getValue())
+            .contains("shape.rotation = (shape.rotation || 0) + 0;");
+    }
+
+    /**
+     * Teste la propagation des exceptions lors d'un échec de l'exécuteur pour la rotation.
+     * <p>
+     * Assure la robustesse du système en vérifiant que les erreurs techniques 
+     * ne sont pas étouffées par le tool.
+     * </p>
+     */
+     @Test
+    public void shouldThrowExceptionWhenExecutorFailsForRotate() {
+        // GIVEN
+        when(toolExecutor.transformShape(anyString(), eq("rotated"), anyString()))
+            .thenThrow(new RuntimeException("Rotation failed"));
+
+        // THEN
+        assertThatThrownBy(() -> {
+         // WHEN
+        penpotTransformTools.rotateShape("any-id", 30);
+        }).isInstanceOf(RuntimeException.class)
+          .hasMessage("Rotation failed");
+    } 
 
 }
