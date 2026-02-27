@@ -396,4 +396,116 @@ class PenpotTransformToolsUnitTest {
         }).isInstanceOf(RuntimeException.class)
           .hasMessage("Scaling error");
     }
+
+    /**
+     * Teste le déplacement absolu d'une forme.
+     * <p>
+     * Vérifie que lorsque 'relative' est false (ou null), le code JS 
+     * assigne directement les coordonnées x et y.
+     * </p>
+     */
+    @Test
+    public void shouldBeSuccessfulWhenMovingShapeAbsolutely() {
+        // GIVEN
+        String shapeId = "rect-move";
+        float newX = 150.0f;
+        float newY = 200.0f;
+        Boolean relative = false;
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.moveShape(shapeId, newX, newY, relative);
+
+        // THEN
+        verify(toolExecutor).transformShape(jsCodeCaptor.capture(), eq("moved"), eq(shapeId));
+        
+        String capturedJsCode = jsCodeCaptor.getValue();
+        assertThat(capturedJsCode)
+            .contains("shape.x = 150.00;")
+            .contains("shape.y = 200.00;")
+            .contains("return { id: shape.id, x: shape.x, y: shape.y };");
+    }
+
+    /**
+     * Teste le déplacement relatif d'une forme.
+     * <p>
+     * Vérifie que lorsque 'relative' est true, le code JS incrémente 
+     * les coordonnées actuelles de la forme.
+     * </p>
+     */
+    @Test
+    public void shouldBeSuccessfulWhenMovingShapeRelatively() {
+        // GIVEN
+        String shapeId = "rect-rel";
+        float offsetX = 10.0f;
+        float offsetY = -5.0f;
+        Boolean relative = true;
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.moveShape(shapeId, offsetX, offsetY, relative);
+
+        // THEN
+        verify(toolExecutor).transformShape(jsCodeCaptor.capture(), eq("moved"), eq(shapeId));
+        
+        String capturedJsCode = jsCodeCaptor.getValue();
+        assertThat(capturedJsCode)
+            .contains("shape.x = (shape.x || 0) + 10.00;")
+            .contains("shape.y = (shape.y || 0) + -5.00;");
+    }
+
+    /**
+     * Teste le comportement par défaut (absolu) si le paramètre 'relative' est null.
+     * <p>
+     * Couvre la branche 'boolean isRelative = relative != null && relative;' de la méthode.
+     * </p>
+     */
+    @Test
+    public void shouldDefaultToAbsoluteMoveWhenRelativeIsNull() {
+        // GIVEN
+        String shapeId = "rect-null";
+        // WHEN
+        penpotTransformTools.moveShape(shapeId, 10f, 10f, null);
+        // THEN
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(toolExecutor).transformShape(captor.capture(), anyString(), anyString());
+        assertThat(captor.getValue()).contains("shape.x = 10.00;"); // Branche absolue
+    }
+
+    /**
+     * Teste le repli sur la sélection si l'ID est vide pour un déplacement.
+     */
+    @Test
+    public void shouldFallbackToSelectionWhenShapeIdIsEmptyForMove() {
+        // GIVEN
+        String emptyId = "";
+        ArgumentCaptor<String> jsCodeCaptor = ArgumentCaptor.forClass(String.class);
+
+        // WHEN
+        penpotTransformTools.moveShape(emptyId, 50f, 50f, false);
+
+        // THEN
+        verify(toolExecutor).transformShape(jsCodeCaptor.capture(), eq("moved"), eq(""));
+        assertThat(jsCodeCaptor.getValue())
+            .contains("if (penpot.selection.length > 0) shape = penpot.selection[0];");
+    }
+
+    /**
+     * Teste la propagation des exceptions pour le déplacement.
+     */
+    @Test
+    public void shouldThrowExceptionWhenExecutorFailsForMove() {
+        // GIVEN
+        when(toolExecutor.transformShape(anyString(), eq("moved"), anyString()))
+            .thenThrow(new RuntimeException("Move failed"));
+
+        // THEN
+        assertThatThrownBy(() -> {
+            // WHEN
+            penpotTransformTools.moveShape("id", 0, 0, false);
+        }).isInstanceOf(RuntimeException.class)
+          .hasMessage("Move failed");
+    }
+
+
 }
